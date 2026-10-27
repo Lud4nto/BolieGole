@@ -12,10 +12,9 @@ let servers = {};
 const width = 1200;
 const height = 600;
 
-// --- YENİ SABİTLER (güvenlik/fizik) ---
-const BALL_MAX_SPEED = 35;   // tick başına max birim (hızlı şut tünelleme fix)
+const BALL_MAX_SPEED = 35;
 const BALL_MAX_Z_SPEED = 15;
-const GOAL_TOP_Z = 80;       // üst direk eşiği
+const GOAL_TOP_Z = 80;
 const PLAYER_MIN_X = 25, PLAYER_MAX_X = width - 25;
 const PLAYER_MIN_Y = 25, PLAYER_MAX_Y = height - 25;
 
@@ -25,9 +24,7 @@ function isFiniteNum(n) { return typeof n === 'number' && Number.isFinite(n); }
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    for (let i = 0; i < 6; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); }
     if (servers[result]) return generateRoomCode();
     return result;
 }
@@ -40,13 +37,7 @@ io.on('connection', (socket) => {
         for (let id in servers) {
             let s = servers[id];
             if (s && s.status === "lobby") {
-                list.push({
-                    id: s.id,
-                    name: s.name,
-                    type: s.type,
-                    playerCount: s.players.length,
-                    hasPassword: s.password !== ""   // 🔧 FIX: şifreli oda tespiti
-                });
+                list.push({ id: s.id, name: s.name, type: s.type, playerCount: s.players.length, hasPassword: s.password !== "" });
             }
         }
         socket.emit('server_list', list);
@@ -55,14 +46,17 @@ io.on('connection', (socket) => {
     socket.on('create_server', (data) => {
         if (!data) return;
         const code = generateRoomCode();
-        const hostPlayer = { id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300 };
+        const hostPlayer = { id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false };
 
         servers[code] = {
             id: code, name: (data.name || "Oda").substring(0, 30), type: data.type || "private", password: data.password || "",
             hostId: socket.id, players: [hostPlayer], status: "lobby",
-            ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 },
+            redName: data.redName || "KIRMIZI", blueName: data.blueName || "MAVİ",
+            redColor: data.redColor || "#ff4c4c", blueColor: data.blueColor || "#4c9aff",
+            ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" },
             score: { red: 0, blue: 0 }, matchTime: 0, half: 1, isKickoff: false, concedingTeam: null,
-            gameInterval: null, emptyTimer: null, breakTimer: 0, replayTimer: 0
+            gameInterval: null, emptyTimer: null, breakTimer: 0, replayTimer: 0,
+            history: [], emotes: [], botCounter: 0
         };
 
         socket.join(code);
@@ -77,11 +71,10 @@ io.on('connection', (socket) => {
         if (!s) { socket.emit('join_error', 'Oda bulunamadı.'); return; }
         if (s.type === 'private' && data.password !== s.id) { socket.emit('join_error', 'Hatalı Oda Kodu!'); return; }
         if (s.type === 'community' && s.password !== "" && data.password !== s.password) { socket.emit('join_error', 'Hatalı Şifre!'); return; }
-
         if (s.players.length >= 10) { socket.emit('join_error', 'Oda dolu (maks. 10 kişi).'); return; }
 
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
-        let newPlayer = { id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300 };
+        let newPlayer = { id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false };
         s.players.push(newPlayer);
         socket.join(data.id);
         socket.roomId = data.id;
@@ -89,12 +82,33 @@ io.on('connection', (socket) => {
         io.to(data.id).emit('update_lobby', s);
     });
 
+    socket.on('add_bot', () => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.hostId !== socket.id || s.status !== "lobby") return;
+        if (s.players.length >= 10) return;
+
+        let redCount = s.players.filter(p => p.team === 'red').length;
+        let blueCount = s.players.filter(p => p.team === 'blue').length;
+        let botTeam = redCount <= blueCount ? 'red' : 'blue';
+
+        s.botCounter++;
+        let bot = { 
+            id: "bot_" + socket.id + "_" + s.botCounter, 
+            name: "Bot " + s.botCounter, 
+            team: botTeam, 
+            lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: true 
+        };
+        s.players.push(bot);
+        io.to(s.id).emit('update_lobby', s);
+    });
+
     socket.on('change_team', (team) => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (!s || s.status !== "lobby") return;
         let p = s.players.find(pl => pl.id === socket.id);
-        if (p) {
+        if (p && !p.isBot) {
             let target = team || "spectator";
             if (target !== 'spectator') {
                 let count = s.players.filter(pl => pl.team === target).length;
@@ -118,7 +132,7 @@ io.on('connection', (socket) => {
 
         s.status = "playing";
         s.score = { red: 0, blue: 0 };
-        s.matchTime = 0; s.half = 1;
+        s.matchTime = 0; s.half = 1; s.history = []; s.emotes = [];
         resetBall(s, null, false);
 
         io.to(s.id).emit('game_started');
@@ -140,10 +154,8 @@ io.on('connection', (socket) => {
         if (!data || !socket.roomId) return;
         let s = servers[socket.roomId];
         if (!s || s.status !== "playing") return;
-
         let p = s.players.find(pl => pl.id === socket.id);
-        if (!p || p.team === 'spectator') return;
-
+        if (!p || p.team === 'spectator' || p.isBot) return;
         if (!isFiniteNum(data.x) || !isFiniteNum(data.y)) return;
 
         let nx = clamp(data.x, PLAYER_MIN_X, PLAYER_MAX_X);
@@ -153,11 +165,8 @@ io.on('connection', (socket) => {
             if (s.concedingTeam === 'blue' && nx > 595) nx = 595;
             if (s.concedingTeam === 'red' && nx < 605) nx = 605;
         }
-
-        p.lastDx = nx - p.x;
-        p.lastDy = ny - p.y;
-        p.x = nx;
-        p.y = ny;
+        p.lastDx = nx - p.x; p.lastDy = ny - p.y;
+        p.x = nx; p.y = ny;
     });
 
     socket.on('tackle', () => {
@@ -165,11 +174,10 @@ io.on('connection', (socket) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "playing") return;
         let p = s.players.find(pl => pl.id === socket.id);
-        if (!p || p.team === 'spectator') return;
+        if (!p || p.team === 'spectator' || p.isBot) return;
 
         if (s.ball.owner && s.ball.owner !== socket.id) {
             if (s.isKickoff && p.team !== s.concedingTeam) return;
-
             let owner = s.players.find(pl => pl.id === s.ball.owner);
             if (owner && Math.hypot(p.x - owner.x, p.y - owner.y) < 60) {
                 s.ball.owner = socket.id;
@@ -192,21 +200,29 @@ io.on('connection', (socket) => {
             sp = clamp(sp, 0, 100);
 
             let speed = Math.hypot(vx, vy);
-            if (speed > BALL_MAX_SPEED) {
-                vx = (vx / speed) * BALL_MAX_SPEED;
-                vy = (vy / speed) * BALL_MAX_SPEED;
-            }
+            if (speed > BALL_MAX_SPEED) { vx = (vx / speed) * BALL_MAX_SPEED; vy = (vy / speed) * BALL_MAX_SPEED; }
             vz = clamp(vz, -BALL_MAX_Z_SPEED, BALL_MAX_Z_SPEED);
 
             s.ball.vx = vx; s.ball.vy = vy; s.ball.vz = vz;
             s.ball.owner = null; s.ball.possessionTimer = 0; s.ball.pickupCooldown = 20; s.ball.shotPower = sp;
-
+            
             let p = s.players.find(pl => pl.id === socket.id);
             s.ball.lastKickX = p ? p.x : 0;
-            s.ball.x += s.ball.vx * 3;
-            s.ball.y += s.ball.vy * 3;
+            s.ball.lastKickName = p ? p.name : "";
+            s.ball.x += s.ball.vx * 3; s.ball.y += s.ball.vy * 3;
 
             if (s.isKickoff && p && p.team === s.concedingTeam) { s.isKickoff = false; s.concedingTeam = null; }
+        }
+    });
+
+    socket.on('send_emote', (emoji) => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.status !== "playing") return;
+        let p = s.players.find(pl => pl.id === socket.id);
+        if (p) {
+            s.emotes.push({ playerId: socket.id, emoji: emoji, timer: 120 });
+            if (s.emotes.length > 20) s.emotes.shift();
         }
     });
 
@@ -214,10 +230,7 @@ io.on('connection', (socket) => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (s) {
-            if (s.ball && s.ball.owner === socket.id) {
-                s.ball.owner = null;
-                s.ball.possessionTimer = 0;
-            }
+            if (s.ball && s.ball.owner === socket.id) { s.ball.owner = null; s.ball.possessionTimer = 0; }
             s.players = s.players.filter(p => p.id !== socket.id);
             io.to(s.id).emit('update_lobby', s);
             if (s.players.length === 0) {
@@ -234,12 +247,65 @@ io.on('connection', (socket) => {
 
 function updateGame(s) {
     try {
+        // History kaydı (Replay için son 3 saniye / 180 tick)
+        if (s.status === 'playing') {
+            s.history.push({
+                players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team })),
+                ball: { x: s.ball.x, y: s.ball.y, z: s.ball.z, owner: s.ball.owner }
+            });
+            if (s.history.length > 180) s.history.shift();
+        }
+
+        // Emote sürelerini güncelle
+        for (let i = s.emotes.length - 1; i >= 0; i--) {
+            s.emotes[i].timer--;
+            if (s.emotes[i].timer <= 0) s.emotes.splice(i, 1);
+        }
+
+        // Bot Yapay Zekası
+        if (s.status === 'playing') {
+            for (let p of s.players) {
+                if (!p.isBot || p.team === 'spectator') continue;
+                
+                // Basit AI: En yakın topa yönel
+                let targetBallX = s.ball.x;
+                let targetBallY = s.ball.y;
+                let dx = targetBallX - p.x;
+                let dy = targetBallY - p.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > 5) {
+                    let speed = 3.5; // Bot hızı
+                    if (s.ball.owner === p.id) speed = 4.5;
+                    p.lastDx = (dx / dist) * speed;
+                    p.lastDy = (dy / dist) * speed;
+                    p.x += p.lastDx;
+                    p.y += p.lastDy;
+                    p.x = Math.max(25, Math.min(width - 25, p.x));
+                    p.y = Math.max(25, Math.min(height - 25, p.y));
+                }
+
+                // Şut atma mantığı
+                if (s.ball.owner === p.id) {
+                    let goalX = p.team === 'red' ? width - 25 : 25;
+                    let distToGoal = Math.abs(p.x - goalX);
+                    if (distToGoal < 300) {
+                        let angle = Math.atan2(300 - p.y, goalX - p.x);
+                        s.ball.vx = Math.cos(angle) * 22;
+                        s.ball.vy = Math.sin(angle) * 22;
+                        s.ball.vz = 4;
+                        s.ball.owner = null;
+                        s.ball.lastKickName = p.name;
+                        s.ball.shotPower = 85;
+                    }
+                }
+            }
+        }
+
         if (s.status === 'halftime_break') {
             s.breakTimer -= 1/60;
             if (s.breakTimer <= 0) {
-                s.status = 'playing';
-                s.half = 2;
-                s.matchTime = 0;
+                s.status = 'playing'; s.half = 2; s.matchTime = 0;
                 resetBall(s, null, true);
                 io.to(s.id).emit('play_whistle');
                 io.to(s.id).emit('game_state', s);
@@ -247,7 +313,6 @@ function updateGame(s) {
             return;
         }
 
-        // 🔧 GOL EKRANI FIX (Her tick game_state gönderiliyor ve süre 3 saniye)
         if (s.status === 'goal_replay') {
             s.replayTimer -= 1/60;
             if (s.replayTimer <= 0) {
@@ -262,9 +327,7 @@ function updateGame(s) {
 
         s.matchTime += 1/60;
         if (s.half === 1 && s.matchTime >= 300) {
-            s.status = 'halftime_break';
-            s.breakTimer = 15;
-            s.matchTime = 300;
+            s.status = 'halftime_break'; s.breakTimer = 15; s.matchTime = 300;
             io.to(s.id).emit('game_state', s);
             return;
         } else if (s.half === 2 && s.matchTime >= 300) {
@@ -281,9 +344,8 @@ function updateGame(s) {
         if (ball.owner !== null) {
             if (ball.possessionTimer > 0) ball.possessionTimer--;
             let owner = s.players.find(p => p.id === ball.owner);
-            if (!owner) {
-                ball.owner = null;
-            } else {
+            if (!owner) { ball.owner = null; } 
+            else {
                 let angle = Math.atan2(owner.lastDy, owner.lastDx);
                 if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0;
                 ball.x = owner.x + Math.cos(angle) * 35;
@@ -291,7 +353,7 @@ function updateGame(s) {
                 ball.vx = 0; ball.vy = 0; ball.z = 0;
 
                 if (ball.possessionTimer <= 0) {
-                    ball.owner = null; ball.vx = Math.cos(angle) * 7; ball.vy = Math.sin(angle) * 7; ball.pickupCooldown = 30;
+                    ball.owner = null; ball.vx = Math.cos(angle) * 7; ball.vy = Math.sin(angle) * 7; ball.pickupCooldown = 30; 
                 }
             }
         }
@@ -301,51 +363,47 @@ function updateGame(s) {
             ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
 
             if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
-            if (Math.abs(ball.vx) < 0.1) ball.vx = 0;
-            if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
+            if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
+            if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
             if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
             if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
-
+            
             let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
             let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
 
             if (hitLeftGoal || hitRightGoal) {
                 if (ball.z > GOAL_TOP_Z) {
-                    ball.x = hitRightGoal ? width - 30 : 30;
-                    ball.vx = -ball.vx * 0.7;
-                    ball.vy = (Math.random() - 0.5) * 15;
-                    ball.vz = -Math.abs(ball.vz) * 0.5 - 3;
-                    ball.shotPower = 0;
+                    ball.x = hitRightGoal ? width - 30 : 30; ball.vx = -ball.vx * 0.7;
+                    ball.vy = (Math.random() - 0.5) * 15; ball.vz = -Math.abs(ball.vz) * 0.5 - 3; ball.shotPower = 0;
                 } else {
                     let shouldBounce = false;
                     if (ball.shotPower === 100) {
                         let isOwnHalf = false, isClose = false;
-                        if (hitRightGoal) { if (ball.lastKickX < 600) isOwnHalf = true; if (ball.lastKickX > 900) isClose = true; }
+                        if (hitRightGoal) { if (ball.lastKickX < 600) isOwnHalf = true; if (ball.lastKickX > 900) isClose = true; } 
                         else if (hitLeftGoal) { if (ball.lastKickX > 600) isOwnHalf = true; if (ball.lastKickX < 300) isClose = true; }
                         if (!isOwnHalf && !isClose) shouldBounce = true;
                     }
 
                     if (shouldBounce) {
-                        ball.x = hitRightGoal ? width - 30 : 30; ball.vx = -ball.vx * 0.7; ball.vy = (Math.random() - 0.5) * 25; ball.vz = 8; ball.shotPower = 0;
+                        ball.x = hitRightGoal ? width - 30 : 30; ball.vx = -ball.vx * 0.7; ball.vy = (Math.random() - 0.5) * 25; ball.vz = 8; ball.shotPower = 0; 
                     } else {
-                        if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; }
+                        if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; } 
                         else { s.score.blue++; s.concedingTeam = 'red'; }
-
+                        
                         s.status = 'goal_replay';
-                        s.replayTimer = 3; // 🔧 GOL SÜRESİ 3 SANİYE OLDU
-
+                        s.replayTimer = 3;
                         s.isKickoff = true;
-
+                        
                         for (let p of s.players) {
                             if (p.team === 'spectator') continue;
-                            if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; }
+                            if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; } 
                             else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
                         }
-                        s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
-
-                        io.to(s.id).emit('force_positions', s.players);
-                        io.to(s.id).emit('goal_scored', s);
+                        s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
+                        
+                        io.to(s.id).emit('force_positions', s.players); 
+                        io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
                         io.to(s.id).emit('game_state', s);
                         return;
                     }
@@ -360,8 +418,7 @@ function updateGame(s) {
             if (p.team === 'spectator') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
-                if (s.isKickoff && p.team !== s.concedingTeam) continue;
-
+                if (s.isKickoff && p.team !== s.concedingTeam) continue; 
                 ball.owner = p.id; ball.possessionTimer = 150; ball.vx = 0; ball.vy = 0; ball.vz = 0; ball.shotPower = 0;
                 if (s.isKickoff) { s.isKickoff = false; s.concedingTeam = null; }
             }
@@ -372,12 +429,12 @@ function updateGame(s) {
 }
 
 function resetBall(s, concededBy = null, isHalftime = false) {
-    s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
+    s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
         for (let p of s.players) {
             if (p.team === 'spectator') continue;
-            if (p.team === concededBy) { p.x = concededBy === 'red' ? 500 : 700; p.y = 300; }
+            if (p.team === concededBy) { p.x = concededBy === 'red' ? 500 : 700; p.y = 300; } 
             else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
         }
     } else {
