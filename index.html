@@ -16,31 +16,31 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-image: url('menu.png'); /* Arka plan resmi */
+            background-image: url('menu.png');
             background-size: cover;
             background-position: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 9999; /* Her şeyin üstünde dursun */
+            z-index: 9999;
         }
 
         .menu-buttons {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-top: 180px; /* Resimdeki başlığın altında kalması için ayarlandı */
+            margin-top: 180px;
         }
 
         .menu-btn {
             width: 320px;
             padding: 15px;
-            background-color: #d4a373; /* Ahşap rengi */
-            border: 4px solid #8b5a2b; /* Koyu ahşap kenarlık */
-            box-shadow: 4px 4px 0px #5a3a1b; /* 3D gölge efekti */
+            background-color: #d4a373;
+            border: 4px solid #8b5a2b;
+            box-shadow: 4px 4px 0px #5a3a1b;
             border-radius: 8px;
-            font-family: 'Press Start 2P', cursive; /* Piksel fontu */
+            font-family: 'Press Start 2P', cursive;
             font-size: 24px;
             color: #2b1b0e;
             cursor: pointer;
@@ -60,9 +60,9 @@
             box-shadow: 0px 0px 0px #5a3a1b;
         }
 
-        /* Oyun Kapsayıcısı (Başlangıçta gizli) */
+        /* Oyun Kapsayıcısı */
         #game-container { 
-            display: none; /* Menü açıkken oyun gizli */
+            display: none; 
             position: relative; 
             width: 100vw; 
             height: 100vh; 
@@ -185,13 +185,12 @@
         const gameContainer = document.getElementById('game-container');
 
         document.getElementById('btn-play').addEventListener('click', () => {
-            mainMenu.style.display = 'none'; // Menüyü gizle
-            gameContainer.style.display = 'flex'; // Oyunu göster
+            mainMenu.style.display = 'none'; 
+            gameContainer.style.display = 'flex'; 
         });
 
         document.getElementById('btn-exit').addEventListener('click', () => {
             alert("Oyundan çıkılıyor...");
-            // Tarayıcıda pencereyi kapatmak bazen engellenir, o yüzden sayfayı boşaltıyoruz.
             window.location.href = "about:blank"; 
         });
 
@@ -524,11 +523,23 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                if (id === ball.owner && ball.possessionTimer > 0) {
-                    ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#eab308'; 
-                    ctx.lineWidth = 4; 
+                // --- NEON YEŞİL YANIP SÖNME EFEKTİ ---
+                if (id === ball.owner) {
+                    let time = Date.now();
+                    let pulse = (Math.sin(time / 80) + 1) / 2; // Hızlı nabız (0 ile 1 arası)
+                    let radius = 26 + (pulse * 8); // Boyut değişimi
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                    // Neon yeşil (39FF14) rengi ve parlaklık (Opacity) ayarı
+                    ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; 
+                    ctx.lineWidth = 5;
+                    // Işık saçması (Glow) için gölge efekti
+                    ctx.shadowColor = '#39FF14';
+                    ctx.shadowBlur = 15 + (pulse * 15); 
                     ctx.stroke();
+                    ctx.restore();
                 }
 
                 if (id === socket.id && isCharging && shotPower >= 38) {
