@@ -1395,25 +1395,64 @@
             lastRenderTime = now;
 
             if (document.getElementById('screen-game').classList.contains('active')) {
-                if (isPractice) {
-                    // --- ANTRENMAN BOT YAPAY ZEKASI ---
-                    for (let id in players) {
-                        let p = players[id];
-                        if (p.isBot) {
-                            if (p.position === 'GK') {
-                                p.x = 1140; p.y += (Math.max(200, Math.min(400, ball.y)) - p.y) * 0.05;
+                                if (isPractice) {
+                    // Top Fiziği
+                    if (ball.owner === null) {
+                        ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
+                        ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
+                        if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
+                        if (Math.abs(ball.vx) < 0.1) ball.vx = 0;
+                        if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
+                        if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
+                        if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
+                        
+                        // Duvarlar
+                        if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
+                        if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
+
+                        let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
+                        let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
+                        if (hitLeftGoal || hitRightGoal) {
+                            if (ball.z <= 80) {
+                                if (hitRightGoal) score.red++; else score.blue++;
+                                playKickSound(true);
+                                ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
                             } else {
-                                let dx = ball.x - p.x; let dy = ball.y - p.y; let dist = Math.hypot(dx, dy);
-                                if (dist > 30) {
-                                    p.x += (dx / dist) * 3; p.y += (dy / dist) * 3;
-                                    p.lastDx = dx/dist; p.lastDy = dy/dist;
-                                } else if (ball.owner === null && ball.pickupCooldown <= 0) {
-                                    let angle = Math.atan2(300 - p.y, 25 - p.x);
-                                    ball.vx = Math.cos(angle) * 18; ball.vy = Math.sin(angle) * 18; ball.pickupCooldown = 20;
-                                }
+                                ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7;
                             }
                         }
                     }
+
+                    // Topu Alma (Sen)
+                    if (ball.owner === null && myPlayer) {
+                        let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+                        if (dist < 50 && ball.pickupCooldown <= 0) { 
+                            ball.owner = myPlayer.id; 
+                            ball.vx = 0; ball.vy = 0; ball.z = 0; 
+                            ball.possessionTimer = 150; // 2.5 saniye kuralı
+                        }
+                    }
+
+                    if (ball.pickupCooldown > 0) ball.pickupCooldown--;
+
+                    // Topu Sürükleme (Sen)
+                    if (ball.owner === myPlayer.id) {
+                        let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+                        if (myPlayer.lastDx === 0 && myPlayer.lastDy === 0) angle = 0; // Duruyorsan top sağında dursun
+                        
+                        ball.x = myPlayer.x + Math.cos(angle) * 35;
+                        ball.y = myPlayer.y + Math.sin(angle) * 35;
+
+                        // 2.5 saniye kuralı (Top ayağından düşer)
+                        if (ball.possessionTimer > 0) ball.possessionTimer--;
+                        if (ball.possessionTimer <= 0) { 
+                            ball.owner = null; 
+                            ball.vx = Math.cos(angle) * 7; 
+                            ball.vy = Math.sin(angle) * 7; 
+                            ball.pickupCooldown = 30; 
+                        }
+                    }
+                }
                     for (let id in players) {
                         let p = players[id];
                         if (p.isBot && ball.owner === null) {
