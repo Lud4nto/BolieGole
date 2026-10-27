@@ -9,8 +9,8 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// Top başlangıç pozisyonu ve hızı
-let ball = { x: 600, y: 300, vx: 0, vy: 0 };
+// x,y: konum | z: yükseklik | vx,vy,vz: hızlar
+let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0 };
 let score = { red: 0, blue: 0 };
 
 const width = 1200;
@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
     socket.on('kick', (data) => {
         ball.vx = data.vx;
         ball.vy = data.vy;
+        ball.vz = data.vz || 0; // Şut çekildiğinde havaya dikilme gücü
     });
 
     socket.on('disconnect', () => {
@@ -46,55 +47,56 @@ io.on('connection', (socket) => {
     });
 });
 
-// TOP FİZİĞİ (Saniyede 60 kez çalışır - 60 FPS)
+// TOP FİZİĞİ (60 FPS)
 setInterval(() => {
-    // Topun hareketi
     ball.x += ball.vx;
     ball.y += ball.vy;
+    ball.z += ball.vz;
     
-    // Sürtünme (Top daha uzun süre yuvarlansın diye 0.98 yaptık)
+    // Sürtünme (Yatay)
     ball.vx *= 0.98; 
     ball.vy *= 0.98;
+    
+    // Yerçekimi (Dikey)
+    ball.vz -= 0.8;
 
-    // Durma eşiği
+    // Zıplama (Yere çarptığında)
+    if (ball.z <= 0) {
+        ball.z = 0;
+        ball.vz *= -0.6; // Sekme katsayısı
+        if (Math.abs(ball.vz) < 1) ball.vz = 0; // Sekmesi durdu
+    }
+
     if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
     if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-    // Duvarlara çarpma (Üst ve Alt)
+    // Duvarlar
     if (ball.y < 15) { ball.y = 15; ball.vy *= -0.8; }
     if (ball.y > height - 15) { ball.y = height - 15; ball.vy *= -0.8; }
-
-    // Gol Kontrolü (Sol ve Sağ Kale)
+    
+    // Gol
     if (ball.x <= 15 && ball.y > 200 && ball.y < 400) {
-        score.blue++; // Sol kaleye gol
-        resetBall();
+        score.blue++; resetBall();
     } else if (ball.x >= width - 15 && ball.y > 200 && ball.y < 400) {
-        score.red++; // Sağ kaleye gol
-        resetBall();
+        score.red++; resetBall();
     } else {
-        // Kale dışındaki duvarlara çarpma
         if (ball.x < 15) { ball.x = 15; ball.vx *= -0.8; }
         if (ball.x > width - 15) { ball.x = width - 15; ball.vx *= -0.8; }
     }
 
-    // Oyuncu - Top Çarpışması (Dribbling ve Hafif İtme)
+    // Oyuncu - Top Çarpışması
     for (let id in players) {
         let p = players[id];
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        // Oyuncu topa yaklaştığında
         if (dist < 45) {
-            // Topu oyuncunun merkezinden dışarı doğru it
             let angle = Math.atan2(ball.y - p.y, ball.x - p.x);
-            
-            // Top oyuncunun çok içindeyse dışarı fırlat
             if (dist < 30) {
                 ball.x = p.x + Math.cos(angle) * 30;
                 ball.y = p.y + Math.sin(angle) * 30;
                 ball.vx += Math.cos(angle) * 0.5;
                 ball.vy += Math.sin(angle) * 0.5;
             } else {
-                // Hafifçe önüne doğru kaydır
                 ball.vx += Math.cos(angle) * 0.15;
                 ball.vy += Math.sin(angle) * 0.15;
             }
@@ -105,8 +107,7 @@ setInterval(() => {
 }, 1000 / 60);
 
 function resetBall() {
-    ball.x = 600; ball.y = 300; ball.vx = 0; ball.vy = 0;
-    // Oyuncuları kendi yarı sahalarına ışınla
+    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0 };
     for (let id in players) {
         players[id].x = 600 + (players[id].team === 'red' ? -150 : 150);
         players[id].y = 300;
@@ -114,6 +115,4 @@ function resetBall() {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log('Critiball sunucusu ' + PORT + ' portunda calisiyor.');
-});
+server.listen(PORT, () => { console.log('Critiball Sunucusu Aktif'); });
