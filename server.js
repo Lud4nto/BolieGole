@@ -312,6 +312,8 @@ function updateGame(s) {
             s.replayTimer -= 1/60;
             if (s.replayTimer <= 0) {
                 s.status = 'playing';
+                // 🚨 DÜZELTME BURADA: Replay bittikten sonra pozisyonları ayarlıyoruz!
+                resetBall(s, s.concedingTeam, false); 
                 io.to(s.id).emit('play_whistle');
             }
             io.to(s.id).emit('game_state', s);
@@ -388,10 +390,8 @@ function updateGame(s) {
                         
                         s.status = 'goal_replay';
                         s.replayTimer = 3;
+                        // 🚨 DÜZELTME: resetBall'u buradan KALDIRDIK. Sadece replay bitince çağıracağız.
                         
-                        // GOL ANINDA DİREKT resetBall ÇAĞIRIYORUZ
-                        resetBall(s, s.concedingTeam, false);
-
                         io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
                         io.to(s.id).emit('game_state', s);
                         return;
@@ -426,7 +426,6 @@ function resetBall(s, concededBy = null, isHalftime = false) {
         for (let p of s.players) {
             if (p.team === 'spectator') continue;
             if (p.team === concededBy) { 
-                // Santra yapacak takım orta sahada
                 p.x = concededBy === 'red' ? 500 : 700; 
                 p.y = 300; 
             }
@@ -436,11 +435,10 @@ function resetBall(s, concededBy = null, isHalftime = false) {
         for (let i = 0; i < scoringPlayers.length; i++) {
             let p = scoringPlayers[i];
             if (i === 0) { 
-                // Gol atan takımın 1. oyuncusu (veya tek oyuncusu) kalede
+                // 🚨 KALECİ: Gol atan takımın 1. oyuncusu kalesine geçer
                 if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
                 else { p.x = 1140; p.y = 300; }
             } else {
-                // Diğer oyuncular kendi yarı sahasında
                 if (scoringTeam === 'red') { p.x = 250; p.y = 150 + Math.random() * 300; }
                 else { p.x = 950; p.y = 150 + Math.random() * 300; }
             }
