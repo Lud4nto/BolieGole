@@ -101,22 +101,11 @@
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
         .wide-key { width: 110px; }
 
-        /* DEVRE ARASI / MAÇ SONU EKRANI */
-        #overlay-message {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 5000;
-            color: white; text-align: center; backdrop-filter: blur(10px);
-        }
+        #overlay-message { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; color: white; text-align: center; backdrop-filter: blur(10px); }
         #overlay-message h1 { font-family: 'Press Start 2P', cursive; font-size: 48px; margin-bottom: 20px; color: #eab308; }
         #overlay-message p { font-size: 24px; font-weight: bold; }
 
-        /* GOL TEKRARI EKRANI */
-        #overlay-replay {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 6000; pointer-events: none;
-        }
+        #overlay-replay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 6000; pointer-events: none; }
         #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000; animation: pop 1s infinite alternate; }
         @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
 
@@ -274,7 +263,6 @@
         </div>
     </div>
 
-    <!-- SES DOSYALARI (GitHub'a yükledikten sonra burayı güncelle) -->
     <audio id="bgMusic" src="bg_music.mp3" loop preload="auto"></audio>
     <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
@@ -307,7 +295,6 @@
 
         let ballRotation = 0;
         let ballTrail = [];
-        let stadiumFlags = [];
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
@@ -490,6 +477,11 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
+                    // KRİTİK DÜZELTME: Santra veya devre arasında sunucunun konumunu zorla kabul et
+                    if (room.isKickoff || room.status === 'halftime_break') {
+                        myPlayer.x = p.x;
+                        myPlayer.y = p.y;
+                    }
                     players[socket.id] = myPlayer; 
                 } else {
                     players[p.id] = p; 
@@ -683,8 +675,17 @@
             }
             moveX = dx; moveY = dy;
 
-            myPlayer.x = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
-            myPlayer.y = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
+            let newX = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
+            let newY = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
+
+            // İSTEMCİ TARAFLI BARİYER (Hayalet Geçişi Engelle)
+            if (currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
+                if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
+                if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
+            }
+
+            myPlayer.x = newX;
+            myPlayer.y = newY;
             socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
 
             requestAnimationFrame(updateMovement);
@@ -699,14 +700,14 @@
             ctx.fillRect(0, 0, 1200, 600);
             
             // Atatürk Olimpiyat Stadı tarzı tribünler (Saha kenarında, uzakta)
-            let tribuneColor = '#1e293b'; // Koyu gri/mavi tribün rengi
+            let tribuneColor = '#1e293b'; 
             ctx.fillStyle = tribuneColor;
-            ctx.fillRect(0, 0, 1200, 25); // Üst tribün
-            ctx.fillRect(0, 575, 1200, 25); // Alt tribün
-            ctx.fillRect(0, 0, 25, 600); // Sol tribün
-            ctx.fillRect(1175, 0, 25, 600); // Sağ tribün
+            ctx.fillRect(0, 0, 1200, 25); 
+            ctx.fillRect(0, 575, 1200, 25); 
+            ctx.fillRect(0, 0, 25, 600); 
+            ctx.fillRect(1175, 0, 25, 600); 
 
-            // Tribün üstündeki renkli taraftar noktaları (Atmosfer)
+            // Tribün üstündeki renkli taraftar noktaları
             for(let i=0; i<1200; i+=15) {
                 for(let j=0; j<600; j+=15) {
                     if (i < 25 || i > 1175 || j < 25 || j > 575) {
@@ -719,7 +720,7 @@
                 }
             }
 
-            // Reklam panoları (Sahanın hemen dışında)
+            // Reklam panoları
             ctx.fillStyle = '#334155';
             ctx.fillRect(25, 25, 1150, 15);
             ctx.fillRect(25, 560, 1150, 15);
@@ -735,7 +736,7 @@
             }
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            const margin = 40; // Sahanın dışına biraz boşluk
+            const margin = 40; 
             
             ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
             ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
@@ -751,7 +752,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
 
-            // SANTRA BARIYERİ ÇİZGİSİ
+            // SANTRA BARIYERİ
             if (currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
                 if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
@@ -800,8 +801,8 @@
         function gameLoop() {
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
-                drawStadium(); // Tribünleri çiz
-                drawPitch();   // Saha ve çizgiler
+                drawStadium(); 
+                drawPitch();   
                 drawBall();
 
                 if (currentRoom && currentRoom.status !== 'goal_replay') {
