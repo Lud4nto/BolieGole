@@ -6,6 +6,7 @@
     <title>BolieGole</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
         body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
         
@@ -100,35 +101,44 @@
         .shop-icon { font-size: 48px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transition: transform 0.3s; }
         .shop-item:hover .shop-icon { transform: scale(1.2) rotate(5deg); }
         
-        /* OYUN EKRANI (SHADER EFEKTLERİ İÇİN) */
-        #screen-game { background: #000; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 1000; }
-        #screen-game.active { display: flex; align-items: center; justify-content: center; }
+        /* DEV STADYUM SKOR TABELASI */
+        #stadium-scoreboard {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, #1e1e1e 0%, #000000 100%);
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            z-index: 100;
+        }
+        .sb-team { width: 160px; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); }
+        .sb-team.red { border-right: 2px solid #333; }
+        .sb-team.blue { border-left: 2px solid #333; flex-direction: row-reverse; }
+        .sb-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .sb-score { font-size: 28px; font-weight: 900; }
+        .sb-team.red .sb-name { color: #ff4c4c; text-shadow: 0 0 10px #ff4c4c; }
+        .sb-team.red .sb-score { color: #fff; text-shadow: 0 0 10px #ff4c4c; }
+        .sb-team.blue .sb-name { color: #4c9aff; text-shadow: 0 0 10px #4c9aff; }
+        .sb-team.blue .sb-score { color: #fff; text-shadow: 0 0 10px #4c9aff; }
         
-        #game-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .sb-center { padding: 5px 20px; display: flex; flex-direction: column; align-items: center; background: #111; }
+        .sb-timer { font-size: 16px; font-weight: 700; color: #eab308; text-shadow: 0 0 10px #eab308; background: #000; padding: 2px 10px; border-radius: 4px; border: 1px solid #333; }
         
-        /* VIGNETTE EFEKTİ (Kenarları Karartma) */
-        .vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none; z-index: 50; }
-        
-        canvas { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; background-color: #111; outline: none; filter: contrast(1.1) saturate(1.2); }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-
-        #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; }
-        #mute-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; pointer-events: auto; border: 2px solid white; backdrop-filter: blur(4px); user-select: none; z-index: 100; }
-        
-        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; text-align: center; display: flex; align-items: center; gap: 10px; }
-        .red-team { color: #ff4c4c; text-shadow: 0 0 10px rgba(255,76,76,0.8); }
-        .blue-team { color: #4c9aff; text-shadow: 0 0 10px rgba(76,154,255,0.8); }
-        #match-timer { font-size: 14px; color: #eab308; display: block; text-align: center; margin-top: 5px; font-family: 'Segoe UI', sans-serif; font-weight: bold; letter-spacing: 1px; text-shadow: 0 0 5px rgba(234,179,8,0.8); }
-        
-        @keyframes scorePop { 0% { transform: scale(1); color: #fff; text-shadow: 2px 2px 0px #000; } 50% { transform: scale(1.8); color: #eab308; text-shadow: 0px 0px 20px #eab308; } 100% { transform: scale(1); color: #fff; text-shadow: 2px 2px 0px #000; } }
+        @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); color: #fff; text-shadow: 0 0 30px #fff; } 100% { transform: scale(1); } }
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
         .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        #stamina-container { width: 250px; height: 18px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #stamina-container { width: 250px; height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
-        #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; }
+        #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
         
-        #power-container { width: 250px; height: 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #power-container { width: 250px; height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
         #power-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
         @keyframes powerFull { 0% { box-shadow: 0 0 0px #eab308; } 50% { box-shadow: 0 0 20px #eab308, 0 0 40px #eab308; } 100% { box-shadow: 0 0 0px #eab308; } }
@@ -185,6 +195,7 @@
         @keyframes scrollCredits { 0% { transform: translateY(100vh); } 100% { transform: translateY(-100%); } }
 
         @media (pointer: coarse) {
+            #stadium-scoreboard { transform: translateX(-50%) scale(0.8); top: 5px; }
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
             #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 10px; }
@@ -196,10 +207,6 @@
             #tactics-board { height: 250px; }
             .slot { width: 30px; height: 30px; font-size: 8px; }
             .slot .pos-label { font-size: 6px; bottom: -12px; }
-            
-            #in-game-menu-btn { font-size: 14px; padding: 6px 12px; }
-            #scoreboard { font-size: 18px; gap: 5px; }
-            #match-timer { font-size: 12px; }
             .ui-bars { top: 65px; }
             .menu-btn { width: 260px; padding: 10px; font-size: 18px; }
             .modal-content { width: 80%; padding: 15px; gap: 10px; }
@@ -392,19 +399,27 @@
     <div id="screen-game" class="screen">
         <div id="game-wrapper">
             <canvas id="gameCanvas" width="1200" height="600" tabindex="0"></canvas>
-            <div class="vignette"></div> <!-- Kenarları karartma efekti -->
+            <div class="vignette"></div>
         </div>
         
         <div id="ui-layer">
             <div id="in-game-menu-btn" onclick="goToLobby()">🏠 Lobi</div>
             <div id="mute-btn">🔊</div>
             
-            <div id="scoreboard">
-                <span class="red-team"><span id="label-red">KIRMIZI</span> <span id="score-red">0</span></span> 
-                <span style="color:#64748b">:</span> 
-                <span class="blue-team"><span id="score-blue">0</span> <span id="label-blue">MAVİ</span></span>
+            <!-- DEV STADYUM SKOR TABELASI -->
+            <div id="stadium-scoreboard">
+                <div class="sb-team red">
+                    <span class="sb-name" id="label-red">KIRMIZI</span>
+                    <span class="sb-score" id="score-red">0</span>
+                </div>
+                <div class="sb-center">
+                    <span class="sb-timer" id="match-timer">1. YARI 00:00</span>
+                </div>
+                <div class="sb-team blue">
+                    <span class="sb-name" id="label-blue">MAVİ</span>
+                    <span class="sb-score" id="score-blue">0</span>
+                </div>
             </div>
-            <span id="match-timer">1. Yarı 00:00</span>
             
             <div class="ui-bars">
                 <div id="stamina-container"><div id="stamina-bar"></div><div id="stamina-text">DEPAR</div></div>
@@ -507,6 +522,12 @@
 
         let isPractice = false;
         let selectedBotId = null;
+
+        // DOM ELEMENTLERİ (Sürekli getElementById yapmamak için)
+        const elScoreRed = document.getElementById('score-red');
+        const elScoreBlue = document.getElementById('score-blue');
+        const elTimer = document.getElementById('match-timer');
+        let lastScoreRed = -1, lastScoreBlue = -1, lastTimerText = '';
 
         // EŞYALAR
         let equipped = JSON.parse(localStorage.getItem('bolie_equipped')) || { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
@@ -897,11 +918,11 @@
         socket.on('goal_scored', (data) => {
             if(!isMuted) goalSound.play().catch(()=>{});
             document.getElementById('replay-scorer').innerText = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
-            let scoreRedEl = document.getElementById('score-red');
-            let scoreBlueEl = document.getElementById('score-blue');
-            scoreRedEl.innerText = data.score.red; scoreBlueEl.innerText = data.score.blue;
-            document.getElementById('scoreboard').classList.add('score-anim');
-            setTimeout(() => document.getElementById('scoreboard').classList.remove('score-anim'), 600);
+            
+            // Skor Animasyonu
+            document.getElementById('stadium-scoreboard').classList.add('score-anim');
+            setTimeout(() => document.getElementById('stadium-scoreboard').classList.remove('score-anim'), 600);
+            
             score = data.score;
             replayData = data.replay; replayIndex = 0; replayTimer = 0;
         });
@@ -986,16 +1007,17 @@
             for (let id in players) { if (!currentIds.includes(id)) delete players[id]; }
             
             ball = room.ball;
-            if (room.status !== 'goal_replay') {
-                 document.getElementById('score-red').innerText = room.score.red;
-                 document.getElementById('score-blue').innerText = room.score.blue;
-            }
             
-            document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
-
+            // Sadece değiştiyse DOM güncelle (Performans)
+            if (room.score.red !== lastScoreRed) { elScoreRed.innerText = room.score.red; lastScoreRed = room.score.red; }
+            if (room.score.blue !== lastScoreBlue) { elScoreBlue.innerText = room.score.blue; lastScoreBlue = room.score.blue; }
+            
             let m = Math.floor(room.matchTime / 60);
             let s = Math.floor(room.matchTime % 60);
-            document.getElementById('match-timer').innerText = (room.half === 1 ? "1. Yarı " : "2. Yarı ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
+            let timeStr = (room.half === 1 ? "1. YARI " : "2. YARI ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
+            if (timeStr !== lastTimerText) { elTimer.innerText = timeStr; lastTimerText = timeStr; }
+            
+            document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
         });
 
         window.addEventListener('keydown', (e) => { 
@@ -1228,31 +1250,71 @@
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
             
-            document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = "";
-            document.getElementById('score-red').innerText = ""; document.getElementById('score-blue').innerText = "";
-            document.getElementById('match-timer').innerText = "";
+            document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
+            document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
+            document.getElementById('match-timer').innerText = "SERBEST";
         }
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        function drawStadium() {
-            ctx.fillStyle = '#0a0f1c'; ctx.fillRect(0, 0, 1200, 600);
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(0, 0, 1200, 25); ctx.fillRect(0, 575, 1200, 25); ctx.fillRect(0, 0, 25, 600); ctx.fillRect(1175, 0, 25, 600); 
+        // --- OFFSCREEN CANVAS (Arka planı bir kez çiz, performansı uçur) ---
+        const bgCanvas = document.createElement('canvas');
+        bgCanvas.width = 1200; bgCanvas.height = 600;
+        const bgCtx = bgCanvas.getContext('2d');
+
+        function renderBackground() {
+            bgCtx.fillStyle = '#0a0f1c'; bgCtx.fillRect(0, 0, 1200, 600);
+            bgCtx.fillStyle = '#1e293b';
+            bgCtx.fillRect(0, 0, 1200, 25); bgCtx.fillRect(0, 575, 1200, 25); bgCtx.fillRect(0, 0, 25, 600); bgCtx.fillRect(1175, 0, 25, 600); 
             for(let i=0; i<1200; i+=15) {
                 for(let j=0; j<600; j+=15) {
                     if (i < 25 || i > 1175 || j < 25 || j > 575) {
                         if (Math.random() > 0.6) {
                             let colors = ['#ef4444', '#3b82f6', '#ffffff', '#fbbf24', '#f97316'];
-                            ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                            ctx.fillRect(i, j, 6, 6);
+                            bgCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                            bgCtx.fillRect(i, j, 6, 6);
                         }
                     }
                 }
             }
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(25, 25, 1150, 15); ctx.fillRect(25, 560, 1150, 15); ctx.fillRect(25, 25, 15, 550); ctx.fillRect(1160, 25, 15, 550);
+            bgCtx.fillStyle = '#334155';
+            bgCtx.fillRect(25, 25, 1150, 15); bgCtx.fillRect(25, 560, 1150, 15); bgCtx.fillRect(25, 25, 15, 550); bgCtx.fillRect(1160, 25, 15, 550);
+            
+            const stripeWidth = 1200 / 16;
+            for (let i = 0; i < 16; i++) {
+                bgCtx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
+                bgCtx.fillRect(i * stripeWidth, 0, stripeWidth, 600);
+            }
+            let grad = bgCtx.createRadialGradient(600, 300, 50, 600, 300, 600);
+            grad.addColorStop(0, 'rgba(255,255,255,0.08)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+            bgCtx.fillStyle = grad;
+            bgCtx.fillRect(0, 0, 1200, 600);
+
+            bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; bgCtx.lineWidth = 4; bgCtx.lineCap = 'round'; bgCtx.lineJoin = 'round';
+            bgCtx.shadowColor = 'white'; bgCtx.shadowBlur = 10;
+            const margin = 40; 
+            bgCtx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
+            bgCtx.beginPath(); bgCtx.moveTo(600, margin); bgCtx.lineTo(600, 600 - margin); bgCtx.stroke();
+            bgCtx.beginPath(); bgCtx.arc(600, 300, 70, 0, Math.PI * 2); bgCtx.stroke();
+            bgCtx.beginPath(); bgCtx.arc(600, 300, 4, 0, Math.PI * 2); bgCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; bgCtx.fill();
+            
+            const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
+            bgCtx.strokeRect(margin, penaltyY, penaltyW, penaltyH); bgCtx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
+            
+            const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
+            bgCtx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); bgCtx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
+            
+            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            bgCtx.shadowBlur = 15;
+            bgCtx.fillRect(margin - 10, 200, 10, 200); bgCtx.fillRect(1200 - margin, 200, 10, 200);
+            bgCtx.shadowBlur = 0;
+        }
+        renderBackground();
+
+        function drawStadium() {
+            ctx.drawImage(bgCanvas, 0, 0); // Sadece arka planı kopyala (Aşırı hızlı)
             
             if (currentRoom && currentRoom.weather === 'rain') {
                 ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
@@ -1268,46 +1330,11 @@
                 }
                 ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, 0, 1200, 600);
             }
-        }
-
-        function drawPitch() {
-            const stripeWidth = 1200 / 16;
-            for (let i = 0; i < 16; i++) {
-                ctx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
-                ctx.fillRect(i * stripeWidth, 0, stripeWidth, 600);
-            }
-            // SHADER EFEKTİ: Güneş Işığı Yansıması (Bloom)
-            let grad = ctx.createRadialGradient(600, 300, 50, 600, 300, 600);
-            grad.addColorStop(0, 'rgba(255,255,255,0.08)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.3)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 1200, 600);
-
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            ctx.shadowColor = 'white'; ctx.shadowBlur = 10;
-            const margin = 40; 
-            ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
-            ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
-            ctx.beginPath(); ctx.arc(600, 300, 70, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(600, 300, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
             
-            const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
-            ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH); ctx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-            
-            const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
-            ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); ctx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-            
-            // Kale Direkleri (Parlayan)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.shadowBlur = 15;
-            ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
-            
-            ctx.shadowBlur = 0; // Sıfırla
-
             if (!isPractice && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
-                else { ctx.fillRect(592, margin, 8, 600 - (margin * 2)); }
+                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, 40, 8, 600 - (40 * 2)); } 
+                else { ctx.fillRect(592, 40, 8, 600 - (40 * 2)); }
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; 
                 ctx.shadowColor = 'black'; ctx.shadowBlur = 5;
                 ctx.fillText("SANTRA", 600, 60);
@@ -1319,7 +1346,6 @@
             let drawY = ball.y - (ball.z || 0);
             let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
             
-            // Top Gölgesi (Yumuşak)
             ctx.save();
             ctx.filter = 'blur(3px)';
             ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
@@ -1363,7 +1389,6 @@
             }
             drawPentagon(5.5, 0, 0, 0); drawPentagon(4, 10, 0, 0.5); drawPentagon(4, -10, 0, 1.5); drawPentagon(4, 0, 10, 0.8); drawPentagon(4, 0, -10, 1.2);
             
-            // Topun üstüne parlama (highlight)
             let grad = ctx.createRadialGradient(-5, -5, 0, 0, 0, 15);
             grad.addColorStop(0, 'rgba(255,255,255,0.8)');
             grad.addColorStop(0.5, 'rgba(255,255,255,0)');
@@ -1450,7 +1475,6 @@
                 ctx.translate(-clampX, -clampY);
 
                 drawStadium(); 
-                drawPitch();   
                 
                 if (currentRoom && currentRoom.powerups) {
                     for (let pu of currentRoom.powerups) {
@@ -1491,10 +1515,8 @@
                             ctx.shadowColor = glowColor; ctx.shadowBlur = 15;
                         }
 
-                        // Gölge
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
                         
-                        // Oyuncu (Shader Gradient)
                         ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
                         let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
                         if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
@@ -1508,7 +1530,7 @@
                         ctx.fillStyle = grad;
                         ctx.fill(); 
                         ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
-                        ctx.shadowBlur = 0; // Reset
+                        ctx.shadowBlur = 0;
 
                         if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
