@@ -1,7 +1,7 @@
 {
-  "name": "critiball",
+  "name": "boliegole",
   "version": "1.0.0",
-  "description": "Critiball - 10 Kisilik Web Futbol Oyunu",
+  "description": "BolieGole - 10 Kisilik Web Futbol Oyunu",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
