@@ -256,8 +256,8 @@ function updateGame(s) {
             if (s.replayTimer <= 0) {
                 s.status = 'playing';
                 io.to(s.id).emit('play_whistle');
-                io.to(s.id).emit('game_state', s);
             }
+            io.to(s.id).emit('game_state', s);
             return;
         }
 
@@ -337,7 +337,7 @@ function updateGame(s) {
                         else { s.score.blue++; s.concedingTeam = 'red'; }
 
                         s.status = 'goal_replay';
-                        s.replayTimer = 10;
+                        s.replayTimer = 3;
                         s.isKickoff = true;
 
                         for (let p of s.players) {
