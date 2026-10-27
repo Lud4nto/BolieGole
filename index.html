@@ -346,11 +346,20 @@
         document.getElementById('btn-start-game').onclick = () => socket.emit('start_game');
         socket.on('start_error', (msg) => { alert(msg); });
 
-        // DÜZELTME 1: Oyun başladığında currentRoom durumunu 'playing' yap
         socket.on('game_started', () => {
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing'; 
+        });
+
+        // YENİ: MAÇ BİTTİĞİNDE LOBİYE DÖN
+        socket.on('game_ended', (room) => {
+            currentRoom = room;
+            switchScreen('screen-lobby');
+            // Arayüzü temizle
+            document.getElementById('red-players').innerHTML = "";
+            document.getElementById('blue-players').innerHTML = "";
+            document.getElementById('spec-players').innerHTML = "";
         });
 
         function leaveRoom() {
@@ -359,15 +368,26 @@
             }
         }
 
+        // YENİ: MENÜ BUTONU MANTIĞI
         function goToLobby() {
-            if (currentRoom && currentRoom.status === 'playing') alert("Maç devam ederken lobiye dönemezsiniz!");
-            else switchScreen('screen-lobby');
+            if (currentRoom && currentRoom.status === 'playing') {
+                if (currentRoom.hostId === socket.id) {
+                    // Host ise maçı bitirme onayı sor
+                    if (confirm("Maçı sonlandırmak istediğinden emin misin?")) {
+                        socket.emit('stop_game');
+                    }
+                } else {
+                    alert("Maç devam ederken sadece sunucu sahibi maçı sonlandırabilir.");
+                }
+            } else {
+                switchScreen('screen-lobby');
+            }
         }
 
         socket.on('game_state', (room) => {
             if (room.status !== 'playing') return;
             
-            currentRoom = room; // Güncel oda bilgisini sakla
+            currentRoom = room; 
             
             let currentIds = [];
             for (let p of room.players) {
@@ -376,7 +396,7 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    players[socket.id] = myPlayer; // DÜZELTME 2: Kendi karakterini de listeye ekle
+                    players[socket.id] = myPlayer; 
                 } else {
                     players[p.id] = p; 
                 }
@@ -404,6 +424,9 @@
                 if (ball.owner === socket.id) {
                     isCharging = true;
                     chargeStartTime = Date.now();
+                } else {
+                    // YENİ: Top başkasındayken Space'e basılırsa çalma isteği gönder
+                    socket.emit('tackle');
                 }
             }
             updateKeyVisual(k, true);
