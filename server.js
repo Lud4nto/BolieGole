@@ -19,7 +19,6 @@ function generateRoomCode() {
     for (let i = 0; i < 6; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    // Eğer kod zaten varsa tekrar dene
     if (servers[result]) return generateRoomCode();
     return result;
 }
@@ -37,16 +36,26 @@ io.on('connection', (socket) => {
         socket.emit('server_list', list);
     });
 
-    // --- ODA OLUŞTUR ---
+    // --- ODA OLUŞTUR (DÜZELTİLDİ) ---
     socket.on('create_server', (data) => {
         const code = generateRoomCode();
+        
+        // Odayı kuran kişiyi (Host) direkt oyuncu olarak ekliyoruz
+        const hostPlayer = {
+            id: socket.id,
+            name: data.name + " (Host)",
+            team: "spectator",
+            lastDx: 0, lastDy: 0,
+            x: 600, y: 300
+        };
+
         servers[code] = {
             id: code,
             name: data.name,
-            type: data.type, // 'private' veya 'community'
+            type: data.type,
             password: data.password || "",
             hostId: socket.id,
-            players: [], // { id, name, team }
+            players: [hostPlayer], // Host oyuncu listesine eklendi
             status: "lobby",
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 },
             score: { red: 0, blue: 0 },
@@ -54,7 +63,11 @@ io.on('connection', (socket) => {
             emptyTimer: null
         };
 
+        socket.join(code); // Socket'i odaya dahil et
+        socket.roomId = code; // Socket'in oda ID'sini ata
+
         socket.emit('server_created', servers[code]);
+        io.to(code).emit('update_lobby', servers[code]); // Host'a arayüzü gönder
     });
 
     // --- ODAYA KATIL ---
@@ -69,10 +82,8 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Odadaki boş kalma sayacını iptal et
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
 
-        // Oyuncuyu odaya ekle (İzleyici olarak başlasın)
         let newPlayer = {
             id: socket.id,
             name: "Oyuncu" + Math.floor(Math.random() * 100),
@@ -86,7 +97,7 @@ io.on('connection', (socket) => {
         socket.roomId = data.id;
         
         socket.emit('joined_successfully', s);
-        io.to(data.id).emit('update_lobby', s); // Herkese yeni lobi durumunu yolla
+        io.to(data.id).emit('update_lobby', s);
     });
 
     // --- TAKIM DEĞİŞTİR ---
@@ -94,7 +105,6 @@ io.on('connection', (socket) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "lobby") return;
 
-        // Takım dengesi kontrolü (Sadece host oyunu başlatabilir, ama isteyen istediği takıma geçebilir)
         let p = s.players.find(pl => pl.id === socket.id);
         if (p) {
             p.team = team;
@@ -107,7 +117,6 @@ io.on('connection', (socket) => {
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
 
-        // Takım dengesi kontrolü
         let redCount = s.players.filter(p => p.team === 'red').length;
         let blueCount = s.players.filter(p => p.team === 'blue').length;
 
@@ -119,7 +128,6 @@ io.on('connection', (socket) => {
         s.status = "playing";
         io.to(s.id).emit('game_started');
 
-        // Oyun döngüsünü başlat
         s.gameInterval = setInterval(() => {
             updateGame(s);
         }, 1000 / 60);
@@ -150,7 +158,9 @@ io.on('connection', (socket) => {
             s.ball.possessionTimer = 0;
             s.ball.pickupCooldown = 20;
             s.ball.shotPower = data.shotPower || 0;
-            s.ball.lastKickX = players.find(p=>p.id===socket.id)?.x || 0;
+            
+            let p = s.players.find(pl => pl.id === socket.id);
+            s.ball.lastKickX = p ? p.x : 0;
             
             s.ball.x += data.vx * 3; 
             s.ball.y += data.vy * 3;
@@ -164,7 +174,6 @@ io.on('connection', (socket) => {
             s.players = s.players.filter(p => p.id !== socket.id);
             io.to(s.id).emit('update_lobby', s);
 
-            // Oda boş kaldıysa 5 dakika sonra kapat
             if (s.players.length === 0) {
                 s.emptyTimer = setTimeout(() => {
                     if (servers[s.id] && servers[s.id].players.length === 0) {
@@ -172,7 +181,7 @@ io.on('connection', (socket) => {
                         delete servers[s.id];
                         console.log(`Oda kapatıldı: ${s.id}`);
                     }
-                }, 5 * 60 * 1000); // 5 dakika
+                }, 5 * 60 * 1000); 
             }
         }
     });
@@ -183,7 +192,6 @@ function updateGame(s) {
     let ball = s.ball;
     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
 
-    // Top Sahipliği
     if (ball.owner !== null) {
         if (ball.possessionTimer > 0) ball.possessionTimer--;
         let owner = s.players.find(p => p.id === ball.owner);
@@ -207,7 +215,6 @@ function updateGame(s) {
         }
     }
 
-    // Top Fiziği
     if (ball.owner === null) {
         ball.x += ball.vx;
         ball.y += ball.vy;
@@ -262,7 +269,6 @@ function updateGame(s) {
         }
     }
 
-    // Top Alma / Çalma
     for (let p of s.players) {
         if (p.team === 'spectator') continue;
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
