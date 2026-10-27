@@ -23,7 +23,7 @@ function generateRoomCode() {
 }
 
 process.on('uncaughtException', (err) => {
-    console.error('Beklenmeyen bir hata oluştu (Çökme engellendi):', err.message);
+    console.error('Hata (Çökme engellendi):', err.message);
 });
 
 io.on('connection', (socket) => {
@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
 
         servers[code] = {
             id: code,
-            name: data.name || "İsimsiz Oda",
+            name: data.name || "Oda",
             type: data.type || "private", 
             password: data.password || "",
             hostId: socket.id,
@@ -74,20 +74,16 @@ io.on('connection', (socket) => {
         if (!data) return;
         let s = servers[data.id];
         if (!s) {
-            socket.emit('join_error', 'Oda bulunamadı veya kapatılmış.');
+            socket.emit('join_error', 'Oda bulunamadı.');
             return;
         }
 
-        if (s.type === 'private') {
-            if (data.password !== s.id) {
-                socket.emit('join_error', 'Hatalı Oda Kodu!');
-                return;
-            }
-        } else if (s.type === 'community' && s.password !== "") {
-            if (data.password !== s.password) {
-                socket.emit('join_error', 'Hatalı Şifre!');
-                return;
-            }
+        if (s.type === 'private' && data.password !== s.id) {
+            socket.emit('join_error', 'Hatalı Oda Kodu!');
+            return;
+        } else if (s.type === 'community' && s.password !== "" && data.password !== s.password) {
+            socket.emit('join_error', 'Hatalı Şifre!');
+            return;
         }
         
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
@@ -129,35 +125,27 @@ io.on('connection', (socket) => {
         let blueCount = s.players.filter(p => p.team === 'blue').length;
 
         if (redCount === 0 || blueCount === 0 || redCount !== blueCount) {
-            socket.emit('start_error', 'Oyunu başlatmak için takımlarda eşit sayıda (en az 1 Kırmızı, 1 Mavi) oyuncu olmalıdır!');
+            socket.emit('start_error', 'Takımlar eşit sayıda olmalıdır!');
             return;
         }
 
         s.status = "playing";
-        // Takımları başlangıç pozisyonlarına yerleştir
         for (let p of s.players) {
             if (p.team === 'red') { p.x = 450; p.y = 300; }
             if (p.team === 'blue') { p.x = 750; p.y = 300; }
         }
-        resetBall(s); // Topu ortaya al
+        resetBall(s); 
 
         io.to(s.id).emit('game_started');
-
-        s.gameInterval = setInterval(() => {
-            updateGame(s);
-        }, 1000 / 60);
+        s.gameInterval = setInterval(() => { updateGame(s); }, 1000 / 60);
     });
 
-    // YENİ: MAÇI DURDURMA (Sadece Host)
     socket.on('stop_game', () => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
 
-        if (s.gameInterval) {
-            clearInterval(s.gameInterval);
-            s.gameInterval = null;
-        }
+        if (s.gameInterval) { clearInterval(s.gameInterval); s.gameInterval = null; }
         s.status = "lobby";
         s.score = { red: 0, blue: 0 };
         resetBall(s);
@@ -179,7 +167,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // YENİ: SPACE İLE TOP ÇALMA (TACKLE)
     socket.on('tackle', () => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
@@ -188,14 +175,13 @@ io.on('connection', (socket) => {
         let p = s.players.find(pl => pl.id === socket.id);
         if (!p || p.team === 'spectator') return;
 
-        // Eğer top başkasındaysa ve aramızda mesafe 60'tan azsa çal
         if (s.ball.owner && s.ball.owner !== socket.id) {
             let owner = s.players.find(pl => pl.id === s.ball.owner);
             if (owner) {
                 let dist = Math.hypot(p.x - owner.x, p.y - owner.y);
                 if (dist < 60) {
                     s.ball.owner = socket.id;
-                    s.ball.possessionTimer = 150; // Çalan kişiye 2.5 saniye koruma
+                    s.ball.possessionTimer = 150; 
                 }
             }
         }
@@ -217,7 +203,6 @@ io.on('connection', (socket) => {
             
             let p = s.players.find(pl => pl.id === socket.id);
             s.ball.lastKickX = p ? p.x : 0;
-            
             s.ball.x += s.ball.vx * 3; 
             s.ball.y += s.ball.vy * 3;
         }
@@ -291,6 +276,7 @@ function updateGame(s) {
             if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
             if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
             
+            // Çarpışma Mantığı (Ekrandaki çizgilerle tam uyumlu)
             let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
             let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
 
@@ -329,7 +315,6 @@ function updateGame(s) {
             if (p.team === 'spectator') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             
-            // Otomatik alma (Sadece top boştaysa)
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
                 ball.owner = p.id;
                 ball.possessionTimer = 150;
@@ -340,7 +325,7 @@ function updateGame(s) {
 
         io.to(s.id).emit('game_state', s);
     } catch (e) {
-        console.log("Oyun döngüsünde hata oluştu (Oda: " + s.id + "): " + e.message);
+        console.log("Hata:", e.message);
     }
 }
 
@@ -353,4 +338,4 @@ function resetBall(s) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => { console.log('BolieGole Server Çalışıyor'); });
+server.listen(PORT, '0.0.0.0', () => { console.log('Server Çalışıyor'); });
