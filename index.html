@@ -49,19 +49,33 @@
         .join-btn { background: #4c9aff; border: 3px solid #2563eb; box-shadow: 3px 3px 0px #1e3a8a; color: white; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 6px; }
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
-        #screen-lobby { background-color: transparent; }
-        .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
-        .room-code { font-family: 'Press Start 2P', cursive; font-size: 20px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
+        /* LOBİ VE TAKTİK TAHTASI */
+        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 0 20px; box-sizing: border-box; }
         
-        .teams-container { display: flex; gap: 20px; z-index: 10; }
-        .team-box { width: 280px; height: 380px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .team-box.spectator { border-color: #64748b; background: rgba(100, 116, 139, 0.2); }
+        .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; }
+        .lobby-center { display: flex; flex-direction: column; align-items: center; width: 40%; }
+
+        .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
+        .room-code { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
+        
+        .team-box { width: 100%; height: 320px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; }
         .team-box:hover { transform: scale(1.02); }
         .team-title { font-family: 'Press Start 2P', cursive; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
-        .player-slot { width: 100%; padding: 5px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
-        .pos-badge { font-size: 10px; background: #eab308; color: #000; padding: 2px 5px; border-radius: 4px; font-family: 'Press Start 2P', cursive; }
+        .player-slot { width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
         
-        .start-game-btn { margin-top: 15px; padding: 10px 25px; font-size: 18px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
+        /* TAKTİK TAHTASI */
+        #tactics-board { width: 100%; height: 380px; background-color: #2e7d32; border: 4px solid #fff; border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .pitch-line { position: absolute; background: rgba(255,255,255,0.4); }
+        .pitch-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); }
+        .pitch-box { position: absolute; top: 50%; width: 60px; height: 160px; border: 2px solid rgba(255,255,255,0.4); transform: translateY(-50%); }
+        
+        .slot { position: absolute; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); font-size: 10px; font-family: 'Press Start 2P', cursive; cursor: pointer; border: 2px solid white; z-index: 10; transition: 0.2s; }
+        .slot:hover { transform: translate(-50%, -50%) scale(1.1); }
+        .slot.empty { background: rgba(0,0,0,0.5); border-style: dashed; }
+        .slot.filled { color: #fff; font-weight: bold; border-width: 3px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .slot .pos-label { position: absolute; bottom: -15px; font-size: 8px; color: white; font-family: 'Segoe UI', sans-serif; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        
+        .start-game-btn { margin-top: 10px; padding: 10px 25px; font-size: 18px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
         .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
         
         .lobby-actions { display: flex; gap: 10px; margin-top: 10px; z-index: 10; flex-wrap: wrap; justify-content: center; }
@@ -157,6 +171,16 @@
         @media (pointer: coarse) {
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
+            #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 10px; }
+            .lobby-side { width: 100%; flex-direction: row; justify-content: space-between; height: auto; margin-bottom: 5px; }
+            .lobby-center { width: 100%; height: auto; }
+            .team-box { width: 48%; height: 120px; padding: 5px; }
+            .team-title { font-size: 10px; margin-bottom: 2px; }
+            .player-slot { padding: 2px; font-size: 9px; margin-bottom: 2px; }
+            #tactics-board { height: 250px; }
+            .slot { width: 30px; height: 30px; font-size: 8px; }
+            .slot .pos-label { font-size: 6px; bottom: -12px; }
+            
             #in-game-menu-btn { font-size: 14px; padding: 6px 12px; }
             #scoreboard { font-size: 18px; gap: 5px; }
             #match-timer { font-size: 12px; }
@@ -168,15 +192,6 @@
             .top-bar { width: 90%; font-size: 16px; flex-direction: column; gap: 10px; }
             .create-btn { font-size: 12px; padding: 8px 15px; }
             .server-item { padding: 10px; }
-            .lobby-header { margin-bottom: 10px; }
-            .room-code { font-size: 16px; padding: 5px 10px; }
-            .teams-container { gap: 10px; }
-            .team-box { width: 32%; height: 240px; padding: 5px; }
-            .team-title { font-size: 10px; margin-bottom: 5px; }
-            .player-slot { padding: 2px 4px; font-size: 9px; margin-bottom: 3px; }
-            .pos-badge { font-size: 8px; padding: 1px 3px; }
-            .start-game-btn { margin-top: 10px; padding: 8px 20px; font-size: 16px; }
-            .add-bot-btn { padding: 8px 15px; font-size: 10px; }
             .info-box { width: 85%; padding: 20px; }
             .info-box h2 { font-size: 18px; }
             #credits-content h2 { font-size: 20px; }
@@ -217,9 +232,7 @@
         <div class="info-box" style="width: 90%; max-width: 850px;">
             <h2>MAĞAZA</h2>
             <p style="color:#4c9aff; font-weight:bold; margin:0;">Tüm eşyalar ÜCRETSİZDİR!</p>
-            <div class="shop-grid" id="shop-items">
-                <!-- JS ile doldurulacak -->
-            </div>
+            <div class="shop-grid" id="shop-items"></div>
             <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
         </div>
     </div>
@@ -314,33 +327,45 @@
         </div>
     </div>
 
+    <!-- YENİ LOBİ EKRANI (TAKTİK TAHTASI İLE) -->
     <div id="screen-lobby" class="screen">
         <div class="bg-blur" style="opacity: 0.95;"></div>
-        <div class="lobby-header">
-            <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 18px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
-            <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
-        </div>
-        <div class="teams-container">
+        
+        <!-- Sol Taraf: Takımlar ve Butonlar -->
+        <div class="lobby-side">
+            <div class="lobby-header">
+                <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 16px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
+                <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
+            </div>
+            
             <div class="team-box red" id="box-red" onclick="selectTeam('red')">
                 <div class="team-title" id="title-red" style="color:#ff4c4c;">KIRMIZI</div>
                 <div id="red-players" style="width:100%;"></div>
             </div>
-            <div class="team-box blue" id="box-blue" onclick="selectTeam('blue')">
+            <div class="team-box blue" id="box-blue" onclick="selectTeam('blue')" style="margin-top: 10px;">
                 <div class="team-title" id="title-blue" style="color:#4c9aff;">MAVİ</div>
                 <div id="blue-players" style="width:100%;"></div>
             </div>
-            <div class="team-box spectator" onclick="selectTeam('spectator')">
-                <div class="team-title" style="color:#64748b;">İZLEYİCİ</div>
-                <div id="spec-players" style="width:100%;"></div>
+
+            <div class="lobby-actions">
+                <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
+                <button class="menu-btn" style="padding:6px; font-size:10px;" onclick="leaveRoom()">AYRIL</button>
             </div>
         </div>
-        
-        <div class="lobby-actions">
-            <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
-            <button class="menu-btn" style="padding:8px; font-size:12px;" onclick="leaveRoom()">AYRIL</button>
+
+        <!-- Orta Taraf: Taktik Tahtası -->
+        <div class="lobby-center">
+            <div id="tactics-board">
+                <!-- Çizgiler CSS ile çizilecek -->
+                <div class="pitch-line" style="top:50%; left:0; width:100%; height:2px;"></div>
+                <div class="pitch-circle"></div>
+                <div class="pitch-box" style="left:0;"></div>
+                <div class="pitch-box" style="right:0;"></div>
+                
+                <!-- Slotlar JS ile doldurulacak -->
+            </div>
+            <button class="start-game-btn" id="btn-start-game">MAÇI BAŞLAT</button>
         </div>
-        
-        <button class="start-game-btn" id="btn-start-game" style="margin-top: 10px;">MAÇI BAŞLAT</button>
     </div>
 
     <div id="screen-game" class="screen">
@@ -472,6 +497,27 @@
             { id: 'cap', name: 'Kasket', icon: '🧢' }
         ];
 
+        // TAKTİK TAHTASI VERİSİ (Sunucuyla aynı olmalı)
+        const FORMATION_SLOTS = {
+            red: [
+                { id: 'R_GK', name: 'GK', x: 60, y: 300 },
+                { id: 'R_DEF1', name: 'DEF', x: 250, y: 200 },
+                { id: 'R_DEF2', name: 'DEF', x: 250, y: 400 },
+                { id: 'R_MID', name: 'MID', x: 450, y: 300 },
+                { id: 'R_FWD', name: 'FWD', x: 550, y: 300 }
+            ],
+            blue: [
+                { id: 'B_GK', name: 'GK', x: 1140, y: 300 },
+                { id: 'B_DEF1', name: 'DEF', x: 950, y: 200 },
+                { id: 'B_DEF2', name: 'DEF', x: 950, y: 400 },
+                { id: 'B_MID', name: 'MID', x: 750, y: 300 },
+                { id: 'B_FWD', name: 'FWD', x: 650, y: 300 }
+            ]
+        };
+        // Tahtayı HTML'e göre ölçekle (Saha 1200x600, Tahta 100%x100%)
+        const BOARD_W = 600; // Taktik tahtasının tahmini genişliği (CSS'te esnek olacak ama oranlayacağız)
+        const BOARD_H = 380;
+
         // --- SES AYARLARI ---
         const musicSlider = document.getElementById('vol-music');
         const goalSlider = document.getElementById('vol-goal');
@@ -548,11 +594,7 @@
                 let div = document.createElement('div');
                 div.className = 'shop-item' + (shopSelected === o.id ? ' selected' : '');
                 div.innerHTML = `<div class="shop-icon">${o.icon}</div><div>${o.name}</div>`;
-                div.onclick = () => {
-                    shopSelected = o.id;
-                    localStorage.setItem('bolie_outfit', o.id);
-                    renderShop();
-                };
+                div.onclick = () => { shopSelected = o.id; localStorage.setItem('bolie_outfit', o.id); renderShop(); };
                 grid.appendChild(div);
             });
         }
@@ -627,10 +669,7 @@
                 if (pass === null) return; 
             } else {
                 let srv = serverListData.find(s => s.id === id);
-                if (srv && srv.hasPassword) {
-                     pass = prompt("Bu oda şifreli. Lütfen şifreyi girin:");
-                     if (pass === null) return;
-                }
+                if (srv && srv.hasPassword) { pass = prompt("Bu oda şifreli. Lütfen şifreyi girin:"); if (pass === null) return; }
             }
             socket.emit('join_server', { id: id, password: pass, playerName: myPlayerName, outfit: shopSelected, neonColor: myNeonColor });
         };
@@ -639,12 +678,63 @@
         socket.on('server_created', (room) => { currentRoom = room; myTeam = "spectator"; showLobby(room); });
         socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
         
-        // Bot Ekleme Menüsü
-        document.getElementById('btn-add-bot').onclick = () => {
-            let pos = prompt("Botun pozisyonu ne olsun? (GK, DEF, MID, FWD)", "FWD");
-            if (pos && ['GK', 'DEF', 'MID', 'FWD'].includes(pos.toUpperCase())) {
-                socket.emit('add_bot', { position: pos.toUpperCase() });
-            }
+        document.getElementById('btn-add-bot').onclick = () => { socket.emit('add_bot'); };
+
+        // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ
+        function renderTacticsBoard(room) {
+            let board = document.getElementById('tactics-board');
+            // Eski slotları temizle
+            board.querySelectorAll('.slot').forEach(el => el.remove());
+
+            let renderTeam = (team) => {
+                FORMATION_SLOTS[team].forEach(slot => {
+                    let el = document.createElement('div');
+                    el.className = 'slot ' + (room.formation[team][slot.id] ? 'filled' : 'empty');
+                    
+                    // Koordinatları 1200x600'den, tahtanın boyutuna ölçekle
+                    let boardRect = board.getBoundingClientRect();
+                    let pxX = (slot.x / 1200) * boardRect.width;
+                    let pxY = (slot.y / 600) * boardRect.height;
+                    el.style.left = pxX + 'px';
+                    el.style.top = pxY + 'px';
+
+                    if (room.formation[team][slot.id]) {
+                        let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
+                        if (p) {
+                            el.innerText = p.name.substring(0, 3);
+                            el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
+                        }
+                    } else {
+                        el.innerText = '+';
+                        el.style.backgroundColor = team === 'red' ? 'rgba(255,76,76,0.5)' : 'rgba(76,154,255,0.5)';
+                    }
+                    
+                    let lbl = document.createElement('div');
+                    lbl.className = 'pos-label';
+                    lbl.innerText = slot.name;
+                    el.appendChild(lbl);
+
+                    // Tıklama olayı
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        if (myTeam === team) {
+                            socket.emit('change_position', slot.id);
+                        } else {
+                            // Takım değiştir ve o pozisyona geç
+                            socket.emit('change_team', team);
+                            setTimeout(() => socket.emit('change_position', slot.id), 200);
+                        }
+                    };
+                    board.appendChild(el);
+                });
+            };
+            renderTeam('red');
+            renderTeam('blue');
+        }
+
+        window.selectTeam = (team) => {
+            if (!currentRoom || currentRoom.status !== 'lobby') return;
+            socket.emit('change_team', team);
         };
 
         function showLobby(room) {
@@ -668,6 +758,8 @@
             }
             document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
             document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
+            
+            renderTacticsBoard(room);
         }
 
         socket.on('update_lobby', (room) => {
@@ -681,7 +773,7 @@
                 redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
 
                 room.players.forEach(p => {
-                    let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span> <span class="pos-badge">${p.position}</span></div>`;
+                    let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span></div>`;
                     if (p.team === 'red') redList.innerHTML += el;
                     else if (p.team === 'blue') blueList.innerHTML += el;
                     else specList.innerHTML += el;
@@ -689,20 +781,6 @@
                 });
             }
         });
-
-        window.selectTeam = (team) => {
-            if (!currentRoom || currentRoom.status !== 'lobby') return;
-            socket.emit('change_team', team);
-            // Pozisyon seçimi
-            setTimeout(() => {
-                if (team !== 'spectator') {
-                    let pos = prompt("Pozisyonun ne olsun? (GK, DEF, MID, FWD)", "FWD");
-                    if (pos && ['GK', 'DEF', 'MID', 'FWD'].includes(pos.toUpperCase())) {
-                        socket.emit('change_position', pos.toUpperCase());
-                    }
-                }
-            }, 100);
-        };
 
         document.getElementById('btn-start-game').onclick = () => socket.emit('start_game');
         socket.on('start_error', (msg) => { alert(msg); });
@@ -915,7 +993,6 @@
 
         window.sendEmote = (emoji) => { if (!isPractice) socket.emit('send_emote', emoji); };
 
-        // --- MOBİL KONTROLLER ---
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
@@ -942,14 +1019,14 @@
         joystickZone.addEventListener('touchcancel', resetJoystick);
 
         const btnSprint = document.getElementById('btn-sprint');
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator || isPractice) keys['f'] = true; });
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if ((!isSpectator || isPractice) && myPlayer.position && !myPlayer.position.includes('GK')) keys['f'] = true; });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); keys['f'] = false; });
         btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; });
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
-            if (!isPractice && !isSpectator && ball.owner !== socket.id && myPlayer.position !== 'GK') socket.emit('tackle'); 
+            if (!isPractice && !isSpectator && ball.owner !== socket.id && myPlayer.position && !myPlayer.position.includes('GK')) socket.emit('tackle'); 
         });
 
         const btnAction = document.getElementById('btn-action');
@@ -995,7 +1072,7 @@
                 stamina += 0.15 * BASE_FRAME * dt;
                 if (stamina >= 30) isExhausted = false;
             } else {
-                if (keys['f'] && (!myPlayer || myPlayer.position !== 'GK')) { // Kaleci depar atamaz
+                if (keys['f'] && (!myPlayer || !myPlayer.position || !myPlayer.position.includes('GK'))) {
                     currentSpeed = sprintSpeed;
                     stamina -= 1.2 * BASE_FRAME * dt;
                     if (stamina <= 0) { stamina = 0; isExhausted = true; }
@@ -1045,8 +1122,7 @@
             let newX = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
             let newY = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
 
-            // KALECİ SINIRLAMASI (İstemci Tarafı)
-            if (!isPractice && myPlayer.position === 'GK') {
+            if (!isPractice && myPlayer.position && myPlayer.position.includes('GK')) {
                 if (myPlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
                 else newX = Math.max(1000, Math.min(1160, newX));
                 newY = Math.max(200, Math.min(400, newY));
@@ -1099,7 +1175,6 @@
             ctx.fillStyle = '#334155';
             ctx.fillRect(25, 25, 1150, 15); ctx.fillRect(25, 560, 1150, 15); ctx.fillRect(25, 25, 15, 550); ctx.fillRect(1160, 25, 15, 550);
             
-            // Hava Durumu Efektleri
             if (currentRoom && currentRoom.weather === 'rain') {
                 ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
                 for(let i=0; i<50; i++) {
@@ -1259,7 +1334,6 @@
                 drawStadium(); 
                 drawPitch();   
                 
-                // Power-Up Çizimleri
                 if (currentRoom && currentRoom.powerups) {
                     for (let pu of currentRoom.powerups) {
                         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pu.x, pu.y, 15, 0, Math.PI*2); ctx.fill();
@@ -1289,16 +1363,14 @@
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
                         ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
                         
-                        // KALECİ RENGİ
                         let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
-                        if (p.position === 'GK') teamColor = p.neonColor || '#39FF14'; // Neon rastgele renk
+                        if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
                         if (isPractice) teamColor = '#ff0000';
                         
                         ctx.fillStyle = teamColor;
                         ctx.fill(); 
                         ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
 
-                        // Kostüm Çizimi
                         if (p.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
                         else if (p.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
@@ -1334,10 +1406,6 @@
                         }
                         ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
                         ctx.fillText(p.name, px, py - pSize - 5);
-                        if (p.position && !isPractice) {
-                            ctx.fillStyle = '#eab308'; ctx.font = '10px Arial';
-                            ctx.fillText(p.position, px, py + pSize + 12);
-                        }
                     }
                 }
                 
@@ -1345,6 +1413,13 @@
             }
             requestAnimationFrame(gameLoop);
         }
+
+        // Ekran boyutu değiştiğinde taktik tahtasını yeniden çiz
+        window.addEventListener('resize', () => {
+            if (currentRoom && currentRoom.status === 'lobby') {
+                renderTacticsBoard(currentRoom);
+            }
+        });
 
         requestAnimationFrame(updateMovement);
         requestAnimationFrame(gameLoop);
