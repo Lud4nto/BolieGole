@@ -109,17 +109,53 @@
         #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000; animation: pop 1s infinite alternate; }
         @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        /* YENİ EKLENEN AYARLAR VE YAPIMCILAR EKRANLARI İÇİN CSS */
+        /* --- AYARLAR EKRANI CSS --- */
         .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
         .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 24px; margin: 0; text-align: center; }
         
         .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 16px; }
         input[type="range"] { -webkit-appearance: none; width: 150px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #ef4444; border: 2px solid #7f1d1d; border-radius: 50%; cursor: pointer; }
-        
-        .credit-text { font-size: 16px; font-weight: bold; text-align: center; line-height: 1.5; }
-        .credit-text a { color: #1d4ed8; text-decoration: none; }
-        .credit-text a:hover { text-decoration: underline; }
+
+        /* --- YAPIMCILAR EKRANI (KAYDIRMALI) CSS --- */
+        #screen-credits {
+            background: #000;
+            overflow: hidden;
+            justify-content: flex-start;
+        }
+        #credits-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        #credits-content {
+            text-align: center;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            width: 80%;
+            max-width: 600px;
+            animation: scrollCredits 22s linear infinite;
+        }
+        #credits-content h2 {
+            color: #eab308;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        #credits-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #d4a373;
+        }
+        @keyframes scrollCredits {
+            0% { transform: translateY(100vh); }
+            100% { transform: translateY(-100%); }
+        }
 
         @media (pointer: coarse) {
             #mobile-controls, #joystick-zone { display: flex; }
@@ -144,7 +180,8 @@
             .start-game-btn { margin-top: 10px; padding: 8px 20px; font-size: 16px; }
             .info-box { width: 85%; padding: 20px; }
             .info-box h2 { font-size: 18px; }
-            .credit-text { font-size: 14px; }
+            #credits-content h2 { font-size: 20px; }
+            #credits-content p { font-size: 12px; }
         }
     </style>
 </head>
@@ -168,7 +205,7 @@
         </div>
     </div>
 
-    <!-- YENİ EKLENEN AYARLAR EKRANI -->
+    <!-- AYARLAR EKRANI -->
     <div id="screen-options" class="screen">
         <div class="bg-blur"></div>
         <div class="info-box">
@@ -195,24 +232,28 @@
         </div>
     </div>
 
-    <!-- YENİ EKLENEN YAPIMCILAR EKRANI -->
+    <!-- KAYDIRMALI YAPIMCILAR EKRANI -->
     <div id="screen-credits" class="screen">
-        <div class="bg-blur"></div>
-        <div class="info-box">
-            <h2>YAPIMCILAR</h2>
-            <div class="credit-text">
-                <p style="font-size: 20px; color: #eab308; text-shadow: 2px 2px 0 #000; margin-bottom: 5px;">BOLIEGOLE</p>
+        <div id="credits-wrapper">
+            <div id="credits-content">
+                <h2>BOLIEGOLE</h2>
                 <p>Web Tabanlı Çok Oyunculu Futbol</p>
-                <br>
-                <p><b>Tasarım & Kodlama:</b><br> Mustafa A.</p>
-                <br>
-                <p><b>Teknolojiler:</b><br> HTML5 Canvas, Socket.io, Node.js</p>
-                <br>
-                <p style="font-size: 12px; color: #5a3a1b;">© 2026 - Tüm Hakları Saklıdır</p>
-                <br><p><b>Projeyi tavsiye eden değerli arkadaşım:</b><br> Ömer Kaan K.</p>
+                <br><br><br>
+                <p><b>Tasarım & Kodlama:</b></p>
+                <p>Mustafa A.</p>
+                <br><br><br>
+                <p><b>Teknolojiler:</b></p>
+                <p>HTML5 Canvas, Socket.io, Node.js</p>
+                <br><br><br>
+                <p><b>Projeyi tavsiye eden değerli arkadaşım:</b></p>
+                <p>Ömer Kaan K.</p>
+                <br><br><br><br>
+                <p style="font-size: 14px; color: #5a3a1b;">© 2026 - Tüm Hakları Saklıdır</p>
+                <br><br><br><br>
             </div>
-            <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
         </div>
+        <!-- İstenildiği zaman çıkabilmek için altta sabit buton -->
+        <button class="menu-btn" style="position: absolute; bottom: 30px; z-index: 100; width: 200px; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
     </div>
 
     <div id="modal-name" class="modal-overlay">
@@ -400,9 +441,8 @@
         goalSlider.addEventListener('input', (e) => { goalSound.volume = e.target.value / 100; localStorage.setItem('bolie_goal_vol', e.target.value); });
         whistleSlider.addEventListener('input', (e) => { whistleSound.volume = e.target.value / 100; localStorage.setItem('bolie_whistle_vol', e.target.value); });
         
-        loadAudioSettings(); // Sayfa açılınca ayarları yükle
+        loadAudioSettings();
 
-        // Tam Ekran Butonu
         document.getElementById('btn-fullscreen').onclick = () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => console.log(err));
