@@ -109,7 +109,7 @@
 
         let myPlayer = null;
         let players = {};
-        let ball = { x: 600, y: 300, z: 0, owner: null, protectionTimer: 0 };
+        let ball = { x: 600, y: 300, z: 0, owner: null, possessionTimer: 0 };
         let score = { red: 0, blue: 0 };
 
         let stamina = 100;
@@ -143,7 +143,6 @@
 
             if (k === ' ' && isCharging) {
                 isCharging = false;
-                // 150 milisaniyeden kısa basıldıysa direkt pas (Tek Tık)
                 let pressDuration = Date.now() - chargeStartTime;
                 if (pressDuration < 150) {
                     forcePass();
@@ -237,22 +236,17 @@
                 const possText = document.getElementById('possession-text');
                 if (ball.owner === socket.id) {
                     possText.style.display = 'block';
-                    let secondsLeft = (ball.protectionTimer / 60).toFixed(1);
+                    let secondsLeft = (ball.possessionTimer / 60).toFixed(1);
                     
-                    if (ball.protectionTimer > 0) {
-                        possText.innerText = `🔥 TOP SENDE! (Koruma: ${secondsLeft} sn)`;
+                    if (ball.possessionTimer > 0) {
+                        possText.innerText = `🔥 TOP SENDE! (${secondsLeft} sn sonra düşecek)`;
                         possText.style.color = "#eab308";
-                    } else {
-                        possText.innerText = `🔥 TOP SENDE! (DİKKAT, ÇALINABİLİR!)`;
-                        possText.style.color = "#ef4444";
                     }
                 } else {
                     possText.style.display = 'none';
                 }
             });
         }
-
-        let lastMoveX = 0, lastMoveY = 0;
 
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
@@ -313,7 +307,6 @@
                 dx = (dx / length) * (currentSpeed * speedMultiplier);
                 dy = (dy / length) * (currentSpeed * speedMultiplier);
                 
-                // Yönü kaydet (Pas atmak için)
                 myPlayer.lastDx = dx;
                 myPlayer.lastDy = dy;
             }
@@ -388,9 +381,10 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                if (id === ball.owner) {
+                // Sadece top sahibi olduğunda etrafında halka çıksın
+                if (id === ball.owner && ball.possessionTimer > 0) {
                     ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-                    ctx.strokeStyle = (ball.protectionTimer > 0) ? '#eab308' : '#ef4444'; 
+                    ctx.strokeStyle = '#eab308'; 
                     ctx.lineWidth = 4; 
                     ctx.stroke();
                 }
