@@ -241,6 +241,9 @@
                     if (ball.possessionTimer > 0) {
                         possText.innerText = `🔥 TOP SENDE! (${secondsLeft} sn sonra düşecek)`;
                         possText.style.color = "#eab308";
+                    } else {
+                        possText.innerText = `🔥 TOP SENDE! (DİKKAT, ÇALINABİLİR!)`;
+                        possText.style.color = "#ef4444";
                     }
                 } else {
                     possText.style.display = 'none';
@@ -381,7 +384,6 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                // Sadece top sahibi olduğunda etrafında halka çıksın
                 if (id === ball.owner && ball.possessionTimer > 0) {
                     ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
                     ctx.strokeStyle = '#eab308'; 
