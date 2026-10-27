@@ -9,7 +9,6 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// 150 tick = 2.5 saniye. pickupCooldown top düştükten sonra kimsenin hemen alamamasını sağlar.
 let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 };
 let score = { red: 0, blue: 0 };
 
@@ -46,8 +45,9 @@ io.on('connection', (socket) => {
             ball.vz = data.vz;
             ball.owner = null; 
             ball.possessionTimer = 0;
-            ball.pickupCooldown = 15; // Şut çekildikten sonra 0.25 sn kimse alamaz
+            ball.pickupCooldown = 20; // Şut sonrası 0.3 saniye dokunulmazlık
             
+            // Topu oyuncunun hemen önüne fırlat
             ball.x += data.vx * 1.5; 
             ball.y += data.vy * 1.5;
         }
@@ -78,7 +78,6 @@ setInterval(() => {
             let angle = Math.atan2(owner.lastDy, owner.lastDx);
             if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0; 
             
-            // Topu oyuncunun önünde tut
             ball.x = owner.x + Math.cos(angle) * 35;
             ball.y = owner.y + Math.sin(angle) * 35;
             ball.vx = 0; 
@@ -88,15 +87,14 @@ setInterval(() => {
             // SÜRE BİTTİYSE: Topu bırak!
             if (ball.possessionTimer <= 0) {
                 ball.owner = null;
-                // Topu baktığı yöne doğru fırlat ki ayağından kopsun
-                ball.vx = Math.cos(angle) * 6;
-                ball.vy = Math.sin(angle) * 6;
-                ball.pickupCooldown = 30; // 0.5 saniye boyunca yerden alınamaz
+                ball.vx = Math.cos(angle) * 7; // İleri doğru fırlat
+                ball.vy = Math.sin(angle) * 7;
+                ball.pickupCooldown = 30; 
             }
         }
     }
 
-    // 2. Top Fiziği (Sahipsizse)
+    // 2. Top Fiziği
     if (ball.owner === null) {
         ball.x += ball.vx;
         ball.y += ball.vy;
@@ -128,20 +126,19 @@ setInterval(() => {
         }
     }
 
-    // 3. Top Alma / Çalma (Her zaman)
+    // 3. Top Alma / Çalma
     for (let id in players) {
         let p = players[id];
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        // Topa 45 birimden yakınsa VE yerden alma yasağı bittiyse alabilir
         if (dist < 45 && ball.pickupCooldown <= 0) {
             if (ball.owner === null) {
                 ball.owner = id;
-                ball.possessionTimer = 150; // 2.5 saniye
+                ball.possessionTimer = 150;
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             } else if (ball.owner !== id) {
                 ball.owner = id;
-                ball.possessionTimer = 150; // 2.5 saniye
+                ball.possessionTimer = 150;
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             }
         }
