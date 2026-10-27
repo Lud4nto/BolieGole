@@ -20,7 +20,6 @@ const PLAYER_MIN_Y = 25, PLAYER_MAX_Y = height - 25;
 
 const NEON_COLORS = ['#39FF14', '#FF073A', '#00FFFF', '#FF00FF', '#FFFF00', '#FF5E00', '#00FFAA'];
 
-// TAKTİK TAHTASI SLOTLARI (X, Y Koordinatları ve İsimleri)
 const FORMATION_SLOTS = {
     red: [
         { id: 'R_GK', name: 'GK', x: 60, y: 300 },
@@ -68,7 +67,7 @@ io.on('connection', (socket) => {
         const code = generateRoomCode();
         const hostPlayer = { 
             id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", 
-            position: null, outfit: data.outfit || "default", neonColor: data.neonColor || NEON_COLORS[0],
+            position: null, equipped: data.equipped || {}, neonColor: data.neonColor || NEON_COLORS[0],
             lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
         };
 
@@ -77,13 +76,13 @@ io.on('connection', (socket) => {
             hostId: socket.id, players: [hostPlayer], status: "lobby",
             redName: data.redName || "KIRMIZI", blueName: data.blueName || "MAVİ",
             redColor: data.redColor || "#ff4c4c", blueColor: data.blueColor || "#4c9aff",
-            weather: data.weather || 'clear',
+            weather: data.weather || 'clear', ballSkin: data.ballSkin || 'classic',
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" },
             score: { red: 0, blue: 0 }, matchTime: 0, half: 1, isKickoff: false, concedingTeam: null,
             gameInterval: null, emptyTimer: null, breakTimer: 0, replayTimer: 0,
             history: [], emotes: [], botCounter: 0,
             powerups: [], powerupTimer: 0,
-            formation: { red: {}, blue: {} } // Slot doluluk takibi
+            formation: { red: {}, blue: {} }
         };
 
         socket.join(code);
@@ -103,7 +102,7 @@ io.on('connection', (socket) => {
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
         let newPlayer = { 
             id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", 
-            position: null, outfit: data.outfit || "default", neonColor: data.neonColor || NEON_COLORS[0],
+            position: null, equipped: data.equipped || {}, neonColor: data.neonColor || NEON_COLORS[0],
             lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
         };
         s.players.push(newPlayer);
@@ -113,7 +112,7 @@ io.on('connection', (socket) => {
         io.to(data.id).emit('update_lobby', s);
     });
 
-    socket.on('add_bot', (data) => {
+    socket.on('add_bot', () => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id || s.status !== "lobby") return;
@@ -123,22 +122,46 @@ io.on('connection', (socket) => {
         let blueCount = s.players.filter(p => p.team === 'blue').length;
         let botTeam = redCount <= blueCount ? 'red' : 'blue';
         
-        // Rastgele boş bir slot bul
         let emptySlot = FORMATION_SLOTS[botTeam].find(slot => !s.formation[botTeam][slot.id]);
-        if (!emptySlot) {
-            socket.emit('start_error', 'Bu takımın dizilişi dolu!'); return;
-        }
+        if (!emptySlot) { socket.emit('start_error', 'Bu takımın dizilişi dolu!'); return; }
 
         s.botCounter++;
         let bot = { 
             id: "bot_" + socket.id + "_" + s.botCounter, 
             name: "Bot " + s.botCounter, 
             team: botTeam, position: emptySlot.id,
-            outfit: "default", neonColor: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+            equipped: { outfit: 'default', aura: 'none', trail: 'none' }, 
+            neonColor: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
             lastDx: 0, lastDy: 0, x: emptySlot.x, y: emptySlot.y, isBot: true, effects: {} 
         };
         s.formation[botTeam][emptySlot.id] = bot.id;
         s.players.push(bot);
+        io.to(s.id).emit('update_lobby', s);
+    });
+
+    socket.on('move_bot', (data) => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.hostId !== socket.id) return;
+        
+        let bot = s.players.find(p => p.id === data.botId);
+        if (!bot || !bot.isBot) return;
+        
+        // Eğer hedef slot doluysa iptal et
+        if (s.formation[bot.team][data.newSlotId]) return;
+
+        // Eski slotu temizle
+        if (bot.position && s.formation[bot.team][bot.position] === bot.id) {
+            delete s.formation[bot.team][bot.position];
+        }
+        
+        // Yeni slota ata
+        bot.position = data.newSlotId;
+        s.formation[bot.team][data.newSlotId] = bot.id;
+        
+        let slotInfo = FORMATION_SLOTS[bot.team].find(sl => sl.id === data.newSlotId);
+        if(slotInfo) { bot.x = slotInfo.x; bot.y = slotInfo.y; }
+
         io.to(s.id).emit('update_lobby', s);
     });
 
@@ -148,12 +171,11 @@ io.on('connection', (socket) => {
         if (!s || s.status !== "lobby") return;
         let p = s.players.find(pl => pl.id === socket.id);
         if (p && !p.isBot) {
-            // Eski takımdan çıkarken slotunu boşalt
             if (p.team !== "spectator" && p.position && s.formation[p.team][p.position] === p.id) {
                 delete s.formation[p.team][p.position];
             }
             p.team = team || "spectator";
-            p.position = null; // Yeni takıma geçince pozisyon sıfırlanır
+            p.position = null;
             io.to(s.id).emit('update_lobby', s);
         }
     });
@@ -164,15 +186,12 @@ io.on('connection', (socket) => {
         if (!s || s.status !== "lobby") return;
         let p = s.players.find(pl => pl.id === socket.id);
         if (p && !p.isBot && p.team !== 'spectator') {
-            // Slot dolu mu kontrol et
             if (s.formation[p.team][slotId] && s.formation[p.team][slotId] !== p.id) {
                 socket.emit('start_error', 'Bu pozisyon zaten dolu!'); return;
             }
-            // Eski slotu boşalt
             if (p.position && s.formation[p.team][p.position] === p.id) {
                 delete s.formation[p.team][p.position];
             }
-            // Yeni slota yerleş
             p.position = slotId;
             s.formation[p.team][slotId] = p.id;
             
@@ -207,7 +226,6 @@ io.on('connection', (socket) => {
         let redCount = s.players.filter(p => p.team === 'red').length;
         let blueCount = s.players.filter(p => p.team === 'blue').length;
         
-        // Boş slotları otomatik doldur (Eğer oyuncular eksikse)
         let fillEmptySlots = (team) => {
             let emptySlots = FORMATION_SLOTS[team].filter(slot => !s.formation[team][slot.id]);
             let playersWithoutPos = s.players.filter(p => p.team === team && !p.position);
@@ -255,7 +273,6 @@ io.on('connection', (socket) => {
         let nx = clamp(data.x, PLAYER_MIN_X, PLAYER_MAX_X);
         let ny = clamp(data.y, PLAYER_MIN_Y, PLAYER_MAX_Y);
 
-        // KALECİ SINIRLAMASI
         if (p.position && p.position.includes('GK')) {
             if (p.team === 'red') { nx = clamp(nx, 40, 200); } 
             else { nx = clamp(nx, 1000, 1160); }
@@ -388,7 +405,7 @@ function updateGame(s) {
 
         if (s.status === 'playing') {
             s.history.push({
-                players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team, position: p.position, outfit: p.outfit, neonColor: p.neonColor })),
+                players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team, position: p.position, equipped: p.equipped, neonColor: p.neonColor })),
                 ball: { x: s.ball.x, y: s.ball.y, z: s.ball.z, owner: s.ball.owner }
             });
             if (s.history.length > 180) s.history.shift();
@@ -586,7 +603,6 @@ function resetBall(s, concededBy = null, isHalftime = false) {
         let slotInfo = FORMATION_SLOTS[p.team] ? FORMATION_SLOTS[p.team].find(sl => sl.id === p.position) : null;
         if (slotInfo) {
             if (concededBy) {
-                // Santra anında sadece kaleci ve defans yerinde kalır, diğerleri kendi yarısına çekilir
                 if (p.position.includes('GK')) { p.x = slotInfo.x; p.y = slotInfo.y; }
                 else if (p.position.includes('DEF')) { p.x = p.team === 'red' ? 250 : 950; p.y = slotInfo.y; }
                 else { p.x = p.team === 'red' ? 500 : 700; p.y = 300; }
