@@ -18,6 +18,8 @@ const GOAL_TOP_Z = 80;
 const PLAYER_MIN_X = 25, PLAYER_MAX_X = width - 25;
 const PLAYER_MIN_Y = 25, PLAYER_MAX_Y = height - 25;
 
+const NEON_COLORS = ['#39FF14', '#FF073A', '#00FFFF', '#FF00FF', '#FFFF00', '#FF5E00', '#00FFAA'];
+
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function isFiniteNum(n) { return typeof n === 'number' && Number.isFinite(n); }
 
@@ -46,17 +48,23 @@ io.on('connection', (socket) => {
     socket.on('create_server', (data) => {
         if (!data) return;
         const code = generateRoomCode();
-        const hostPlayer = { id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false };
+        const hostPlayer = { 
+            id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", 
+            position: "FWD", outfit: data.outfit || "default", neonColor: data.neonColor || NEON_COLORS[0],
+            lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
+        };
 
         servers[code] = {
             id: code, name: (data.name || "Oda").substring(0, 30), type: data.type || "private", password: data.password || "",
             hostId: socket.id, players: [hostPlayer], status: "lobby",
             redName: data.redName || "KIRMIZI", blueName: data.blueName || "MAVİ",
             redColor: data.redColor || "#ff4c4c", blueColor: data.blueColor || "#4c9aff",
+            weather: data.weather || 'clear',
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" },
             score: { red: 0, blue: 0 }, matchTime: 0, half: 1, isKickoff: false, concedingTeam: null,
             gameInterval: null, emptyTimer: null, breakTimer: 0, replayTimer: 0,
-            history: [], emotes: [], botCounter: 0
+            history: [], emotes: [], botCounter: 0,
+            powerups: [], powerupTimer: 0
         };
 
         socket.join(code);
@@ -74,7 +82,11 @@ io.on('connection', (socket) => {
         if (s.players.length >= 10) { socket.emit('join_error', 'Oda dolu (maks. 10 kişi).'); return; }
 
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
-        let newPlayer = { id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false };
+        let newPlayer = { 
+            id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", 
+            position: "FWD", outfit: data.outfit || "default", neonColor: data.neonColor || NEON_COLORS[0],
+            lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
+        };
         s.players.push(newPlayer);
         socket.join(data.id);
         socket.roomId = data.id;
@@ -82,7 +94,7 @@ io.on('connection', (socket) => {
         io.to(data.id).emit('update_lobby', s);
     });
 
-    socket.on('add_bot', () => {
+    socket.on('add_bot', (data) => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id || s.status !== "lobby") return;
@@ -91,13 +103,16 @@ io.on('connection', (socket) => {
         let redCount = s.players.filter(p => p.team === 'red').length;
         let blueCount = s.players.filter(p => p.team === 'blue').length;
         let botTeam = redCount <= blueCount ? 'red' : 'blue';
+        
+        let reqPos = data ? data.position : 'FWD';
 
         s.botCounter++;
         let bot = { 
             id: "bot_" + socket.id + "_" + s.botCounter, 
-            name: "Bot " + s.botCounter, 
-            team: botTeam, 
-            lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: true 
+            name: "Bot " + s.botCounter + " (" + reqPos + ")", 
+            team: botTeam, position: reqPos,
+            outfit: "default", neonColor: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+            lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: true, effects: {} 
         };
         s.players.push(bot);
         io.to(s.id).emit('update_lobby', s);
@@ -119,6 +134,33 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('change_position', (pos) => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.status !== "lobby") return;
+        let p = s.players.find(pl => pl.id === socket.id);
+        if (p && !p.isBot) {
+            p.position = pos;
+            io.to(s.id).emit('update_lobby', s);
+        }
+    });
+
+    socket.on('rematch', () => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.hostId !== socket.id) return;
+        
+        s.status = "playing";
+        s.score = { red: 0, blue: 0 };
+        s.matchTime = 0; s.half = 1; s.history = []; s.emotes = []; s.powerups = []; s.powerupTimer = 0;
+        resetBall(s, null, false, true);
+
+        io.to(s.id).emit('game_started');
+        io.to(s.id).emit('play_whistle');
+        if (s.gameInterval) clearInterval(s.gameInterval);
+        s.gameInterval = setInterval(() => { updateGame(s); }, 1000 / 60);
+    });
+
     socket.on('start_game', () => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
@@ -130,10 +172,27 @@ io.on('connection', (socket) => {
             socket.emit('start_error', 'Takımlar eşit sayıda olmalıdır!'); return;
         }
 
+        // Otomatik pozisyon ataması (Eğer eksikse)
+        let teamRed = s.players.filter(p => p.team === 'red');
+        let teamBlue = s.players.filter(p => p.team === 'blue');
+        let assignPos = (team) => {
+            let posList = ['GK', 'DEF', 'DEF', 'MID', 'FWD'];
+            team.forEach((p, i) => { if (!p.position || !posList.includes(p.position)) p.position = posList[i % posList.length]; });
+            // Aynı pozisyondan 2 tane varsa düzelt
+            let used = new Set();
+            team.forEach((p) => {
+                if (used.has(p.position)) {
+                    for (let pos of posList) { if (!used.has(pos)) { p.position = pos; break; } }
+                }
+                used.add(p.position);
+            });
+        };
+        assignPos(teamRed); assignPos(teamBlue);
+
         s.status = "playing";
         s.score = { red: 0, blue: 0 };
-        s.matchTime = 0; s.half = 1; s.history = []; s.emotes = [];
-        resetBall(s, null, false);
+        s.matchTime = 0; s.half = 1; s.history = []; s.emotes = []; s.powerups = []; s.powerupTimer = 0;
+        resetBall(s, null, false, true);
 
         io.to(s.id).emit('game_started');
         io.to(s.id).emit('play_whistle');
@@ -161,6 +220,13 @@ io.on('connection', (socket) => {
         let nx = clamp(data.x, PLAYER_MIN_X, PLAYER_MAX_X);
         let ny = clamp(data.y, PLAYER_MIN_Y, PLAYER_MAX_Y);
 
+        // KALECİ SINIRLAMASI
+        if (p.position === 'GK') {
+            if (p.team === 'red') { nx = clamp(nx, 40, 200); } 
+            else { nx = clamp(nx, 1000, 1160); }
+            ny = clamp(ny, 200, 400); // Kale alanı
+        }
+
         if (s.isKickoff && p.team !== s.concedingTeam) {
             if (s.concedingTeam === 'blue' && nx > 595) nx = 595;
             if (s.concedingTeam === 'red' && nx < 605) nx = 605;
@@ -174,7 +240,7 @@ io.on('connection', (socket) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "playing") return;
         let p = s.players.find(pl => pl.id === socket.id);
-        if (!p || p.team === 'spectator' || p.isBot) return;
+        if (!p || p.team === 'spectator' || p.isBot || p.position === 'GK') return;
 
         if (s.ball.owner && s.ball.owner !== socket.id) {
             if (s.isKickoff && p.team !== s.concedingTeam) return;
@@ -199,14 +265,18 @@ io.on('connection', (socket) => {
             let sp = isFiniteNum(data.shotPower) ? data.shotPower : 0;
             sp = clamp(sp, 0, 100);
 
+            let p = s.players.find(pl => pl.id === socket.id);
+            
+            // Power-up Kontrolü (Dev Ayak)
+            if (p && p.effects && p.effects.power > 0) { vx *= 1.5; vy *= 1.5; }
+
             let speed = Math.hypot(vx, vy);
-            if (speed > BALL_MAX_SPEED) { vx = (vx / speed) * BALL_MAX_SPEED; vy = (vy / speed) * BALL_MAX_SPEED; }
+            if (speed > BALL_MAX_SPEED * 1.5) { vx = (vx / speed) * (BALL_MAX_SPEED * 1.5); vy = (vy / speed) * (BALL_MAX_SPEED * 1.5); }
             vz = clamp(vz, -BALL_MAX_Z_SPEED, BALL_MAX_Z_SPEED);
 
             s.ball.vx = vx; s.ball.vy = vy; s.ball.vz = vz;
             s.ball.owner = null; s.ball.possessionTimer = 0; s.ball.pickupCooldown = 20; s.ball.shotPower = sp;
             
-            let p = s.players.find(pl => pl.id === socket.id);
             s.ball.lastKickX = p ? p.x : 0;
             s.ball.lastKickName = p ? p.name : "";
             s.ball.x += s.ball.vx * 3; s.ball.y += s.ball.vy * 3;
@@ -247,9 +317,44 @@ io.on('connection', (socket) => {
 
 function updateGame(s) {
     try {
+        // Hava durumu çarpanları
+        let speedMult = 1.0, friction = 0.98;
+        if (s.weather === 'rain') { friction = 0.99; speedMult = 1.05; }
+        if (s.weather === 'snow') { friction = 0.95; speedMult = 0.9; }
+
+        // Efekt sürelerini güncelle
+        for (let p of s.players) {
+            if (!p.effects) p.effects = {};
+            for (let key in p.effects) {
+                if (p.effects[key] > 0) {
+                    p.effects[key]--;
+                    if (p.effects[key] <= 0) delete p.effects[key];
+                }
+            }
+        }
+
+        // Power-Up Spawn (Her 15 saniyede bir, max 2 tane)
+        if (s.status === 'playing') {
+            s.powerupTimer++;
+            if (s.powerupTimer >= 900 && s.powerups.length < 2) { // 15 * 60
+                s.powerupTimer = 0;
+                let types = ['freeze', 'speed', 'power', 'magnet'];
+                let type = types[Math.floor(Math.random() * types.length)];
+                let px = 300 + Math.random() * 600;
+                let py = 100 + Math.random() * 400;
+                s.powerups.push({ x: px, y: py, type: type, timer: 600 }); // 10 saniye yerde kalır
+            }
+        }
+
+        // Power-Up süresi bitenleri sil
+        for (let i = s.powerups.length - 1; i >= 0; i--) {
+            s.powerups[i].timer--;
+            if (s.powerups[i].timer <= 0) s.powerups.splice(i, 1);
+        }
+
         if (s.status === 'playing') {
             s.history.push({
-                players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team })),
+                players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team, position: p.position, outfit: p.outfit, neonColor: p.neonColor })),
                 ball: { x: s.ball.x, y: s.ball.y, z: s.ball.z, owner: s.ball.owner }
             });
             if (s.history.length > 180) s.history.shift();
@@ -260,6 +365,7 @@ function updateGame(s) {
             if (s.emotes[i].timer <= 0) s.emotes.splice(i, 1);
         }
 
+        // BOT AI
         if (s.status === 'playing') {
             for (let p of s.players) {
                 if (!p.isBot || p.team === 'spectator') continue;
@@ -270,28 +376,47 @@ function updateGame(s) {
                 let dy = targetBallY - p.y;
                 let dist = Math.hypot(dx, dy);
 
-                if (dist > 5) {
-                    let speed = 3.5;
-                    if (s.ball.owner === p.id) speed = 4.5;
-                    p.lastDx = (dx / dist) * speed;
-                    p.lastDy = (dy / dist) * speed;
-                    p.x += p.lastDx;
-                    p.y += p.lastDy;
-                    p.x = Math.max(25, Math.min(width - 25, p.x));
-                    p.y = Math.max(25, Math.min(height - 25, p.y));
-                }
+                let speed = 3.5 * speedMult;
+                if (s.ball.owner === p.id) speed = 4.5 * speedMult;
 
-                if (s.ball.owner === p.id) {
-                    let goalX = p.team === 'red' ? width - 25 : 25;
-                    let distToGoal = Math.abs(p.x - goalX);
-                    if (distToGoal < 300) {
-                        let angle = Math.atan2(300 - p.y, goalX - p.x);
-                        s.ball.vx = Math.cos(angle) * 22;
-                        s.ball.vy = Math.sin(angle) * 22;
-                        s.ball.vz = 4;
-                        s.ball.owner = null;
-                        s.ball.lastKickName = p.name;
-                        s.ball.shotPower = 85;
+                // Eğer frozen ise hareket edemez
+                if (p.effects && p.effects.freeze > 0) speed = 0;
+                if (p.effects && p.effects.speed > 0) speed *= 2;
+
+                // KALECİ AI
+                if (p.position === 'GK') {
+                    let goalX = p.team === 'red' ? 60 : 1140;
+                    let targetY = clamp(s.ball.y, 200, 400);
+                    p.x = goalX;
+                    p.y += (targetY - p.y) * 0.1;
+                    p.lastDx = 0; p.lastDy = p.y - targetY;
+                } else {
+                    // Normal AI
+                    if (dist > 5) {
+                        p.lastDx = (dx / dist) * speed;
+                        p.lastDy = (dy / dist) * speed;
+                        p.x += p.lastDx;
+                        p.y += p.lastDy;
+                        
+                        // Kalecilerin alanına girme
+                        if (p.position !== 'GK') {
+                            p.x = Math.max(210, Math.min(width - 210, p.x));
+                            p.y = Math.max(25, Math.min(height - 25, p.y));
+                        }
+                    }
+
+                    if (s.ball.owner === p.id) {
+                        let goalX = p.team === 'red' ? width - 25 : 25;
+                        let distToGoal = Math.abs(p.x - goalX);
+                        if (distToGoal < 300) {
+                            let angle = Math.atan2(300 - p.y, goalX - p.x);
+                            s.ball.vx = Math.cos(angle) * 22 * speedMult;
+                            s.ball.vy = Math.sin(angle) * 22 * speedMult;
+                            s.ball.vz = 4;
+                            s.ball.owner = null;
+                            s.ball.lastKickName = p.name;
+                            s.ball.shotPower = 85;
+                        }
                     }
                 }
             }
@@ -301,7 +426,7 @@ function updateGame(s) {
             s.breakTimer -= 1/60;
             if (s.breakTimer <= 0) {
                 s.status = 'playing'; s.half = 2; s.matchTime = 0;
-                resetBall(s, null, true);
+                resetBall(s, null, true, false);
                 io.to(s.id).emit('play_whistle');
                 io.to(s.id).emit('game_state', s);
             }
@@ -312,8 +437,7 @@ function updateGame(s) {
             s.replayTimer -= 1/60;
             if (s.replayTimer <= 0) {
                 s.status = 'playing';
-                // 🚨 DÜZELTME BURADA: Replay bittikten sonra pozisyonları ayarlıyoruz!
-                resetBall(s, s.concedingTeam, false); 
+                resetBall(s, s.concedingTeam, false, false); 
                 io.to(s.id).emit('play_whistle');
             }
             io.to(s.id).emit('game_state', s);
@@ -338,6 +462,34 @@ function updateGame(s) {
         let ball = s.ball;
         if (ball.pickupCooldown > 0) ball.pickupCooldown--;
 
+        // Power-Up Toplama
+        for (let i = s.powerups.length - 1; i >= 0; i--) {
+            let pu = s.powerups[i];
+            for (let p of s.players) {
+                if (p.team !== 'spectator' && Math.hypot(p.x - pu.x, p.y - pu.y) < 40) {
+                    if (pu.type === 'freeze') {
+                        let enemyTeam = p.team === 'red' ? 'blue' : 'red';
+                        s.players.forEach(ep => { if (ep.team === enemyTeam) { if(!ep.effects) ep.effects = {}; ep.effects.freeze = 120; } });
+                    } else {
+                        if (!p.effects) p.effects = {};
+                        p.effects[pu.type] = 180; // 3 saniye
+                    }
+                    io.to(s.id).emit('powerup_collected', { type: pu.type, name: p.name });
+                    s.powerups.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        // Mıknatıs Efekti
+        for (let p of s.players) {
+            if (p.effects && p.effects.magnet > 0 && ball.owner === null) {
+                let dx = p.x - ball.x; let dy = p.y - ball.y;
+                let d = Math.hypot(dx, dy);
+                if (d < 200) { ball.vx += (dx / d) * 0.5; ball.vy += (dy / d) * 0.5; }
+            }
+        }
+
         if (ball.owner !== null) {
             if (ball.possessionTimer > 0) ball.possessionTimer--;
             let owner = s.players.find(p => p.id === ball.owner);
@@ -356,8 +508,8 @@ function updateGame(s) {
         }
 
         if (ball.owner === null) {
-            ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
-            ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
+            ball.x += ball.vx * speedMult; ball.y += ball.vy * speedMult; ball.z += ball.vz;
+            ball.vx *= friction; ball.vy *= friction; ball.vz -= 0.8;
 
             if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
             if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
@@ -374,28 +526,13 @@ function updateGame(s) {
                     ball.x = hitRightGoal ? width - 30 : 30; ball.vx = -ball.vx * 0.7;
                     ball.vy = (Math.random() - 0.5) * 15; ball.vz = -Math.abs(ball.vz) * 0.5 - 3; ball.shotPower = 0;
                 } else {
-                    let shouldBounce = false;
-                    if (ball.shotPower === 100) {
-                        let isOwnHalf = false, isClose = false;
-                        if (hitRightGoal) { if (ball.lastKickX < 600) isOwnHalf = true; if (ball.lastKickX > 900) isClose = true; } 
-                        else if (hitLeftGoal) { if (ball.lastKickX > 600) isOwnHalf = true; if (ball.lastKickX < 300) isClose = true; }
-                        if (!isOwnHalf && !isClose) shouldBounce = true;
-                    }
-
-                    if (shouldBounce) {
-                        ball.x = hitRightGoal ? width - 30 : 30; ball.vx = -ball.vx * 0.7; ball.vy = (Math.random() - 0.5) * 25; ball.vz = 8; ball.shotPower = 0; 
-                    } else {
-                        if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; } 
-                        else { s.score.blue++; s.concedingTeam = 'red'; }
-                        
-                        s.status = 'goal_replay';
-                        s.replayTimer = 3;
-                        // 🚨 DÜZELTME: resetBall'u buradan KALDIRDIK. Sadece replay bitince çağıracağız.
-                        
-                        io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
-                        io.to(s.id).emit('game_state', s);
-                        return;
-                    }
+                    if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; } 
+                    else { s.score.blue++; s.concedingTeam = 'red'; }
+                    
+                    s.status = 'goal_replay'; s.replayTimer = 3;
+                    io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
+                    io.to(s.id).emit('game_state', s);
+                    return;
                 }
             } else {
                 if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
@@ -404,7 +541,7 @@ function updateGame(s) {
         }
 
         for (let p of s.players) {
-            if (p.team === 'spectator') continue;
+            if (p.team === 'spectator' || p.position === 'GK') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
                 if (s.isKickoff && p.team !== s.concedingTeam) continue; 
@@ -417,45 +554,35 @@ function updateGame(s) {
     } catch (e) { console.log("Hata:", e.message); }
 }
 
-function resetBall(s, concededBy = null, isHalftime = false) {
+function resetBall(s, concededBy = null, isHalftime = false, isStart = false) {
     s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
+    
+    let redPlayers = s.players.filter(p => p.team === 'red');
+    let bluePlayers = s.players.filter(p => p.team === 'blue');
+
+    let setPos = (p, team, isKickoffSide) => {
+        if (p.position === 'GK') {
+            p.x = team === 'red' ? 60 : 1140; p.y = 300;
+        } else if (p.position === 'DEF') {
+            p.x = team === 'red' ? (isKickoffSide ? 250 : 300) : (isKickoffSide ? 950 : 900); 
+            p.y = 200 + Math.random() * 200;
+        } else if (p.position === 'MID') {
+            p.x = team === 'red' ? (isKickoffSide ? 450 : 500) : (isKickoffSide ? 750 : 700); 
+            p.y = 300;
+        } else if (p.position === 'FWD') {
+            p.x = team === 'red' ? (isKickoffSide ? 550 : 500) : (isKickoffSide ? 650 : 700); 
+            p.y = 300;
+        }
+    };
+
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
-        let scoringTeam = concededBy === 'red' ? 'blue' : 'red';
-
-        for (let p of s.players) {
-            if (p.team === 'spectator') continue;
-            if (p.team === concededBy) { 
-                p.x = concededBy === 'red' ? 500 : 700; 
-                p.y = 300; 
-            }
-        }
-        
-        let scoringPlayers = s.players.filter(p => p.team === scoringTeam);
-        for (let i = 0; i < scoringPlayers.length; i++) {
-            let p = scoringPlayers[i];
-            if (i === 0) { 
-                // 🚨 KALECİ: Gol atan takımın 1. oyuncusu kalesine geçer
-                if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
-                else { p.x = 1140; p.y = 300; }
-            } else {
-                if (scoringTeam === 'red') { p.x = 250; p.y = 150 + Math.random() * 300; }
-                else { p.x = 950; p.y = 150 + Math.random() * 300; }
-            }
-        }
+        redPlayers.forEach(p => { if (p.position !== 'GK') { p.x = 500; p.y = 300; } });
+        bluePlayers.forEach(p => { if (p.position !== 'GK') { p.x = 700; p.y = 300; } });
     } else {
         s.isKickoff = false; s.concedingTeam = null;
-        if (isHalftime) {
-            for (let p of s.players) {
-                if (p.team === 'red') { p.x = 750; p.y = 300; }
-                if (p.team === 'blue') { p.x = 450; p.y = 300; }
-            }
-        } else {
-            for (let p of s.players) {
-                if (p.team === 'red') { p.x = 450; p.y = 300; }
-                if (p.team === 'blue') { p.x = 750; p.y = 300; }
-            }
-        }
+        redPlayers.forEach(p => setPos(p, 'red', true));
+        bluePlayers.forEach(p => setPos(p, 'blue', true));
     }
     io.to(s.id).emit('force_positions', s.players);
 }
