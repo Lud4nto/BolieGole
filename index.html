@@ -144,7 +144,6 @@
         @keyframes powerFull { 0% { box-shadow: 0 0 0px #eab308; } 50% { box-shadow: 0 0 20px #eab308, 0 0 40px #eab308; } 100% { box-shadow: 0 0 0px #eab308; } }
         .power-full { animation: powerFull 0.2s infinite; background: #eab308 !important; }
 
-        /* YENİ ÜST BUTONLAR VE SES BUTONU */
         #top-left-btns { position: absolute; top: 15px; left: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; z-index: 100; }
         .top-ui-btn { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; }
         .top-ui-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.05); border-color: rgba(255,255,255,0.5); }
@@ -414,7 +413,6 @@
         </div>
         
         <div id="ui-layer">
-            <!-- YENİ ÜST BUTONLAR -->
             <div id="top-left-btns">
                 <div class="top-ui-btn" onclick="goToMainMenu()">🏠 ANA MENÜ</div>
                 <div class="top-ui-btn" onclick="goToLobby()">👥 LOBİ</div>
@@ -422,7 +420,6 @@
             
             <div id="mute-btn">🔊</div>
             
-            <!-- DEV STADYUM SKOR TABELASI -->
             <div id="stadium-scoreboard">
                 <div class="sb-team red">
                     <span class="sb-name" id="label-red">KIRMIZI</span>
@@ -768,6 +765,7 @@
         
         document.getElementById('btn-add-bot').onclick = () => { socket.emit('add_bot'); };
 
+        // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ (Çift Tıklama ile Bot Zorluk Seçimi)
         function renderTacticsBoard(room) {
             let board = document.getElementById('tactics-board');
             if(!board) return;
@@ -799,7 +797,7 @@
                     lbl.innerText = slot.name;
                     el.appendChild(lbl);
 
-                    // TEK TIKLAMA (Seçme veya Taşıma)
+                    // TEK TIKLAMA
                     el.onclick = (e) => {
                         e.stopPropagation();
                         if (p && p.isBot && room.hostId === socket.id) {
@@ -1061,6 +1059,10 @@
         });
 
         window.addEventListener('keydown', (e) => { 
+            if (isPractice && (e.key === 'r' || e.key === 'R')) {
+                ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+                return;
+            }
             if (isSpectator && !isPractice) return;
             
             let k = e.key;
@@ -1279,7 +1281,7 @@
             requestAnimationFrame(updateMovement);
         }
 
-               function startPracticeMode() {
+        function startPracticeMode() {
             isPractice = true; isSpectator = false; switchScreen('screen-game');
             myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
             
@@ -1305,154 +1307,87 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // --- TSUBASA TARZI SAHA ÇİZİMİ ---
         const bgCanvas = document.createElement('canvas');
         bgCanvas.width = 1200; bgCanvas.height = 600;
         const bgCtx = bgCanvas.getContext('2d');
 
         function renderBackground() {
-            // Gökyüzü / Dış alan (Tsubasa tarzı hafif mavi ton)
-            bgCtx.fillStyle = '#1e3a8a'; // Koyu mavi
-            bgCtx.fillRect(0, 0, 1200, 600);
-            
-            // Tribün / Dış çerçeve (Parlak renkler)
-            bgCtx.fillStyle = '#3b82f6';
-            bgCtx.fillRect(10, 10, 1180, 580);
-
-            // Çim (Tsubasa gibi parlak ve canlı)
+            bgCtx.fillStyle = '#1e3a8a'; bgCtx.fillRect(0, 0, 1200, 600);
+            bgCtx.fillStyle = '#3b82f6'; bgCtx.fillRect(10, 10, 1180, 580);
             const stripeWidth = 1200 / 16;
             for (let i = 0; i < 16; i++) {
-                bgCtx.fillStyle = (i % 2 === 0) ? '#4caf50' : '#388e3c'; // Canlı yeşiller
+                bgCtx.fillStyle = (i % 2 === 0) ? '#4caf50' : '#388e3c';
                 bgCtx.fillRect(i * stripeWidth, 0, stripeWidth, 600);
             }
-
-            // Güneş Işığı / Bloom (Sahanın ortasından dışa doğru)
             let grad = bgCtx.createRadialGradient(600, 300, 50, 600, 300, 600);
-            grad.addColorStop(0, 'rgba(255,255,255,0.2)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.4)');
-            bgCtx.fillStyle = grad;
-            bgCtx.fillRect(0, 0, 1200, 600);
-
-            // Çizgiler (Kalın, beyaz ve parlak)
-            bgCtx.strokeStyle = 'rgba(255, 255, 255, 1)'; 
-            bgCtx.lineWidth = 6; 
-            bgCtx.lineCap = 'round'; 
-            bgCtx.lineJoin = 'round';
-            bgCtx.shadowColor = 'rgba(255, 255, 255, 0.8)'; 
-            bgCtx.shadowBlur = 10;
-
+            grad.addColorStop(0, 'rgba(255,255,255,0.2)'); grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+            bgCtx.fillStyle = grad; bgCtx.fillRect(0, 0, 1200, 600);
+            bgCtx.strokeStyle = 'rgba(255, 255, 255, 1)'; bgCtx.lineWidth = 6; 
+            bgCtx.lineCap = 'round'; bgCtx.lineJoin = 'round';
+            bgCtx.shadowColor = 'rgba(255, 255, 255, 0.8)'; bgCtx.shadowBlur = 10;
             const margin = 40; 
             bgCtx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
-            
-            // Orta Çizgi
             bgCtx.beginPath(); bgCtx.moveTo(600, margin); bgCtx.lineTo(600, 600 - margin); bgCtx.stroke();
-            
-            // Orta Yuvarlak
             bgCtx.beginPath(); bgCtx.arc(600, 300, 70, 0, Math.PI * 2); bgCtx.stroke();
             bgCtx.beginPath(); bgCtx.arc(600, 300, 6, 0, Math.PI * 2); bgCtx.fillStyle = '#fff'; bgCtx.fill();
-            
-            // Ceza Sahaları
             const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
-            bgCtx.strokeRect(margin, penaltyY, penaltyW, penaltyH); 
-            bgCtx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-            
-            // Kale Sahaları
+            bgCtx.strokeRect(margin, penaltyY, penaltyW, penaltyH); bgCtx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
             const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
-            bgCtx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); 
-            bgCtx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-            
-            // Kale Direkleri (Parlayan)
-            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            bgCtx.shadowBlur = 20;
-            bgCtx.fillRect(margin - 12, 200, 12, 200); 
-            bgCtx.fillRect(1200 - margin, 200, 12, 200);
-            
-            // Gölgeleri sıfırla
+            bgCtx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); bgCtx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
+            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.9)'; bgCtx.shadowBlur = 20;
+            bgCtx.fillRect(margin - 12, 200, 12, 200); bgCtx.fillRect(1200 - margin, 200, 12, 200);
             bgCtx.shadowBlur = 0;
         }
         renderBackground();
 
         function drawStadium() {
-            ctx.drawImage(bgCanvas, 0, 0); // Önbellekten yükle
-            
+            ctx.drawImage(bgCanvas, 0, 0);
             if (currentRoom && currentRoom.weather === 'rain') {
                 ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
-                for(let i=0; i<50; i++) {
-                    let x = (Math.random() * 1200); let y = (Math.random() * 600);
-                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x-5, y+15); ctx.stroke();
-                }
+                for(let i=0; i<50; i++) { let x = (Math.random() * 1200); let y = (Math.random() * 600); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x-5, y+15); ctx.stroke(); }
             } else if (currentRoom && currentRoom.weather === 'snow') {
                 ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                for(let i=0; i<50; i++) {
-                    let x = (Math.random() * 1200); let y = (Math.random() * 600);
-                    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
-                }
+                for(let i=0; i<50; i++) { let x = (Math.random() * 1200); let y = (Math.random() * 600); ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill(); }
                 ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, 0, 1200, 600);
             }
-            
             if (!isPractice && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, 40, 8, 600 - (40 * 2)); } 
-                else { ctx.fillRect(592, 40, 8, 600 - (40 * 2)); }
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; 
-                ctx.shadowColor = 'black'; ctx.shadowBlur = 5;
-                ctx.fillText("SANTRA", 600, 60);
-                ctx.shadowBlur = 0;
+                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, 40, 8, 600 - (40 * 2)); } else { ctx.fillRect(592, 40, 8, 600 - (40 * 2)); }
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 5; ctx.fillText("SANTRA", 600, 60); ctx.shadowBlur = 0;
             }
         }
 
         function drawBall() {
             let drawY = ball.y - (ball.z || 0);
             let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
-            
-            ctx.save();
-            ctx.filter = 'blur(3px)';
+            ctx.save(); ctx.filter = 'blur(3px)';
             ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * shadowScale})`; ctx.fill();
-            ctx.restore();
-
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * shadowScale})`; ctx.fill(); ctx.restore();
             let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
             if (speed > 5 && ball.z === 0) ballTrail.push({ x: ball.x, y: drawY, alpha: 0.5 });
             if (ballTrail.length > 8) ballTrail.shift();
             for (let i = 0; i < ballTrail.length; i++) {
                 let t = ballTrail[i]; t.alpha -= 0.05;
-                if (t.alpha > 0) {
-                    ctx.beginPath(); ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${t.alpha})`; ctx.fill();
-                }
+                if (t.alpha > 0) { ctx.beginPath(); ctx.arc(t.x, t.y, 15, 0, Math.PI * 2); ctx.fillStyle = `rgba(255, 255, 255, ${t.alpha})`; ctx.fill(); }
             }
-
             ballRotation += speed * 0.05;
             ctx.save(); ctx.translate(ball.x, drawY); ctx.rotate(ballRotation);
-            
-            let baseColor = '#ffffff';
-            let patternColor = '#1a1a1a';
+            let baseColor = '#ffffff'; let patternColor = '#1a1a1a';
             let skin = currentRoom ? currentRoom.ballSkin : 'classic';
             if (isPractice) skin = equipped.ball;
-
             if (skin === 'fire') { baseColor = '#ff4500'; patternColor = '#ffd700'; }
             else if (skin === 'neon') { baseColor = '#39FF14'; patternColor = '#000000'; }
             else if (skin === 'beach') { baseColor = '#ffff00'; patternColor = '#ff0000'; }
-
-            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); 
-            ctx.fillStyle = baseColor; ctx.fill(); 
-            ctx.lineWidth = 2; ctx.strokeStyle = patternColor; ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fillStyle = baseColor; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = patternColor; ctx.stroke();
             function drawPentagon(radius, offsetX, offsetY, angle) {
                 ctx.beginPath();
-                for (let i = 0; i < 5; i++) {
-                    let a = angle + i * (Math.PI * 2 / 5);
-                    let x = offsetX + Math.cos(a) * radius; let y = offsetY + Math.sin(a) * radius;
-                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
+                for (let i = 0; i < 5; i++) { let a = angle + i * (Math.PI * 2 / 5); let x = offsetX + Math.cos(a) * radius; let y = offsetY + Math.sin(a) * radius; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
                 ctx.closePath(); ctx.fillStyle = patternColor; ctx.fill();
             }
             drawPentagon(5.5, 0, 0, 0); drawPentagon(4, 10, 0, 0.5); drawPentagon(4, -10, 0, 1.5); drawPentagon(4, 0, 10, 0.8); drawPentagon(4, 0, -10, 1.2);
-            
             let grad = ctx.createRadialGradient(-5, -5, 0, 0, 0, 15);
-            grad.addColorStop(0, 'rgba(255,255,255,0.8)');
-            grad.addColorStop(0.5, 'rgba(255,255,255,0)');
+            grad.addColorStop(0, 'rgba(255,255,255,0.8)'); grad.addColorStop(0.5, 'rgba(255,255,255,0)');
             ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
-
             ctx.restore();
         }
 
@@ -1463,6 +1398,35 @@
 
             if (document.getElementById('screen-game').classList.contains('active')) {
                 if (isPractice) {
+                    // --- ANTRENMAN BOT YAPAY ZEKASI ---
+                    for (let id in players) {
+                        let p = players[id];
+                        if (p.isBot) {
+                            if (p.position === 'GK') {
+                                p.x = 1140; p.y += (Math.max(200, Math.min(400, ball.y)) - p.y) * 0.05;
+                            } else {
+                                let dx = ball.x - p.x; let dy = ball.y - p.y; let dist = Math.hypot(dx, dy);
+                                if (dist > 30) {
+                                    p.x += (dx / dist) * 3; p.y += (dy / dist) * 3;
+                                    p.lastDx = dx/dist; p.lastDy = dy/dist;
+                                } else if (ball.owner === null && ball.pickupCooldown <= 0) {
+                                    let angle = Math.atan2(300 - p.y, 25 - p.x);
+                                    ball.vx = Math.cos(angle) * 18; ball.vy = Math.sin(angle) * 18; ball.pickupCooldown = 20;
+                                }
+                            }
+                        }
+                    }
+                    for (let id in players) {
+                        let p = players[id];
+                        if (p.isBot && ball.owner === null) {
+                            let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
+                            if (dist < 40 && ball.pickupCooldown <= 0) { ball.owner = p.id; ball.possessionTimer = 150; }
+                        }
+                    }
+                    if (ball.owner && players[ball.owner] && players[ball.owner].isBot) {
+                        if (ball.possessionTimer > 0) ball.possessionTimer--;
+                        if (ball.possessionTimer <= 0) { ball.owner = null; ball.vx = 10; ball.vy = 0; ball.pickupCooldown = 30; }
+                    }
                     if (ball.owner === null) {
                         ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
                         ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
@@ -1494,45 +1458,29 @@
                     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
                     if (ball.owner === myPlayer.id) {
                         let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
-                        ball.x = myPlayer.x + Math.cos(angle) * 35;
-                        ball.y = myPlayer.y + Math.sin(angle) * 35;
+                        ball.x = myPlayer.x + Math.cos(angle) * 35; ball.y = myPlayer.y + Math.sin(angle) * 35;
+                        if (ball.possessionTimer > 0) ball.possessionTimer--;
+                        if (ball.possessionTimer <= 0) { ball.owner = null; ball.pickupCooldown = 30; }
                     }
                 }
 
                 ctx.clearRect(0, 0, 1200, 600);
 
-                let targetCamX = 600;
-                let targetCamY = 300;
-                let targetZoom = 1.0;
-
-                if (isPractice) {
-                     targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2;
-                } else if (currentRoom) {
+                let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
+                if (isPractice) { targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2; }
+                else if (currentRoom) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-                    if (currentRoom.status === 'goal_replay') {
-                        updateReplay(now);
-                        targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
-                    } else if (currentRoom.status === 'playing') {
-                        if (ball.owner === null && speed > 15) {
-                            targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; 
-                        }
-                    }
+                    if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
+                    else if (currentRoom.status === 'playing') { if (ball.owner === null && speed > 15) { targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; } }
                 }
-
                 cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
                 cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
                 cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
-
-                let viewW = 1200 / cameraZoom;
-                let viewH = 600 / cameraZoom;
+                let viewW = 1200 / cameraZoom; let viewH = 600 / cameraZoom;
                 let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
                 let clampY = Math.max(viewH / 2, Math.min(600 - viewH / 2, cameraY));
 
-                ctx.save();
-                ctx.translate(600, 300);
-                ctx.scale(cameraZoom, cameraZoom);
-                ctx.translate(-clampX, -clampY);
-
+                ctx.save(); ctx.translate(600, 300); ctx.scale(cameraZoom, cameraZoom); ctx.translate(-clampX, -clampY);
                 drawStadium(); 
                 
                 if (currentRoom && currentRoom.powerups) {
@@ -1543,7 +1491,6 @@
                         ctx.fillText(icon, pu.x, pu.y + 7);
                     }
                 }
-
                 drawBall();
 
                 if (currentRoom || isPractice) {
@@ -1551,104 +1498,58 @@
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
-                        
                         if (id !== socket.id && !isPractice) {
                             if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
-                            p.renderX += (p.x - p.renderX) * lerpFactor;
-                            p.renderY += (p.y - p.renderY) * lerpFactor;
+                            p.renderX += (p.x - p.renderX) * lerpFactor; p.renderY += (p.y - p.renderY) * lerpFactor;
                         }
                         let px = (id === socket.id || isPractice) ? p.x : p.renderX;
                         let py = (id === socket.id || isPractice) ? p.y : p.renderY;
-
                         let pSize = 22;
-                        
                         if (p.equipped && p.equipped.aura && p.equipped.aura !== 'none') {
                             let glowColor = 'white';
-                            if (p.equipped.aura === 'fire') glowColor = '#ff4500';
-                            else if (p.equipped.aura === 'ice') glowColor = '#00ffff';
-                            else if (p.equipped.aura === 'toxic') glowColor = '#39FF14';
-                            else if (p.equipped.aura === 'rainbow') glowColor = `hsl(${Date.now() % 360}, 100%, 50%)`;
-
-                            ctx.beginPath(); ctx.arc(px, py, pSize + 5, 0, Math.PI * 2);
-                            ctx.fillStyle = glowColor; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1;
-                            ctx.shadowColor = glowColor; ctx.shadowBlur = 15;
+                            if (p.equipped.aura === 'fire') glowColor = '#ff4500'; else if (p.equipped.aura === 'ice') glowColor = '#00ffff'; else if (p.equipped.aura === 'toxic') glowColor = '#39FF14'; else if (p.equipped.aura === 'rainbow') glowColor = `hsl(${Date.now() % 360}, 100%, 50%)`;
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 5, 0, Math.PI * 2); ctx.fillStyle = glowColor; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1; ctx.shadowColor = glowColor; ctx.shadowBlur = 15;
                         }
-
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                        
                         ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
                         let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
                         if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
-                        if (isPractice) teamColor = '#ff0000';
-                        
-                        let grad = ctx.createRadialGradient(px - 5, py - 5, 2, px, py, pSize);
-                        grad.addColorStop(0, '#ffffff');
-                        grad.addColorStop(0.2, teamColor);
-                        grad.addColorStop(1, teamColor);
-                        
-                        ctx.fillStyle = grad;
-                        ctx.fill(); 
-                        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
-                        ctx.shadowBlur = 0;
-
+                        if (isPractice) teamColor = p.team === 'red' ? '#ff0000' : '#1e90ff';
+                        let grad = ctx.createRadialGradient(px - 5, py - 5, 2, px, py, pSize); grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.2, teamColor); grad.addColorStop(1, teamColor);
+                        ctx.fillStyle = grad; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke(); ctx.shadowBlur = 0;
                         if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
                         else if (p.equipped && p.equipped.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
                         else if (p.equipped && p.equipped.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
-                        
                         if (p.equipped && p.equipped.trail && p.equipped.trail !== 'none') {
                             let speed = Math.hypot(p.lastDx || 0, p.lastDy || 0);
                             if (speed > 1) {
-                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : teamColor;
-                                ctx.fillStyle = trailColor;
-                                let angle = Math.atan2(p.lastDy, p.lastDx);
-                                let backX = px - Math.cos(angle) * pSize;
-                                let backY = py - Math.sin(angle) * pSize;
-                                if (p.equipped.trail === 'stars') {
-                                    ctx.font = '12px Arial'; ctx.fillText('✨', backX, backY);
-                                } else {
-                                    ctx.globalAlpha = 0.5;
-                                    ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill();
-                                    ctx.globalAlpha = 1;
-                                }
+                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : teamColor; ctx.fillStyle = trailColor;
+                                let angle = Math.atan2(p.lastDy, p.lastDx); let backX = px - Math.cos(angle) * pSize; let backY = py - Math.sin(angle) * pSize;
+                                if (p.equipped.trail === 'stars') { ctx.font = '12px Arial'; ctx.fillText('✨', backX, backY); }
+                                else { ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
                             }
                         }
-
-                        if (!isPractice && currentRoom.emotes) {
-                            for (let em of currentRoom.emotes) {
-                                if (em.playerId === id) {
-                                    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20);
-                                }
-                            }
-                        }
-
+                        if (!isPractice && currentRoom.emotes) { for (let em of currentRoom.emotes) { if (em.playerId === id) { ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20); } } }
                         if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
-                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
-                            let radius = pSize + 4 + (pulse * 6); 
-                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
-                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
-                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = pSize + 4 + (pulse * 6); 
+                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4; ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
                         }
-
                         if (id === socket.id && isCharging && shotPower >= 38) {
                             let intensity = shotPower / 100; let time = Date.now() / 100;
                             ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
                             for (let i = 0; i < 5; i++) {
                                 let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
                                 ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
-                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5; ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
                                 ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
                                 ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
                             }
                         }
-                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
-                        ctx.shadowColor = 'black'; ctx.shadowBlur = 3;
-                        ctx.fillText(p.name, px, py - pSize - 5);
-                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 3;
+                        ctx.fillText(p.name, px, py - pSize - 5); ctx.shadowBlur = 0;
                     }
                 }
-                
                 ctx.restore();
             }
             requestAnimationFrame(gameLoop);
