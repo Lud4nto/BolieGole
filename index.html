@@ -121,6 +121,7 @@
         let isCharging = false;
         let shotPower = 0;
         let chargeStartTime = 0;
+        let moveX = 0, moveY = 0; // Anlık hareket yönü
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
@@ -153,10 +154,20 @@
             updateKeyVisual(k, false);
         });
 
+        function getKickAngle() {
+            if (moveX !== 0 || moveY !== 0) {
+                return Math.atan2(moveY, moveX);
+            } else if (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) {
+                return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+            }
+            return 0; // Varsayılan sağ yön
+        }
+
         function forcePass() {
             if (ball.owner !== socket.id) return;
-            let angle = Math.atan2(myPlayer.lastDy || 0, myPlayer.lastDx || 1);
-            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4, vz: 0 });
+            let angle = getKickAngle();
+            // Pas hızını artırdık ki hareket ederken top geride kalmasın
+            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 7, vy: Math.sin(angle) * 7, vz: 0 });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -164,18 +175,19 @@
         function executeKick() {
             if (ball.owner !== socket.id) return;
             
-            let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
+            let angle = getKickAngle();
             let vx = 0, vy = 0, vz = 0;
 
             if (shotPower < 38) {
-                vx = Math.cos(angle) * 4;
-                vy = Math.sin(angle) * 4;
+                vx = Math.cos(angle) * 7;
+                vy = Math.sin(angle) * 7;
                 vz = 0;
             } else {
                 let force = shotPower / 100; 
-                vx = Math.cos(angle) * (8 + (force * 8)); 
-                vy = Math.sin(angle) * (8 + (force * 8));
-                vz = 2 + (force * 6);
+                // Şut hızı çok daha yüksek
+                vx = Math.cos(angle) * (14 + (force * 12)); 
+                vy = Math.sin(angle) * (14 + (force * 12));
+                vz = 2 + (force * 8);
             }
             
             if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
@@ -237,14 +249,8 @@
                 if (ball.owner === socket.id) {
                     possText.style.display = 'block';
                     let secondsLeft = (ball.possessionTimer / 60).toFixed(1);
-                    
-                    if (ball.possessionTimer > 0) {
-                        possText.innerText = `🔥 TOP SENDE! (${secondsLeft} sn sonra düşecek)`;
-                        possText.style.color = "#eab308";
-                    } else {
-                        possText.innerText = `🔥 TOP SENDE! (DİKKAT, ÇALINABİLİR!)`;
-                        possText.style.color = "#ef4444";
-                    }
+                    possText.innerText = `🔥 TOP SENDE! (${secondsLeft} sn)`;
+                    possText.style.color = "#eab308";
                 } else {
                     possText.style.display = 'none';
                 }
@@ -313,6 +319,9 @@
                 myPlayer.lastDx = dx;
                 myPlayer.lastDy = dy;
             }
+            
+            // Anlık hareketi kaydet (Pas için)
+            moveX = dx; moveY = dy;
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
             myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
@@ -371,7 +380,7 @@
             ctx.fillStyle = '#fff'; ctx.fill();
             ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
 
-            // Oyuncular
+            // Oyuncular ve Efektler
             for (let id in players) {
                 let p = players[id];
                 if (!p) continue;
@@ -389,6 +398,36 @@
                     ctx.strokeStyle = '#eab308'; 
                     ctx.lineWidth = 4; 
                     ctx.stroke();
+                }
+
+                // KARADELİK VE YILDIRIM EFEKTİ
+                if (id === socket.id && isCharging && shotPower >= 38) {
+                    let intensity = shotPower / 100;
+                    let time = Date.now() / 100;
+
+                    // Karadelik (Koyu Mor Halka)
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 35 + (intensity * 20), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`;
+                    ctx.fill();
+
+                    // Mor Yıldırımlar (Etrafta dönen çizgiler)
+                    for (let i = 0; i < 5; i++) {
+                        let angle = time + (i * Math.PI * 2 / 5);
+                        let rad1 = 25;
+                        let rad2 = 45 + (intensity * 15);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
+                        // Yıldırım kırılması
+                        let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                        ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
+                        ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
+                        
+                        ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; // Parlak Mor
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
                 }
 
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
