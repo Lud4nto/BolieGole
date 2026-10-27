@@ -24,29 +24,31 @@
             justify-content: center;
         }
         #scoreboard {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-shadow: 2px 2px 4px #000;
         }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
         
         canvas {
+            /* Bilgisayar için daha büyük alan */
+            width: 90vw;
+            height: 80vh;
             background-color: #2e7d32;
             border: 4px solid #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-width: 95vw;
-            max-height: 75vh;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
         }
 
+        /* Mobil Joystick */
         #joystick-zone {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 120px;
-            height: 120px;
+            bottom: 30px;
+            left: 30px;
+            width: 140px;
+            height: 140px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -56,14 +58,61 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
         @media (pointer: coarse) {
             #joystick-zone { display: block; }
+            canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
+            #scoreboard { position: absolute; top: 20px; z-index: 10; }
+        }
+
+        /* PC Kontrol Görselleri */
+        #pc-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.8;
+        }
+        .key-row {
+            display: flex;
+            gap: 5px;
+        }
+        .key {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #ccc;
+            transition: all 0.1s ease;
+        }
+        .key.active {
+            background: #4c9aff;
+            color: white;
+            border-color: #ffffff;
+            transform: scale(0.95);
+            box-shadow: 0 0 15px #4c9aff;
+        }
+        .wide-key {
+            width: 105px;
+        }
+        
+        /* Mobilde PC tuşlarını gizle */
+        @media (pointer: coarse) {
+            #pc-controls { display: none; }
         }
     </style>
 </head>
@@ -76,10 +125,30 @@
             <span class="blue-team">Mavi: <span id="score-blue">0</span></span>
         </div>
         
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <!-- Canvas boyutu büyütüldü -->
+        <canvas id="gameCanvas" width="1200" height="750"></canvas>
 
+        <!-- Mobil Kontroller -->
         <div id="joystick-zone">
             <div id="joystick-knob"></div>
+        </div>
+
+        <!-- PC Kontrolleri Görseli -->
+        <div id="pc-controls">
+            <div class="key-row">
+                <div class="key" id="key-w">W</div>
+            </div>
+            <div class="key-row">
+                <div class="key" id="key-a">A</div>
+                <div class="key" id="key-s">S</div>
+                <div class="key" id="key-d">D</div>
+            </div>
+            <div class="key-row" style="margin-top: 10px;">
+                <div class="key wide-key" id="key-space">SPACE</div>
+            </div>
+            <div class="key-row">
+                <div class="key wide-key" id="key-ctrl">CTRL</div>
+            </div>
         </div>
     </div>
 
@@ -89,25 +158,51 @@
         const ctx = canvas.getContext('2d');
         const socket = io();
 
-        // Arka plan resmi yükleniyor
+        // Arka plan resmi
         const bgImage = new Image();
         bgImage.src = 'arkaplan.png';
 
         let myPlayer = null;
         let players = {};
-        let ball = { x: 400, y: 250 };
+        let ball = { x: 600, y: 375 };
         let score = { red: 0, blue: 0 };
 
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
+        // Tuş durumları
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'Control': false };
         
-        window.addEventListener('keydown', (e) => { if(e.key in keys) keys[e.key] = true; });
-        window.addEventListener('keyup', (e) => { if(e.key in keys) keys[e.key] = false; });
+        window.addEventListener('keydown', (e) => { 
+            if(e.key.toLowerCase() in keys) { keys[e.key.toLowerCase()] = true; updateKeyVisual(e.key.toLowerCase(), true); }
+            if(e.key === ' ') { keys[' '] = true; updateKeyVisual(' ', true); }
+            if(e.key === 'Control') { keys['Control'] = true; updateKeyVisual('Control', true); }
+        });
+        window.addEventListener('keyup', (e) => { 
+            if(e.key.toLowerCase() in keys) { keys[e.key.toLowerCase()] = false; updateKeyVisual(e.key.toLowerCase(), false); }
+            if(e.key === ' ') { keys[' '] = false; updateKeyVisual(' ', false); }
+            if(e.key === 'Control') { keys['Control'] = false; updateKeyVisual('Control', false); }
+        });
 
+        // Tuş görselleştirme
+        function updateKeyVisual(key, isPressed) {
+            let id = '';
+            if(key === 'w' || key === 'a' || key === 's' || key === 'd') id = `key-${key}`;
+            if(key === ' ') id = 'key-space';
+            if(key === 'Control') id = 'key-ctrl';
+            
+            if(id) {
+                const el = document.getElementById(id);
+                if(el) {
+                    if(isPressed) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            }
+        }
+
+        // Joystick Ayarları
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false;
         let joystickVector = { x: 0, y: 0 };
-        const maxDistance = 40;
+        const maxDistance = 50;
 
         function handleTouch(e) {
             e.preventDefault();
@@ -138,34 +233,31 @@
             joystickVector = { x: 0, y: 0 };
         });
 
+        // Socket Bağlantıları
         socket.on('currentPlayers', (p, b, s) => {
-            players = p;
-            ball = b;
-            score = s;
-            myPlayer = players[socket.id];
+            players = p; ball = b; score = s; myPlayer = players[socket.id];
         });
-
         socket.on('newPlayer', (player) => { players[player.id] = player; });
         socket.on('playerDisconnected', (id) => { delete players[id]; });
-
         socket.on('gameState', (p, b, s) => {
-            players = p;
-            ball = b;
-            score = s;
-            
+            players = p; ball = b; score = s;
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
-            
             draw();
         });
 
+        let isDashing = false;
+        let dashCooldown = 0;
+
+        // Oyun Döngüsü
         function updateMovement() {
             if (!myPlayer) return;
 
-            let speed = 4;
+            let speed = 6;
             let dx = 0;
             let dy = 0;
 
+            // Hareket
             if (keys.w || keys.ArrowUp) dy -= speed;
             if (keys.s || keys.ArrowDown) dy += speed;
             if (keys.a || keys.ArrowLeft) dx -= speed;
@@ -176,19 +268,37 @@
                 dy += joystickVector.y * speed;
             }
 
-            let newX = Math.max(20, Math.min(780, myPlayer.x + dx));
-            let newY = Math.max(20, Math.min(480, myPlayer.y + dy));
+            // CTRL (Kayma/Top Çalma) Mantığı
+            if (keys['Control'] && dashCooldown <= 0) {
+                isDashing = true;
+                dashCooldown = 120; // 2 saniye bekleme
+                // Dash yönü (Eğer hareket etmiyorsa baktığı yön)
+                if(dx === 0 && dy === 0) { dx = 0; dy = speed * 2; }
+                else { dx *= 2; dy *= 2; }
+                
+                setTimeout(() => { isDashing = false; }, 300); // 0.3 saniye dash süresi
+            }
+            if (dashCooldown > 0) dashCooldown--;
+
+            // Sınır kontrolü
+            let newX = Math.max(20, Math.min(canvas.width - 20, myPlayer.x + dx));
+            let newY = Math.max(20, Math.min(canvas.height - 20, myPlayer.y + dy));
 
             if (newX !== myPlayer.x || newY !== myPlayer.y) {
                 myPlayer.x = newX;
                 myPlayer.y = newY;
                 socket.emit('move', { x: newX, y: newY });
 
+                // Topa çarpma mesafesi
                 let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-                if (distToBall < 30) {
+                let kickRadius = isDashing ? 50 : 35; // Kayarken daha geniş alan
+
+                if (distToBall < kickRadius) {
+                    // SPACE tuşu (Şut) veya normal çarpma
+                    let kickPower = keys[' '] ? 4 : 2; 
                     socket.emit('kick', { 
-                        vx: (ball.x - myPlayer.x) * 1.5, 
-                        vy: (ball.y - myPlayer.y) * 1.5 
+                        vx: (ball.x - myPlayer.x) * kickPower, 
+                        vy: (ball.y - myPlayer.y) * kickPower 
                     });
                 }
             }
@@ -196,48 +306,79 @@
             requestAnimationFrame(updateMovement);
         }
 
-        function draw() {
-            // --- ARKA PLAN RESMİNİ ÇİZ ---
-            if (bgImage.complete && bgImage.naturalWidth !== 0) {
-                // Resim yüklendiyse sahanın her yerine kapla
-                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+        // Resmi boydan boya kaplama fonksiyonu (Cover)
+        function drawCoverImage(img, canvas) {
+            if (!img.complete || img.naturalWidth === 0) return false;
+            
+            const imgRatio = img.width / img.height;
+            const canvasRatio = canvas.width / canvas.height;
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            // Resmin oranını bozmadan alanı tamamen kaplar
+            if (canvasRatio > imgRatio) {
+                drawWidth = canvas.width;
+                drawHeight = canvas.width / imgRatio;
+                offsetX = 0;
+                offsetY = (canvas.height - drawHeight) / 2;
             } else {
-                // Resim yüklenene kadar veya hata olursa eski yeşil rengi kullan
+                drawWidth = canvas.height * imgRatio;
+                drawHeight = canvas.height;
+                offsetX = (canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            }
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            return true;
+        }
+
+        function draw() {
+            // Arka Plan
+            if (!drawCoverImage(bgImage, canvas)) {
                 ctx.fillStyle = '#2e7d32';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // Saha Çizgileri
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.lineWidth = 4;
+            // Saha Çizgileri (Dinamik boyuta göre)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.moveTo(400, 0);
-            ctx.lineTo(400, 500);
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
             ctx.stroke();
-            
+
             ctx.beginPath();
-            ctx.arc(400, 250, 60, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 90, 0, Math.PI * 2);
             ctx.stroke();
 
             // Kaleler
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.fillRect(0, 150, 10, 200);
-            ctx.fillRect(790, 150, 10, 200);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            let goalHeight = 250;
+            let goalY = (canvas.height - goalHeight) / 2;
+            ctx.fillRect(0, goalY, 15, goalHeight);
+            ctx.fillRect(canvas.width - 15, goalY, 15, goalHeight);
 
             // Topu Çiz
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, 12, 0, Math.PI * 2);
+            ctx.arc(ball.x, ball.y, 15, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
             ctx.fill();
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             // Oyuncuları Çiz
             for (let id in players) {
                 let p = players[id];
+                
+                // Dash (Kayma) efekti
+                if (id === socket.id && isDashing) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 30, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fill();
+                }
+
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
                 ctx.fillStyle = p.team === 'red' ? '#ff4c4c' : '#4c9aff';
                 ctx.fill();
                 ctx.strokeStyle = '#ffffff';
@@ -245,9 +386,9 @@
                 ctx.stroke();
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '14px Arial';
+                ctx.font = 'bold 16px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(p.name, p.x, p.y - 30);
+                ctx.fillText(p.name, p.x, p.y - 35);
             }
         }
 
