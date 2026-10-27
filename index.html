@@ -271,9 +271,8 @@
     <script>
         const socket = io();
 
-        // 🔧 Sabitler
-        const BASE_FRAME = 60;   // eski kodun varsaydığı frame hızı
-        const MOVE_EMIT_MS = 33; // ~30Hz gönderim
+        const BASE_FRAME = 60;
+        const MOVE_EMIT_MS = 33;
 
         let myPlayerName = "";
         let currentRoom = null;
@@ -296,12 +295,11 @@
         let shotPower = 0;
         let chargeStartTime = 0;
         let moveX = 0, moveY = 0;
-        let localLastDx = 0, localLastDy = 0; // 🔧 FIX: şut yönü için
+        let localLastDx = 0, localLastDy = 0;
 
         let ballRotation = 0;
         let ballTrail = [];
 
-        // 🔧 FIX: son gönderim zamanları (throttle)
         let lastMoveEmit = 0;
         let lastFrameTime = performance.now();
         let lastRenderTime = performance.now();
@@ -309,7 +307,6 @@
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
-        // 🔧 FIX: XSS koruması
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, function (c) {
                 return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -321,7 +318,6 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // --- MENÜ OLAYLARI ---
         document.getElementById('btn-play').onclick = () => { document.getElementById('modal-name').style.display = 'flex'; };
 
         document.getElementById('btn-confirm-name').onclick = () => {
@@ -350,7 +346,6 @@
             document.getElementById('modal-create').style.display = 'none';
         };
 
-        // --- SOCKET OLAYLARI ---
         socket.on('server_list', (list) => {
             serverListData = list;
             let container = document.getElementById('server-list-container');
@@ -363,7 +358,6 @@
                 let typeStr = srv.type === 'private' ? '🔒 Özel Oda' : '🌐 Topluluk';
                 let div = document.createElement('div');
                 div.className = 'server-item';
-                // 🔧 FIX: escapeHtml ile XSS koruması
                 div.innerHTML = `
                     <div>
                         <h3>${escapeHtml(srv.name)} <span style="font-size:12px;">(${srv.playerCount}/10)</span></h3>
@@ -416,7 +410,6 @@
                 redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
 
                 room.players.forEach(p => {
-                    // 🔧 FIX: escapeHtml ile XSS koruması
                     let el = `<div class="player-slot">${escapeHtml(p.name)}</div>`;
                     if (p.team === 'red') redList.innerHTML += el;
                     else if (p.team === 'blue') blueList.innerHTML += el;
@@ -438,17 +431,17 @@
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing';
-            ballTrail = [];        // 🔧 reset
-            ballRotation = 0;      // 🔧 reset
-            lastAudioStatus = '';  // 🔧 ses kontrolü reset
+            ballTrail = [];
+            ballRotation = 0;
+            lastAudioStatus = '';
             document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
         });
 
         socket.on('game_ended', (room) => {
             currentRoom = room;
             switchScreen('screen-lobby');
-            ballTrail = [];        // 🔧 reset
-            ballRotation = 0;      // 🔧 reset
+            ballTrail = [];
+            ballRotation = 0;
             document.getElementById('bgMusic').pause();
         });
 
@@ -476,7 +469,6 @@
             } else switchScreen('screen-lobby');
         }
 
-        // force_positions - sunucudan snap
         socket.on('force_positions', (serverPlayers) => {
             for (let sp of serverPlayers) {
                 if (sp.id === socket.id) {
@@ -499,29 +491,30 @@
         socket.on('game_state', (room) => {
             currentRoom = room;
 
-            // 🔧 FIX: müzik sadece status değişince kontrol edilsin (60Hz değil)
+            // 🔧 GOL EKRANI FIX: Overlay'ler her tick kontrol edilsin
             if (room.status === 'playing') {
                 document.getElementById('overlay-message').style.display = 'none';
                 document.getElementById('overlay-replay').style.display = 'none';
             } else if (room.status === 'halftime_break') {
-                    document.getElementById('overlay-message').style.display = 'flex';
-                    document.getElementById('msg-title').innerText = "DEVRE ARASI";
-                    document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
-                    document.getElementById('overlay-replay').style.display = 'none';
+                document.getElementById('overlay-message').style.display = 'flex';
+                document.getElementById('msg-title').innerText = "DEVRE ARASI";
+                document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
+                document.getElementById('overlay-replay').style.display = 'none';
             } else if (room.status === 'goal_replay') {
-                    document.getElementById('overlay-replay').style.display = 'flex';
-                    document.getElementById('overlay-message').style.display = 'none';
+                document.getElementById('overlay-replay').style.display = 'flex';
+                document.getElementById('overlay-message').style.display = 'none';
             }
-                // Müzik sadece status değişince
-                if (room.status !== lastAudioStatus) {
-                    lastAudioStatus = room.status;
-                    let music = document.getElementById('bgMusic');
-                    if (room.status === 'playing') {
-                        if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
-    } else {
-        music.pause();
-    }
-}
+
+            // Müzik sadece status değişince
+            if (room.status !== lastAudioStatus) {
+                lastAudioStatus = room.status;
+                let music = document.getElementById('bgMusic');
+                if (room.status === 'playing') {
+                    if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
+                } else {
+                    music.pause();
+                }
+            }
 
             let currentIds = [];
             for (let p of room.players) {
@@ -530,7 +523,6 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    // 🔧 Santra/devre arası snap (titreşim fix)
                     if (room.isKickoff || room.status === 'halftime_break') {
                         myPlayer.x = p.x;
                         myPlayer.y = p.y;
@@ -544,7 +536,6 @@
                         players[p.id].y = p.y;
                         players[p.id].team = p.team;
                         players[p.id].name = p.name;
-                        // renderX/Y korunur (lerp için)
                     }
                 }
             }
@@ -561,7 +552,6 @@
             document.getElementById('match-timer').innerText = (room.half === 1 ? "1. Yarı " : "2. Yarı ") + timeStr;
         });
 
-        // --- KLAVYE KONTROLLERİ ---
         window.addEventListener('keydown', (e) => { 
             if (isSpectator) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
@@ -599,7 +589,6 @@
         }
 
         function getKickAngle() {
-            // 🔧 FIX: myPlayer.lastDx yerine client-side localLastDx
             if (moveX !== 0 || moveY !== 0) return Math.atan2(moveY, moveX);
             if (localLastDx !== 0 || localLastDy !== 0) return Math.atan2(localLastDy, localLastDx);
             return 0;
@@ -626,7 +615,6 @@
             document.getElementById('power-container').style.display = 'none';
         }
 
-        // --- MOBİL KONTROLLER ---
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
@@ -654,12 +642,12 @@
         joystickZone.addEventListener('touchstart', (e) => { joystickActive = true; handleTouch(e); });
         joystickZone.addEventListener('touchmove', (e) => { if(joystickActive) handleTouch(e); });
         joystickZone.addEventListener('touchend', resetJoystick);
-        joystickZone.addEventListener('touchcancel', resetJoystick); // 🔧 FIX
+        joystickZone.addEventListener('touchcancel', resetJoystick);
 
         const btnSprint = document.getElementById('btn-sprint');
         btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = true; });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = false; });
-        btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; }); // 🔧 FIX
+        btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; });
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
@@ -682,7 +670,7 @@
                 if (pressDuration < 200 && shotPower < 30) forcePass(); else executeKick();
             }
         });
-        btnAction.addEventListener('touchcancel', (e) => { // 🔧 FIX
+        btnAction.addEventListener('touchcancel', (e) => {
             e.preventDefault();
             if (isSpectator) return;
             if (isCharging) {
@@ -692,17 +680,15 @@
             }
         });
 
-        // --- HAREKET DÖNGÜSÜ (deltaTime ile) ---
         function updateMovement(now) {
             now = now || performance.now();
-            let dt = Math.min((now - lastFrameTime) / 1000, 0.1); // saniye, max 100ms
+            let dt = Math.min((now - lastFrameTime) / 1000, 0.1);
             lastFrameTime = now;
 
             if (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing') { 
                 requestAnimationFrame(updateMovement); return; 
             }
 
-            // 🔧 FIX: top çalınırsa şarj sıfırlansın (hile engeli)
             if (isCharging && ball.owner !== socket.id) {
                 isCharging = false;
                 shotPower = 0;
@@ -773,7 +759,6 @@
             myPlayer.x = newX;
             myPlayer.y = newY;
 
-            // 🔧 FIX: throttle (30Hz) + Math.round (bandwidth)
             if (now - lastMoveEmit >= MOVE_EMIT_MS) {
                 socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
                 lastMoveEmit = now;
@@ -782,7 +767,6 @@
             requestAnimationFrame(updateMovement);
         }
 
-        // --- ÇİZİM DÖNGÜSÜ ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -896,13 +880,13 @@
                 drawPitch();   
                 drawBall();
 
-                if (currentRoom && currentRoom.status !== 'goal_replay') {
-                    let lerpFactor = Math.min(1, 15 * dt); // 🔧 lerp
+                // 🔧 GOL EKRANI FIX: goal_replay sırasında da oyuncular çizilsin
+                if (currentRoom) {
+                    let lerpFactor = Math.min(1, 15 * dt);
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
                         
-                        // 🔧 FIX: renderX/renderY yoksa hedefle başlat, varsa lerp
                         if (id !== socket.id) {
                             if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
                             p.renderX += (p.x - p.renderX) * lerpFactor;
