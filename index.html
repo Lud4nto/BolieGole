@@ -14,16 +14,28 @@
         
         canvas { width: 90vw; height: 70vh; background-color: #111; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); }
         
+        /* Üst Barlar Konteyneri */
+        .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        
         /* Kondisyon Barı */
         #stamina-container {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             width: 350px; height: 24px; background: rgba(15, 23, 42, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
             overflow: hidden; display: flex; align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
-        #stamina-text { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 2px #000; }
+        #stamina-text { position: absolute; width: 350px; text-align: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 2px #000; }
+
+        /* Şut Gücü Barı */
+        #power-container {
+            width: 350px; height: 16px; background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            overflow: hidden; display: none; align-items: center; /* Başlangıçta gizli */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+        }
+        #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear, background 0.1s; }
+        #power-text { position: absolute; width: 350px; text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 2px #000; }
 
         /* PC Kontrolleri */
         #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
@@ -46,16 +58,25 @@
             #joystick-zone { display: block; }
             #pc-controls { display: none; }
             canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
-            #scoreboard { position: absolute; top: 60px; font-size: 28px; }
-            #stamina-container { top: 20px; width: 200px; height: 16px; }
+            #scoreboard { position: absolute; top: 80px; font-size: 28px; }
+            #stamina-container { width: 200px; height: 16px; }
+            #stamina-text { width: 200px; }
+            #power-container { width: 200px; height: 12px; }
+            #power-text { width: 200px; font-size: 8px; }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="stamina-container">
-            <div id="stamina-bar"></div>
-            <div id="stamina-text">DEPAR KONDİSYONU</div>
+        <div class="ui-bars">
+            <div id="stamina-container">
+                <div id="stamina-bar"></div>
+                <div id="stamina-text">DEPAR KONDİSYONU</div>
+            </div>
+            <div id="power-container">
+                <div id="power-bar"></div>
+                <div id="power-text">ŞUT GÜCÜ</div>
+            </div>
         </div>
 
         <div id="scoreboard">
@@ -89,25 +110,76 @@
         let ball = { x: 600, y: 300, z: 0 };
         let score = { red: 0, blue: 0 };
 
-        // Kondisyon ve Hız Ayarları
+        // Kondisyon Ayarları
         let stamina = 100;
         let isExhausted = false; 
         const maxStamina = 100;
         const normalSpeed = 4.5;
         const sprintSpeed = 7.5;
 
+        // Şut Ayarları
+        let isCharging = false;
+        let shotPower = 0;
+        let canCharge = false;
+
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
         window.addEventListener('keydown', (e) => { 
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
+            
+            // Space'e basıldığında şarj başlat (eğer topa yakınsa)
+            if (k === ' ') {
+                if (myPlayer && ball) {
+                    let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+                    if (dist < 70) { // Topa yeterince yakınsa şarj etmeye başla
+                        isCharging = true;
+                    }
+                }
+            }
             updateKeyVisual(k, true);
         });
+
         window.addEventListener('keyup', (e) => { 
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = false;
+
+            // Space bırakıldığında topu fırlat
+            if (k === ' ' && isCharging) {
+                isCharging = false;
+                executeKick();
+            }
             updateKeyVisual(k, false);
         });
+
+        function executeKick() {
+            if (!myPlayer || !ball) return;
+            let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+            
+            if (dist < 70) {
+                let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
+                let vx = 0, vy = 0, vz = 0;
+
+                if (shotPower < 38) {
+                    // PAS (Kısa basış veya %38 altı)
+                    vx = Math.cos(angle) * 2.5;
+                    vy = Math.sin(angle) * 2.5;
+                    vz = 0;
+                } else {
+                    // ŞUT (Uzun basış, %38 üstü)
+                    let force = shotPower / 100; // 0.38 ile 1.0 arası
+                    vx = Math.cos(angle) * (6 + (force * 7)); // Hız 6 ile 13 arası
+                    vy = Math.sin(angle) * (6 + (force * 7));
+                    vz = 2 + (force * 6); // Zıplama yüksekliği
+                }
+                
+                if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
+            }
+            
+            // Sıfırla
+            shotPower = 0;
+            document.getElementById('power-container').style.display = 'none';
+        }
 
         function updateKeyVisual(key, isPressed) {
             let id = '';
@@ -116,7 +188,7 @@
             if(id) {
                 const el = document.getElementById(id);
                 if(el) {
-                    if (id === 'key-f' && isExhausted && isPressed) return; // Tükenmişse F basılmasın
+                    if (id === 'key-f' && isExhausted && isPressed) return;
                     isPressed ? el.classList.add('active') : el.classList.remove('active');
                 }
             }
@@ -165,45 +237,62 @@
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
 
-            // --- KONDİSYON MANTIĞI (Kesin Çözüm) ---
+            // --- KONDİSYON MANTIĞI ---
             let isSprinting = false;
             let currentSpeed = normalSpeed;
 
             if (isExhausted) {
-                // Eğer tükendiyse: 30'a kadar doldur, koşma!
-                stamina += 0.15; // Yavaş yenilenme
-                if (stamina >= 30) {
-                    isExhausted = false; // 30'a ulaştı, kilit açıldı
-                }
+                stamina += 0.15;
+                if (stamina >= 30) isExhausted = false;
                 const fKey = document.getElementById('key-f');
                 if (fKey) fKey.classList.add('disabled');
             } else {
-                // Tükenmediyse: F'ye basıyorsa koş
                 if (keys['f']) {
                     isSprinting = true;
                     currentSpeed = sprintSpeed;
-                    stamina -= 1.2; // Depar atarken tükenme
-                    if (stamina <= 0) {
-                        stamina = 0;
-                        isExhausted = true; // Tükendi!
-                    }
+                    stamina -= 1.2;
+                    if (stamina <= 0) { stamina = 0; isExhausted = true; }
                 } else {
-                    stamina += 0.15; // Yürürken yavaşça dol
+                    stamina += 0.15;
                 }
                 const fKey = document.getElementById('key-f');
                 if (fKey) fKey.classList.remove('disabled');
             }
             if (stamina > maxStamina) stamina = maxStamina;
 
-            // Barı Güncelle
             const bar = document.getElementById('stamina-bar');
             bar.style.width = (stamina / maxStamina) * 100 + '%';
-            if (isExhausted) { 
-                bar.style.background = 'linear-gradient(90deg, #ef4444, #7f1d1d)'; // Koyu kırmızı
-            } else if (stamina < 30) { 
-                bar.style.background = 'linear-gradient(90deg, #f97316, #ea580c)'; // Turuncu
-            } else { 
-                bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)'; // Normal
+            if (isExhausted) bar.style.background = 'linear-gradient(90deg, #ef4444, #7f1d1d)';
+            else if (stamina < 30) bar.style.background = 'linear-gradient(90deg, #f97316, #ea580c)';
+            else bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
+
+            // --- ŞUT GÜCÜ MANTIĞI ---
+            let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+            
+            // Eğer topa yakınsa ve Space'e basılıyorsa gücü artır
+            if (isCharging && distToBall < 70) {
+                document.getElementById('power-container').style.display = 'flex'; // Barı göster
+                
+                shotPower += 2.5; // Dolma hızı (Hızlıca dolsun)
+                if (shotPower > 100) shotPower = 100;
+
+                const pBar = document.getElementById('power-bar');
+                pBar.style.width = shotPower + '%';
+                
+                // %38'in altı kırmızı (pas), üstü yeşilden sarıya
+                if (shotPower < 38) {
+                    pBar.style.background = '#ef4444'; 
+                } else {
+                    pBar.style.background = `linear-gradient(90deg, #22c55e ${shotPower}%, #eab308)`; 
+                }
+            } else if (!isCharging) {
+                document.getElementById('power-container').style.display = 'none';
+                shotPower = 0;
+            } else if (isCharging && distToBall >= 70) {
+                // Topa uzaksa şarjı iptal et
+                isCharging = false;
+                shotPower = 0;
+                document.getElementById('power-container').style.display = 'none';
             }
 
             // --- HAREKET ---
@@ -216,21 +305,15 @@
 
             if (dx !== 0 || dy !== 0) {
                 let length = Math.hypot(dx, dy);
-                dx = (dx / length) * currentSpeed;
-                dy = (dy / length) * currentSpeed;
+                // Şarj ederken yavaşla (gerçekçilik)
+                let speedMultiplier = isCharging ? 0.5 : 1;
+                dx = (dx / length) * (currentSpeed * speedMultiplier);
+                dy = (dy / length) * (currentSpeed * speedMultiplier);
             }
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
             myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
             if (socket) socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
-
-            // ŞUT (Space)
-            let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-            if (distToBall < 60 && keys[' ']) {
-                if (socket) socket.emit('kick', { vx: (ball.x - myPlayer.x) * 5, vy: (ball.y - myPlayer.y) * 5, vz: 6 });
-                keys[' '] = false; 
-                updateKeyVisual(' ', false);
-            }
 
             requestAnimationFrame(updateMovement);
         }
@@ -298,6 +381,14 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
+                // Şarj eden oyuncunun etrafında parlama
+                if (id === socket.id && isCharging) {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
+                    ctx.strokeStyle = shotPower >= 38 ? '#eab308' : '#ef4444';
+                    ctx.lineWidth = 3; 
+                    ctx.stroke();
+                }
+
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
                 ctx.fillText(p.name, p.x, p.y - 35);
             }
