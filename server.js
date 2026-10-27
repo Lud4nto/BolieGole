@@ -267,7 +267,6 @@ function updateGame(s) {
             for (let p of s.players) {
                 if (!p.isBot || p.team === 'spectator') continue;
                 
-                // Basit AI: En yakın topa yönel
                 let targetBallX = s.ball.x;
                 let targetBallY = s.ball.y;
                 let dx = targetBallX - p.x;
@@ -275,7 +274,7 @@ function updateGame(s) {
                 let dist = Math.hypot(dx, dy);
 
                 if (dist > 5) {
-                    let speed = 3.5; // Bot hızı
+                    let speed = 3.5;
                     if (s.ball.owner === p.id) speed = 4.5;
                     p.lastDx = (dx / dist) * speed;
                     p.lastDy = (dy / dist) * speed;
@@ -285,7 +284,6 @@ function updateGame(s) {
                     p.y = Math.max(25, Math.min(height - 25, p.y));
                 }
 
-                // Şut atma mantığı
                 if (s.ball.owner === p.id) {
                     let goalX = p.team === 'red' ? width - 25 : 25;
                     let distToGoal = Math.abs(p.x - goalX);
@@ -395,11 +393,26 @@ function updateGame(s) {
                         s.replayTimer = 3;
                         s.isKickoff = true;
                         
+                        let scoringTeam = s.concedingTeam === 'red' ? 'blue' : 'red';
+
                         for (let p of s.players) {
                             if (p.team === 'spectator') continue;
-                            if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; } 
-                            else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
+                            if (p.team === s.concedingTeam) { 
+                                p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; 
+                            }
                         }
+                        let scoringPlayers = s.players.filter(p => p.team === scoringTeam);
+                        for (let i = 0; i < scoringPlayers.length; i++) {
+                            let p = scoringPlayers[i];
+                            if (i === 0) { // Kaleci
+                                if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
+                                else { p.x = 1140; p.y = 300; }
+                            } else {
+                                if (scoringTeam === 'red') { p.x = 300; p.y = 200 + Math.random() * 200; }
+                                else { p.x = 900; p.y = 200 + Math.random() * 200; }
+                            }
+                        }
+
                         s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
                         
                         io.to(s.id).emit('force_positions', s.players); 
@@ -432,10 +445,24 @@ function resetBall(s, concededBy = null, isHalftime = false) {
     s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
+        let scoringTeam = concededBy === 'red' ? 'blue' : 'red';
+
         for (let p of s.players) {
             if (p.team === 'spectator') continue;
-            if (p.team === concededBy) { p.x = concededBy === 'red' ? 500 : 700; p.y = 300; } 
-            else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
+            if (p.team === concededBy) { 
+                p.x = concededBy === 'red' ? 500 : 700; p.y = 300; 
+            }
+        }
+        let scoringPlayers = s.players.filter(p => p.team === scoringTeam);
+        for (let i = 0; i < scoringPlayers.length; i++) {
+            let p = scoringPlayers[i];
+            if (i === 0) {
+                if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
+                else { p.x = 1140; p.y = 300; }
+            } else {
+                if (scoringTeam === 'red') { p.x = 300; p.y = 200 + Math.random() * 200; }
+                else { p.x = 900; p.y = 200 + Math.random() * 200; }
+            }
         }
     } else {
         s.isKickoff = false; s.concedingTeam = null;
