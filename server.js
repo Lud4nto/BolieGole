@@ -580,7 +580,7 @@ function updateGame(s) {
         }
 
         for (let p of s.players) {
-            if (p.team === 'spectator' || (p.position && p.position.includes('GK'))) continue;
+            if (p.team === 'spectator') continue; // ARTIK KALECİLER DE TOPU ALABİLİR
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
                 if (s.isKickoff && p.team !== s.concedingTeam) continue; 
@@ -612,7 +612,6 @@ function resetBall(s, concededBy = null, isHalftime = false) {
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
         
-        // 🚨 1v1 KONTROLÜ: Gol yiyen takımda sadece 1 kişi varsa topu kaleye yakın başlat
         let concedingPlayers = s.players.filter(p => p.team === concededBy);
         if (concedingPlayers.length === 1) {
             s.ball.x = concededBy === 'red' ? 150 : 1050;
