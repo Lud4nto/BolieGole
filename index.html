@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Critiball</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; }
         #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #scoreboard { font-size: 32px; font-weight: bold; margin-bottom: 15px; text-shadow: 2px 2px 4px #000; z-index: 10; }
         .red-team { color: #ff4c4c; }
@@ -13,11 +13,40 @@
         
         canvas { width: 90vw; height: 70vh; background-color: #111; border: 4px solid #ffffff; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
         
-        #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8; pointer-events: none; }
-        .key-row { display: flex; gap: 8px; }
-        .key { width: 55px; height: 55px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ccc; transition: 0.1s; }
-        .key.active { background: #4c9aff; color: white; transform: translateY(4px); }
-        .wide-key { width: 122px; }
+        /* Kondisyon Barı */
+        #stamina-container {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #ffffff; border-radius: 10px;
+            overflow: hidden; display: flex; align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #stamina-bar {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #f1c40f, #f39c12);
+            transition: width 0.1s linear, background 0.3s;
+        }
+        #stamina-text {
+            position: absolute; width: 100%; text-align: center;
+            font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
+        }
+
+        /* PC Kontrolleri (Modern Tasarım) */
+        #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; opacity: 0.9; pointer-events: none; }
+        .key-row { display: flex; gap: 10px; }
+        .key {
+            width: 55px; height: 55px;
+            background: rgba(20, 20, 20, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 18px; color: #ccc;
+            transition: 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+        }
+        .key.active { background: rgba(76, 154, 255, 0.8); color: white; border-color: #fff; transform: translateY(4px); box-shadow: 0 0 15px #4c9aff; }
+        .wide-key { width: 120px; }
 
         #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: none; }
         #joystick-knob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); }
@@ -26,21 +55,29 @@
             #pc-controls { display: none; }
             canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
             #scoreboard { position: absolute; top: 20px; }
+            #stamina-container { top: 70px; width: 200px; }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <!-- Kondisyon Barı -->
+        <div id="stamina-container">
+            <div id="stamina-bar"></div>
+            <div id="stamina-text">KONDİSYON</div>
+        </div>
+
         <div id="scoreboard"><span class="red-team">Kırmızı: <span id="score-red">0</span></span> - <span class="blue-team">Mavi: <span id="score-blue">0</span></span></div>
         
         <canvas id="gameCanvas" width="1200" height="600"></canvas>
 
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
 
+        <!-- Yeni PC Kontrolleri -->
         <div id="pc-controls">
             <div class="key-row"><div class="key" id="key-w">W</div></div>
             <div class="key-row"><div class="key" id="key-a">A</div><div class="key" id="key-s">S</div><div class="key" id="key-d">D</div></div>
-            <div class="key-row"><div class="key wide-key" id="key-space">SPACE</div></div>
+            <div class="key-row"><div class="key wide-key" id="key-space">SPACE</div><div class="key" id="key-f">F</div></div>
         </div>
     </div>
 
@@ -48,16 +85,20 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
-        let socket = null;
-        try { socket = io(); } catch(e) { console.log("Socket yok"); }
+        let socket = null; try { socket = io(); } catch(e) {}
 
         let myPlayer = null;
         let players = {};
-        let ball = { x: 600, y: 300 };
+        let ball = { x: 600, y: 300, z: 0 };
         let score = { red: 0, blue: 0 };
 
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false };
+        // Kondisyon
+        let stamina = 100;
+        const maxStamina = 100;
+        const normalSpeed = 3.5;
+        const sprintSpeed = 6.5;
+
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
         window.addEventListener('keydown', (e) => { 
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
@@ -72,7 +113,7 @@
 
         function updateKeyVisual(key, isPressed) {
             let id = '';
-            if(['w','a','s','d'].includes(key)) id = `key-${key}`;
+            if(['w','a','s','d','f'].includes(key)) id = `key-${key}`;
             if(key === ' ') id = 'key-space';
             if(id) {
                 const el = document.getElementById(id);
@@ -104,7 +145,6 @@
             joystickActive = false; joystickKnob.style.transform = 'translate(-50%, -50%)'; joystickVector = { x: 0, y: 0 };
         });
 
-        // Socket Bağlantıları
         if (socket) {
             socket.on('currentPlayers', (p, b, s) => {
                 players = p; ball = b; score = s; 
@@ -124,28 +164,49 @@
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
 
-            // HIZ DÜŞÜRÜLDÜ (Eski: 6 -> Yeni: 4)
-            let speed = 4; 
-            let dx = 0, dy = 0;
+            let isSprinting = keys['f'] && stamina > 0;
+            let currentSpeed = isSprinting ? sprintSpeed : normalSpeed;
 
-            if (keys.w || keys.ArrowUp) dy -= speed;
-            if (keys.s || keys.ArrowDown) dy += speed;
-            if (keys.a || keys.ArrowLeft) dx -= speed;
-            if (keys.d || keys.ArrowRight) dx += speed;
-            if (joystickActive) { dx += joystickVector.x * speed; dy += joystickVector.y * speed; }
+            // Kondisyon Çubuğu Mantığı
+            if (isSprinting) {
+                stamina -= 1.5; // Depar atarken tükenme hızı
+                if (stamina < 0) stamina = 0;
+            } else {
+                stamina += 0.8; // Durunca/yürüyünce dolma hızı
+                if (stamina > maxStamina) stamina = maxStamina;
+            }
+
+            // Barı Güncelle
+            const bar = document.getElementById('stamina-bar');
+            bar.style.width = (stamina / maxStamina) * 100 + '%';
+            if (stamina < 30) { bar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)'; } 
+            else { bar.style.background = 'linear-gradient(90deg, #f1c40f, #f39c12)'; }
+
+            let dx = 0, dy = 0;
+            if (keys.w || keys.ArrowUp) dy -= 1;
+            if (keys.s || keys.ArrowDown) dy += 1;
+            if (keys.a || keys.ArrowLeft) dx -= 1;
+            if (keys.d || keys.ArrowRight) dx += 1;
+            if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
+
+            // Normalize (Çapraz giderken daha hızlı olmayı engeller)
+            if (dx !== 0 || dy !== 0) {
+                let length = Math.hypot(dx, dy);
+                dx = (dx / length) * currentSpeed;
+                dy = (dy / length) * currentSpeed;
+            }
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
             myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
-            
             if (socket) socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
 
-            // ŞUT KONTROLÜ
+            // ŞUT
             let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-            if (distToBall < 55 && keys[' ']) {
-                // Şut gücünü biraz daha artırdık (4 -> 4.5)
+            if (distToBall < 60 && keys[' ']) {
                 if (socket) socket.emit('kick', { 
-                    vx: (ball.x - myPlayer.x) * 4.5, 
-                    vy: (ball.y - myPlayer.y) * 4.5 
+                    vx: (ball.x - myPlayer.x) * 5, 
+                    vy: (ball.y - myPlayer.y) * 5,
+                    vz: 8 // Topu havaya diker (Sekme efekti için)
                 });
                 keys[' '] = false; 
                 updateKeyVisual(' ', false);
@@ -168,7 +229,6 @@
 
             const margin = 30;
             ctx.strokeRect(margin, margin, canvas.width - (margin * 2), canvas.height - (margin * 2));
-
             ctx.beginPath(); ctx.moveTo(canvas.width / 2, margin); ctx.lineTo(canvas.width / 2, canvas.height - margin); ctx.stroke();
             ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 70, 0, Math.PI * 2); ctx.stroke();
             ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
@@ -183,7 +243,7 @@
 
             ctx.beginPath(); ctx.arc(margin + 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(canvas.width - margin - 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
-
+            
             ctx.beginPath(); ctx.arc(margin + penaltyW, canvas.height / 2, 50, Math.PI * 0.65, Math.PI * 1.35); ctx.stroke();
             ctx.beginPath(); ctx.arc(canvas.width - margin - penaltyW, canvas.height / 2, 50, -Math.PI * 0.35, Math.PI * 0.35); ctx.stroke();
             
@@ -196,12 +256,18 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPitch();
 
-            // Top
-            ctx.beginPath(); ctx.arc(ball.x, ball.y, 15, 0, Math.PI * 2); 
+            // --- TOP ÇİZİMİ (Zıplama / Gölge Efekti) ---
+            // 1. Gölge (Topun yere izdüşümü)
+            ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15, 8, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+
+            // 2. Topun kendisi (Yüksekliğe göre y ekseninde yukarı çizilir)
+            let drawY = ball.y - (ball.z || 0);
+            ctx.beginPath(); ctx.arc(ball.x, drawY, 15, 0, Math.PI * 2); 
             ctx.fillStyle = '#fff'; ctx.fill();
             ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
 
-            // Oyuncular
+            // --- OYUNCULARI ÇİZ ---
             for (let id in players) {
                 let p = players[id];
                 if (!p) continue;
