@@ -144,10 +144,8 @@ io.on('connection', (socket) => {
         let p = s.players.find(pl => pl.id === socket.id);
         if (!p || p.team === 'spectator') return;
 
-        // 🔧 FIX: NaN / undefined / sonsuz sayı engeli
         if (!isFiniteNum(data.x) || !isFiniteNum(data.y)) return;
 
-        // 🔧 FIX: sunucu tarafı clamp (hile engeli)
         let nx = clamp(data.x, PLAYER_MIN_X, PLAYER_MAX_X);
         let ny = clamp(data.y, PLAYER_MIN_Y, PLAYER_MAX_Y);
 
@@ -187,7 +185,6 @@ io.on('connection', (socket) => {
         if (!s || s.status !== "playing") return;
 
         if (s.ball && s.ball.owner === socket.id) {
-            // 🔧 FIX: input validation + clamp
             let vx = isFiniteNum(data.vx) ? data.vx : 0;
             let vy = isFiniteNum(data.vy) ? data.vy : 0;
             let vz = isFiniteNum(data.vz) ? data.vz : 0;
@@ -217,7 +214,6 @@ io.on('connection', (socket) => {
         if (!socket.roomId) return;
         let s = servers[socket.roomId];
         if (s) {
-            // 🔧 FIX: top sahibi ayrıldıysa topu serbest bırak
             if (s.ball && s.ball.owner === socket.id) {
                 s.ball.owner = null;
                 s.ball.possessionTimer = 0;
@@ -251,6 +247,7 @@ function updateGame(s) {
             return;
         }
 
+        // 🔧 GOL EKRANI FIX (Her tick game_state gönderiliyor ve süre 3 saniye)
         if (s.status === 'goal_replay') {
             s.replayTimer -= 1/60;
             if (s.replayTimer <= 0) {
@@ -314,7 +311,6 @@ function updateGame(s) {
             let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
 
             if (hitLeftGoal || hitRightGoal) {
-                // 🔧 YENİ: ÜST DİREKTEN SEKME
                 if (ball.z > GOAL_TOP_Z) {
                     ball.x = hitRightGoal ? width - 30 : 30;
                     ball.vx = -ball.vx * 0.7;
@@ -337,7 +333,8 @@ function updateGame(s) {
                         else { s.score.blue++; s.concedingTeam = 'red'; }
 
                         s.status = 'goal_replay';
-                        s.replayTimer = 3;
+                        s.replayTimer = 3; // 🔧 GOL SÜRESİ 3 SANİYE OLDU
+
                         s.isKickoff = true;
 
                         for (let p of s.players) {
