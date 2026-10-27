@@ -247,7 +247,6 @@ io.on('connection', (socket) => {
 
 function updateGame(s) {
     try {
-        // History kaydı (Replay için son 3 saniye / 180 tick)
         if (s.status === 'playing') {
             s.history.push({
                 players: s.players.map(p => ({ id: p.id, x: p.x, y: p.y, team: p.team })),
@@ -256,13 +255,11 @@ function updateGame(s) {
             if (s.history.length > 180) s.history.shift();
         }
 
-        // Emote sürelerini güncelle
         for (let i = s.emotes.length - 1; i >= 0; i--) {
             s.emotes[i].timer--;
             if (s.emotes[i].timer <= 0) s.emotes.splice(i, 1);
         }
 
-        // Bot Yapay Zekası
         if (s.status === 'playing') {
             for (let p of s.players) {
                 if (!p.isBot || p.team === 'spectator') continue;
@@ -391,31 +388,10 @@ function updateGame(s) {
                         
                         s.status = 'goal_replay';
                         s.replayTimer = 3;
-                        s.isKickoff = true;
                         
-                        let scoringTeam = s.concedingTeam === 'red' ? 'blue' : 'red';
+                        // GOL ANINDA DİREKT resetBall ÇAĞIRIYORUZ
+                        resetBall(s, s.concedingTeam, false);
 
-                        for (let p of s.players) {
-                            if (p.team === 'spectator') continue;
-                            if (p.team === s.concedingTeam) { 
-                                p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; 
-                            }
-                        }
-                        let scoringPlayers = s.players.filter(p => p.team === scoringTeam);
-                        for (let i = 0; i < scoringPlayers.length; i++) {
-                            let p = scoringPlayers[i];
-                            if (i === 0) { // Kaleci
-                                if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
-                                else { p.x = 1140; p.y = 300; }
-                            } else {
-                                if (scoringTeam === 'red') { p.x = 300; p.y = 200 + Math.random() * 200; }
-                                else { p.x = 900; p.y = 200 + Math.random() * 200; }
-                            }
-                        }
-
-                        s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" };
-                        
-                        io.to(s.id).emit('force_positions', s.players); 
                         io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
                         io.to(s.id).emit('game_state', s);
                         return;
@@ -450,18 +426,23 @@ function resetBall(s, concededBy = null, isHalftime = false) {
         for (let p of s.players) {
             if (p.team === 'spectator') continue;
             if (p.team === concededBy) { 
-                p.x = concededBy === 'red' ? 500 : 700; p.y = 300; 
+                // Santra yapacak takım orta sahada
+                p.x = concededBy === 'red' ? 500 : 700; 
+                p.y = 300; 
             }
         }
+        
         let scoringPlayers = s.players.filter(p => p.team === scoringTeam);
         for (let i = 0; i < scoringPlayers.length; i++) {
             let p = scoringPlayers[i];
-            if (i === 0) {
+            if (i === 0) { 
+                // Gol atan takımın 1. oyuncusu (veya tek oyuncusu) kalede
                 if (scoringTeam === 'red') { p.x = 60; p.y = 300; }
                 else { p.x = 1140; p.y = 300; }
             } else {
-                if (scoringTeam === 'red') { p.x = 300; p.y = 200 + Math.random() * 200; }
-                else { p.x = 900; p.y = 200 + Math.random() * 200; }
+                // Diğer oyuncular kendi yarı sahasında
+                if (scoringTeam === 'red') { p.x = 250; p.y = 150 + Math.random() * 300; }
+                else { p.x = 950; p.y = 150 + Math.random() * 300; }
             }
         }
     } else {
