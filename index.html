@@ -300,10 +300,10 @@
         let ballRotation = 0;
         let ballTrail = [];
 
-        // Gol Kamerası Değişkenleri
-        let lastBallX = 600;
-        let lastBallY = 300;
-        let goalCamTime = 0;
+        // 🎥 KAMERA DEĞİŞKENLERİ 🎥
+        let cameraX = 600;
+        let cameraY = 300;
+        let cameraZoom = 1.0;
 
         let lastMoveEmit = 0;
         let lastFrameTime = performance.now();
@@ -438,7 +438,10 @@
             if(currentRoom) currentRoom.status = 'playing';
             ballTrail = [];
             ballRotation = 0;
-            goalCamTime = 0;
+            
+            // Kamerayı sıfırla
+            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            
             lastAudioStatus = '';
             document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
         });
@@ -527,7 +530,7 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    // 🔧 TİTREŞİM FIX: Sunucu pozisyonu zorla ezilmiyor, client kendi konumunu yönetiyor.
+                    // 🔧 TİTREŞİM FIX
                     players[socket.id] = myPlayer; 
                 } else {
                     if (!players[p.id]) {
@@ -838,11 +841,6 @@
         }
 
         function drawBall() {
-            if (currentRoom && currentRoom.status === 'playing') {
-                lastBallX = ball.x;
-                lastBallY = ball.y;
-            }
-
             let drawY = ball.y - (ball.z || 0);
             let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
             ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
@@ -882,22 +880,48 @@
 
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
-                
-                ctx.save(); // KAMERA BAŞLANGICI
-                if (currentRoom && currentRoom.status === 'goal_replay') {
-                    goalCamTime += dt;
-                    let targetZoom = 1.6;
-                    let currentZoom = 1.0 + Math.min(goalCamTime * 2, 1.0) * (targetZoom - 1.0);
+
+                // 🎥 KAMERA TAKİP MANTIĞI 🎥
+                let targetCamX = 600; // Varsayılan: Orta saha
+                let targetCamY = 300;
+                let targetZoom = 1.0;
+
+                if (currentRoom) {
+                    let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     
-                    let panX = Math.max(600 - (600/currentZoom), Math.min(600 + (600/currentZoom), lastBallX));
-                    let panY = Math.max(300 - (300/currentZoom), Math.min(300 + (300/currentZoom), lastBallY));
-                    
-                    ctx.translate(600, 300);
-                    ctx.scale(currentZoom, currentZoom);
-                    ctx.translate(-panX, -panY);
-                } else {
-                    goalCamTime = 0;
+                    if (currentRoom.status === 'goal_replay') {
+                        // Gol anında topun kaleye girişini izle
+                        targetCamX = ball.x;
+                        targetCamY = ball.y;
+                        targetZoom = 1.5;
+                    } else if (currentRoom.status === 'playing') {
+                        // Eğer top hızlı gidiyorsa (şut veya uzun pas), topu takip et
+                        if (ball.owner === null && speed > 15) {
+                            targetCamX = ball.x;
+                            targetCamY = ball.y;
+                            targetZoom = 1.3; 
+                        } else if (myPlayer) {
+                            // Normal zamanlarda oyuncuyu hafifçe takip et (veya merkezde kal)
+                            // İstersen burayı açabilirsin: targetCamX = myPlayer.x;
+                        }
+                    }
                 }
+
+                // Yumuşak kamera geçişi (Lerp)
+                cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
+                cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
+                cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
+
+                // Ekran dışına taşmayı engelle
+                let viewW = 1200 / cameraZoom;
+                let viewH = 600 / cameraZoom;
+                let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
+                let clampY = Math.max(viewH / 2, Math.min(600 - viewH / 2, cameraY));
+
+                ctx.save();
+                ctx.translate(600, 300);
+                ctx.scale(cameraZoom, cameraZoom);
+                ctx.translate(-clampX, -clampY);
 
                 drawStadium(); 
                 drawPitch();   
