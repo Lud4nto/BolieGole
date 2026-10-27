@@ -1301,4 +1301,53 @@
                         // Kostüm Çizimi
                         if (p.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
-                        else if (p.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12
+                        else if (p.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
+                        else if (p.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
+                        
+                        if (!isPractice && currentRoom.emotes) {
+                            for (let em of currentRoom.emotes) {
+                                if (em.playerId === id) {
+                                    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20);
+                                }
+                            }
+                        }
+
+                        if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
+                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
+                            let radius = pSize + 4 + (pulse * 6); 
+                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
+                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
+                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+                        }
+
+                        if (id === socket.id && isCharging && shotPower >= 38) {
+                            let intensity = shotPower / 100; let time = Date.now() / 100;
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                            for (let i = 0; i < 5; i++) {
+                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
+                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
+                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
+                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            }
+                        }
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
+                        ctx.fillText(p.name, px, py - pSize - 5);
+                        if (p.position && !isPractice) {
+                            ctx.fillStyle = '#eab308'; ctx.font = '10px Arial';
+                            ctx.fillText(p.position, px, py + pSize + 12);
+                        }
+                    }
+                }
+                
+                ctx.restore();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(updateMovement);
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
