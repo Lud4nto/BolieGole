@@ -33,9 +33,9 @@
         .blue-team { color: #4c9aff; }
         
         canvas {
-            /* Bilgisayar için daha büyük alan */
+            /* Daha yatay bir görünüm için genişlik artırıldı */
             width: 90vw;
-            height: 80vh;
+            height: 70vh;
             background-color: #2e7d32;
             border: 4px solid #ffffff;
             border-radius: 12px;
@@ -53,6 +53,7 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: none;
+            pointer-events: auto; /* Tıklamayı yakalar */
         }
         #joystick-knob {
             position: absolute;
@@ -73,21 +74,22 @@
         /* PC Kontrol Görselleri */
         #pc-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             right: 30px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             opacity: 0.8;
+            pointer-events: none; /* Tıklamaları engellemez */
         }
         .key-row {
             display: flex;
-            gap: 5px;
+            gap: 8px;
         }
         .key {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
@@ -98,19 +100,19 @@
             font-size: 18px;
             color: #ccc;
             transition: all 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .key.active {
             background: #4c9aff;
             color: white;
             border-color: #ffffff;
-            transform: scale(0.95);
+            transform: translateY(4px);
             box-shadow: 0 0 15px #4c9aff;
         }
         .wide-key {
-            width: 105px;
+            width: 122px;
         }
         
-        /* Mobilde PC tuşlarını gizle */
         @media (pointer: coarse) {
             #pc-controls { display: none; }
         }
@@ -125,8 +127,8 @@
             <span class="blue-team">Mavi: <span id="score-blue">0</span></span>
         </div>
         
-        <!-- Canvas boyutu büyütüldü -->
-        <canvas id="gameCanvas" width="1200" height="750"></canvas>
+        <!-- Saha boyutu yatay olarak ayarlandı (1200x600) -->
+        <canvas id="gameCanvas" width="1200" height="600"></canvas>
 
         <!-- Mobil Kontroller -->
         <div id="joystick-zone">
@@ -147,7 +149,7 @@
                 <div class="key wide-key" id="key-space">SPACE</div>
             </div>
             <div class="key-row">
-                <div class="key wide-key" id="key-ctrl">CTRL</div>
+                <div class="key wide-key" id="key-control">CTRL</div>
             </div>
         </div>
     </div>
@@ -158,35 +160,47 @@
         const ctx = canvas.getContext('2d');
         const socket = io();
 
-        // Arka plan resmi
         const bgImage = new Image();
         bgImage.src = 'arkaplan.png';
 
         let myPlayer = null;
         let players = {};
-        let ball = { x: 600, y: 375 };
+        let ball = { x: 600, y: 300 };
         let score = { red: 0, blue: 0 };
 
         // Tuş durumları
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'Control': false };
         
+        // Tuş dinleyicileri (Hem büyük hem küçük harf duyarlı)
         window.addEventListener('keydown', (e) => { 
-            if(e.key.toLowerCase() in keys) { keys[e.key.toLowerCase()] = true; updateKeyVisual(e.key.toLowerCase(), true); }
-            if(e.key === ' ') { keys[' '] = true; updateKeyVisual(' ', true); }
-            if(e.key === 'Control') { keys['Control'] = true; updateKeyVisual('Control', true); }
+            let k = e.key;
+            if(k === ' ' || k === 'Control' || k === 'ArrowUp' || k === 'ArrowLeft' || k === 'ArrowDown' || k === 'ArrowRight') {
+                if (keys[k] !== undefined) keys[k] = true;
+                updateKeyVisual(k, true);
+            } else {
+                k = k.toLowerCase();
+                if (keys[k] !== undefined) keys[k] = true;
+                updateKeyVisual(k, true);
+            }
         });
+        
         window.addEventListener('keyup', (e) => { 
-            if(e.key.toLowerCase() in keys) { keys[e.key.toLowerCase()] = false; updateKeyVisual(e.key.toLowerCase(), false); }
-            if(e.key === ' ') { keys[' '] = false; updateKeyVisual(' ', false); }
-            if(e.key === 'Control') { keys['Control'] = false; updateKeyVisual('Control', false); }
+            let k = e.key;
+            if(k === ' ' || k === 'Control' || k === 'ArrowUp' || k === 'ArrowLeft' || k === 'ArrowDown' || k === 'ArrowRight') {
+                if (keys[k] !== undefined) keys[k] = false;
+                updateKeyVisual(k, false);
+            } else {
+                k = k.toLowerCase();
+                if (keys[k] !== undefined) keys[k] = false;
+                updateKeyVisual(k, false);
+            }
         });
 
-        // Tuş görselleştirme
         function updateKeyVisual(key, isPressed) {
             let id = '';
             if(key === 'w' || key === 'a' || key === 's' || key === 'd') id = `key-${key}`;
             if(key === ' ') id = 'key-space';
-            if(key === 'Control') id = 'key-ctrl';
+            if(key === 'Control') id = 'key-control';
             
             if(id) {
                 const el = document.getElementById(id);
@@ -235,12 +249,18 @@
 
         // Socket Bağlantıları
         socket.on('currentPlayers', (p, b, s) => {
-            players = p; ball = b; score = s; myPlayer = players[socket.id];
+            players = p; ball = b; score = s; 
+            if (players[socket.id]) myPlayer = players[socket.id];
         });
+        
         socket.on('newPlayer', (player) => { players[player.id] = player; });
         socket.on('playerDisconnected', (id) => { delete players[id]; });
+        
         socket.on('gameState', (p, b, s) => {
             players = p; ball = b; score = s;
+            // KRİTİK DÜZELTME: Oyuncu referansını her karede güncelle
+            if (players[socket.id]) myPlayer = players[socket.id];
+            
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
             draw();
@@ -249,15 +269,16 @@
         let isDashing = false;
         let dashCooldown = 0;
 
-        // Oyun Döngüsü
         function updateMovement() {
-            if (!myPlayer) return;
+            if (!myPlayer) {
+                requestAnimationFrame(updateMovement);
+                return;
+            }
 
             let speed = 6;
             let dx = 0;
             let dy = 0;
 
-            // Hareket
             if (keys.w || keys.ArrowUp) dy -= speed;
             if (keys.s || keys.ArrowDown) dy += speed;
             if (keys.a || keys.ArrowLeft) dx -= speed;
@@ -268,19 +289,16 @@
                 dy += joystickVector.y * speed;
             }
 
-            // CTRL (Kayma/Top Çalma) Mantığı
             if (keys['Control'] && dashCooldown <= 0) {
                 isDashing = true;
-                dashCooldown = 120; // 2 saniye bekleme
-                // Dash yönü (Eğer hareket etmiyorsa baktığı yön)
+                dashCooldown = 120;
                 if(dx === 0 && dy === 0) { dx = 0; dy = speed * 2; }
                 else { dx *= 2; dy *= 2; }
                 
-                setTimeout(() => { isDashing = false; }, 300); // 0.3 saniye dash süresi
+                setTimeout(() => { isDashing = false; }, 300);
             }
             if (dashCooldown > 0) dashCooldown--;
 
-            // Sınır kontrolü
             let newX = Math.max(20, Math.min(canvas.width - 20, myPlayer.x + dx));
             let newY = Math.max(20, Math.min(canvas.height - 20, myPlayer.y + dy));
 
@@ -289,12 +307,10 @@
                 myPlayer.y = newY;
                 socket.emit('move', { x: newX, y: newY });
 
-                // Topa çarpma mesafesi
                 let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-                let kickRadius = isDashing ? 50 : 35; // Kayarken daha geniş alan
+                let kickRadius = isDashing ? 50 : 35;
 
                 if (distToBall < kickRadius) {
-                    // SPACE tuşu (Şut) veya normal çarpma
                     let kickPower = keys[' '] ? 4 : 2; 
                     socket.emit('kick', { 
                         vx: (ball.x - myPlayer.x) * kickPower, 
@@ -306,7 +322,7 @@
             requestAnimationFrame(updateMovement);
         }
 
-        // Resmi boydan boya kaplama fonksiyonu (Cover)
+        // Resmi esnetmeden sahayı kaplama (Cover)
         function drawCoverImage(img, canvas) {
             if (!img.complete || img.naturalWidth === 0) return false;
             
@@ -314,7 +330,6 @@
             const canvasRatio = canvas.width / canvas.height;
             let drawWidth, drawHeight, offsetX, offsetY;
 
-            // Resmin oranını bozmadan alanı tamamen kaplar
             if (canvasRatio > imgRatio) {
                 drawWidth = canvas.width;
                 drawHeight = canvas.width / imgRatio;
@@ -331,13 +346,12 @@
         }
 
         function draw() {
-            // Arka Plan
             if (!drawCoverImage(bgImage, canvas)) {
                 ctx.fillStyle = '#2e7d32';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // Saha Çizgileri (Dinamik boyuta göre)
+            // Saha Çizgileri
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.lineWidth = 5;
             ctx.beginPath();
@@ -351,7 +365,7 @@
 
             // Kaleler
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            let goalHeight = 250;
+            let goalHeight = 200;
             let goalY = (canvas.height - goalHeight) / 2;
             ctx.fillRect(0, goalY, 15, goalHeight);
             ctx.fillRect(canvas.width - 15, goalY, 15, goalHeight);
@@ -369,7 +383,6 @@
             for (let id in players) {
                 let p = players[id];
                 
-                // Dash (Kayma) efekti
                 if (id === socket.id && isDashing) {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, 30, 0, Math.PI * 2);
