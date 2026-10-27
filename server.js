@@ -92,8 +92,8 @@ io.on('connection', (socket) => {
 
         s.status = "playing";
         s.score = { red: 0, blue: 0 };
-        s.matchTime = 0; s.half = 1; s.isKickoff = false;
-        resetBall(s, null); 
+        s.matchTime = 0; s.half = 1; 
+        resetBall(s, null, false); 
 
         io.to(s.id).emit('game_started');
         io.to(s.id).emit('play_whistle'); 
@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
         if (s.gameInterval) { clearInterval(s.gameInterval); s.gameInterval = null; }
-        s.status = "lobby"; s.score = { red: 0, blue: 0 }; resetBall(s, null);
+        s.status = "lobby"; s.score = { red: 0, blue: 0 }; resetBall(s, null, false);
         io.to(s.id).emit('game_ended', s);
     });
 
@@ -116,9 +116,8 @@ io.on('connection', (socket) => {
         
         let p = s.players.find(pl => pl.id === socket.id);
         if (p && p.team !== 'spectator') {
-            // KESİN BARİYER KONTROLÜ (Santra)
+            // Sunucu Tarafı Bariyer
             if (s.isKickoff && p.team !== s.concedingTeam) {
-                // Gol atan takım (Örn: Kırmızı), rakibin sahasına (x > 600) geçemez
                 if (s.concedingTeam === 'blue' && data.x > 595) data.x = 595; 
                 if (s.concedingTeam === 'red' && data.x < 605) data.x = 605;
             }
@@ -135,7 +134,7 @@ io.on('connection', (socket) => {
         if (!p || p.team === 'spectator') return;
 
         if (s.ball.owner && s.ball.owner !== socket.id) {
-            // Santra sırasında gol atan takım top çalamaz
+            // SANTRA KORUMASI: Gol atan takım top çalamaz
             if (s.isKickoff && p.team !== s.concedingTeam) return;
 
             let owner = s.players.find(pl => pl.id === s.ball.owner);
@@ -190,13 +189,9 @@ function updateGame(s) {
                 s.status = 'playing';
                 s.half = 2;
                 s.matchTime = 0;
-                for (let p of s.players) {
-                    if (p.team === 'red') { p.x = 750; p.y = 300; } 
-                    if (p.team === 'blue') { p.x = 450; p.y = 300; }
-                }
-                resetBall(s, null);
+                resetBall(s, null, true); // Saha değişimi
                 io.to(s.id).emit('play_whistle');
-                io.to(s.id).emit('game_state', s); // Anında ışınla
+                io.to(s.id).emit('game_state', s);
             }
             return;
         }
@@ -206,7 +201,7 @@ function updateGame(s) {
             if (s.replayTimer <= 0) {
                 s.status = 'playing';
                 io.to(s.id).emit('play_whistle');
-                io.to(s.id).emit('game_state', s); // Anında ışınla
+                io.to(s.id).emit('game_state', s);
             }
             return;
         }
@@ -276,18 +271,20 @@ function updateGame(s) {
                 } else {
                     if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; } 
                     else { s.score.blue++; s.concedingTeam = 'red'; }
+                    
                     s.status = 'goal_replay';
                     s.replayTimer = 10;
-                    
-                    // GOL SONRASI ANINDA DİZİLİŞ
                     s.isKickoff = true;
+                    
+                    // Gol sonrası anında yerleşim
                     for (let p of s.players) {
                         if (p.team === 'spectator') continue;
                         if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; } 
                         else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
                     }
                     s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
-
+                    
+                    io.to(s.id).emit('force_positions', s.players); // Anında ışınla
                     io.to(s.id).emit('goal_scored', s);
                     io.to(s.id).emit('game_state', s);
                 }
@@ -305,6 +302,7 @@ function updateGame(s) {
                 if (s.isKickoff && p.team !== s.concedingTeam) continue; 
 
                 ball.owner = p.id; ball.possessionTimer = 150; ball.vx = 0; ball.vy = 0; ball.vz = 0; ball.shotPower = 0;
+                if (s.isKickoff) { s.isKickoff = false; s.concedingTeam = null; }
             }
         }
 
@@ -312,7 +310,7 @@ function updateGame(s) {
     } catch (e) { console.log("Hata:", e.message); }
 }
 
-function resetBall(s, concededBy = null) {
+function resetBall(s, concededBy = null, isHalftime = false) {
     s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
@@ -323,11 +321,19 @@ function resetBall(s, concededBy = null) {
         }
     } else {
         s.isKickoff = false; s.concedingTeam = null;
-        for (let p of s.players) {
-            if (p.team === 'red') { p.x = 450; p.y = 300; }
-            if (p.team === 'blue') { p.x = 750; p.y = 300; }
+        if (isHalftime) {
+            for (let p of s.players) {
+                if (p.team === 'red') { p.x = 750; p.y = 300; }
+                if (p.team === 'blue') { p.x = 450; p.y = 300; }
+            }
+        } else {
+            for (let p of s.players) {
+                if (p.team === 'red') { p.x = 450; p.y = 300; }
+                if (p.team === 'blue') { p.x = 750; p.y = 300; }
+            }
         }
     }
+    io.to(s.id).emit('force_positions', s.players);
 }
 
 const PORT = process.env.PORT || 3000;
