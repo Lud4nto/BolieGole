@@ -2,13 +2,29 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BolieGole</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-        body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
         
+        /* --- YATAY EKRAN UYARISI --- */
+        #orientation-warning {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0f172a; color: white; z-index: 99999;
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; font-size: 24px; font-weight: bold; padding: 20px;
+        }
+        #orientation-warning svg { width: 100px; height: 100px; margin-bottom: 20px; animation: rotateAnim 2s infinite ease-in-out; }
+        @keyframes rotateAnim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+        
+        @media (orientation: portrait) and (pointer: coarse) {
+            #orientation-warning { display: flex; }
+            .screen, #modal-name, #modal-create { display: none !important; }
+        }
+
+        /* --- EKRANLAR --- */
         .screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .active { display: flex; }
 
@@ -45,58 +61,106 @@
         .room-code { font-family: 'Press Start 2P', cursive; font-size: 30px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 10px 20px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 10px; }
         
         .teams-container { display: flex; gap: 20px; z-index: 10; }
-        .team-box { width: 300px; height: 400px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .team-box { width: 250px; height: 350px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .team-box.red { border-color: #ff4c4c; background: rgba(255, 76, 76, 0.2); }
         .team-box.blue { border-color: #4c9aff; background: rgba(76, 154, 255, 0.2); }
         .team-box.spectator { border-color: #64748b; background: rgba(100, 116, 139, 0.2); }
         .team-box:hover { transform: scale(1.02); }
-        .team-title { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-        .player-slot { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; color: white; }
+        .team-title { font-family: 'Press Start 2P', cursive; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .player-slot { width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 8px; text-align: center; font-weight: bold; color: white; font-size: 14px; }
         
-        .start-game-btn { margin-top: 30px; padding: 15px 40px; font-size: 24px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
+        .start-game-btn { margin-top: 20px; padding: 12px 30px; font-size: 20px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
         .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
 
+        /* --- OYUN EKRANI --- */
         #screen-game { background: #111; position: relative; }
-        #in-game-menu-btn { position: absolute; top: 20px; left: 20px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #2b1b0e; padding: 12px 24px; border-radius: 30px; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 154, 158, 0.5); transition: all 0.2s ease; z-index: 100; border: 3px solid #ffffff; }
-        #in-game-menu-btn:hover { transform: scale(1.05) translateY(-3px); }
+        #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 154, 158, 0.5); transition: all 0.2s ease; z-index: 100; border: 2px solid #ffffff; }
         
-        #scoreboard { font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; margin-bottom: 10px; text-shadow: 2px 2px 0px #000; }
+        #scoreboard { font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; margin-bottom: 10px; text-shadow: 2px 2px 0px #000; z-index: 10; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
         
-        canvas { width: 90vw; height: 70vh; background-color: #111; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+        canvas { width: 100vw; height: 100vh; background-color: #111; display: block; }
         
-        .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        #stamina-container { width: 350px; height: 24px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); }
+        .ui-bars { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; z-index: 10; }
+        #stamina-container { width: 250px; height: 18px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
-        #stamina-text { position: absolute; width: 350px; text-align: center; font-size: 12px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; }
-        #power-container { width: 350px; height: 16px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; overflow: hidden; display: none; align-items: center; }
+        #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; }
+        #power-container { width: 250px; height: 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
-        #power-text { position: absolute; width: 350px; text-align: center; font-size: 10px; font-weight: 900; color: #fff; }
-        #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
-        .key-row { display: flex; gap: 12px; }
-        .key { width: 60px; height: 60px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; color: #94a3b8; transition: 0.1s; }
+        #power-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
+
+        /* --- MOBİL KONTROLLER --- */
+        #mobile-controls { position: absolute; bottom: 20px; right: 20px; display: none; gap: 15px; align-items: flex-end; z-index: 100; }
+        
+        .mob-btn {
+            width: 75px; height: 75px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: transform 0.1s;
+        }
+        .mob-btn:active { transform: scale(0.9); }
+        .mob-btn svg { width: 55%; height: 55%; }
+
+        #btn-sprint { background: #1d4ed8; } /* Mavi X */
+        #btn-tackle { background: #dc2626; } /* Kırmızı O */
+        #btn-action { background: #059669; } /* Yeşil Üçgen */
+
+        /* Joystick */
+        #joystick-zone { position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: none; z-index: 100; backdrop-filter: blur(5px); }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: rgba(76, 154, 255, 0.6); border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 15px rgba(76, 154, 255, 0.5); }
+
+        /* PC Kontrolleri */
+        #pc-controls { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        .key-row { display: flex; gap: 10px; }
+        .key { width: 50px; height: 50px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #94a3b8; transition: 0.1s; }
         .key.active { background: rgba(76, 154, 255, 0.9); color: white; transform: translateY(4px); }
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
-        .wide-key { width: 130px; }
-        #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; display: none; }
-        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; background: rgba(76, 154, 255, 0.6); border-radius: 50%; transform: translate(-50%, -50%); }
-        
+        .wide-key { width: 110px; }
+
+        /* MOBİL EKRAN AYARLARI */
         @media (pointer: coarse) {
-            #joystick-zone { display: block; }
+            #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
-            canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
-            #scoreboard { position: absolute; top: 80px; font-size: 20px; }
-            #stamina-container, #power-container { width: 200px; height: 16px; }
-            #stamina-text, #power-text { width: 200px; font-size: 8px; }
-            .list-container { width: 95%; height: 65vh; }
-            .team-box { width: 30%; height: 300px; }
-            .modal-content { width: 90%; }
+            #in-game-menu-btn { top: 10px; left: 10px; font-size: 14px; padding: 6px 12px; }
+            #scoreboard { top: 10px; font-size: 18px; }
+            .ui-bars { top: 45px; }
+            
+            /* Menüleri yatay ekranda sığdır */
+            .menu-buttons { margin-top: 100px; }
+            .menu-btn { width: 260px; padding: 10px; font-size: 18px; }
+            .modal-content { width: 80%; padding: 15px; gap: 10px; }
+            .modal-content h2 { font-size: 16px; }
+            
+            .list-container { width: 90%; height: 60vh; }
+            .top-bar { width: 90%; font-size: 16px; flex-direction: column; gap: 10px; }
+            .create-btn { font-size: 12px; padding: 8px 15px; }
+            .server-item { padding: 10px; }
+            
+            .lobby-header { margin-bottom: 15px; }
+            .room-code { font-size: 20px; padding: 5px 10px; }
+            .teams-container { gap: 10px; }
+            .team-box { width: 30%; height: 200px; padding: 10px; }
+            .team-title { font-size: 12px; margin-bottom: 5px; }
+            .player-slot { padding: 5px; font-size: 11px; margin-bottom: 5px; }
+            .start-game-btn { margin-top: 10px; padding: 8px 20px; font-size: 16px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- YATAY EKRAN UYARISI -->
+    <div id="orientation-warning">
+        <svg viewBox="0 0 100 100" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="25" y="25" width="50" height="50" rx="5" />
+            <path d="M 75 50 L 95 50 M 85 40 L 95 50 L 85 60" />
+        </svg>
+        <p>En iyi deneyim için lütfen telefonunuzu yatay çevirin.</p>
+    </div>
+
+    <!-- 1. ANA MENÜ -->
     <div id="screen-main-menu" class="screen active">
         <div class="bg-image"></div>
         <div class="menu-buttons">
@@ -107,6 +171,7 @@
         </div>
     </div>
 
+    <!-- İSİM GİRME -->
     <div id="modal-name" class="modal-overlay">
         <div class="modal-content">
             <h2>OYUNCU ADI</h2>
@@ -117,6 +182,7 @@
         </div>
     </div>
 
+    <!-- SUNUCU LİSTESİ -->
     <div id="screen-server-list" class="screen">
         <div class="bg-blur"></div>
         <div class="top-bar">
@@ -124,9 +190,10 @@
             <button class="create-btn" id="btn-show-create">SUNUCU OLUŞTUR</button>
         </div>
         <div class="list-container" id="server-list-container"></div>
-        <button class="menu-btn" style="margin-top:20px; width:200px; font-size:16px; padding:10px;" id="btn-back-main">GERİ DÖN</button>
+        <button class="menu-btn" style="margin-top:15px; width:150px; font-size:14px; padding:8px;" id="btn-back-main">GERİ DÖN</button>
     </div>
 
+    <!-- ODA OLUŞTURMA -->
     <div id="modal-create" class="modal-overlay">
         <div class="modal-content">
             <h2>SUNUCU OLUŞTUR</h2>
@@ -143,10 +210,11 @@
         </div>
     </div>
 
+    <!-- LOBİ -->
     <div id="screen-lobby" class="screen">
         <div class="bg-blur" style="opacity: 0.95;"></div>
         <div class="lobby-header">
-            <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 24px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
+            <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 20px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
             <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
         </div>
         <div class="teams-container">
@@ -164,24 +232,41 @@
             </div>
         </div>
         <button class="start-game-btn" id="btn-start-game">OYUNU BAŞLAT</button>
-        <button class="menu-btn" style="margin-top:20px; width:200px; padding:10px; font-size:14px; z-index:10;" onclick="leaveRoom()">ODADAN AYRIL</button>
+        <button class="menu-btn" style="margin-top:15px; width:150px; padding:8px; font-size:12px; z-index:10;" onclick="leaveRoom()">ODADAN AYRIL</button>
     </div>
 
+    <!-- OYUN EKRANI -->
     <div id="screen-game" class="screen">
-        <div id="in-game-menu-btn" onclick="goToLobby()">
-            <span style="font-size: 24px;">🏠</span> Lobi
-        </div>
-        <div class="ui-bars">
-            <div id="stamina-container"><div id="stamina-bar"></div><div id="stamina-text">DEPAR KONDİSYONU</div></div>
-            <div id="power-container"><div id="power-bar"></div><div id="power-text">ŞUT GÜCÜ</div></div>
-        </div>
+        <div id="in-game-menu-btn" onclick="goToLobby()">🏠 Lobi</div>
         <div id="scoreboard">
             <span class="red-team">KIRMIZI <span id="score-red">0</span></span> 
             <span style="color:#64748b">:</span> 
             <span class="blue-team"><span id="score-blue">0</span> MAVİ</span>
         </div>
-        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+        
+        <div class="ui-bars">
+            <div id="stamina-container"><div id="stamina-bar"></div><div id="stamina-text">DEPAR</div></div>
+            <div id="power-container"><div id="power-bar"></div><div id="power-text">ŞUT GÜCÜ</div></div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- MOBİL KONTROLLER -->
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        
+        <div id="mobile-controls">
+            <div class="mob-btn" id="btn-tackle">
+                <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" stroke="white" stroke-width="10" fill="none"/></svg>
+            </div>
+            <div class="mob-btn" id="btn-sprint">
+                <svg viewBox="0 0 100 100"><path d="M30 30 L70 70 M70 30 L30 70" stroke="white" stroke-width="12" stroke-linecap="round"/></svg>
+            </div>
+            <div class="mob-btn" id="btn-action">
+                <svg viewBox="0 0 100 100"><polygon points="50,25 75,75 25,75" stroke="white" stroke-width="10" fill="none" stroke-linejoin="round"/></svg>
+            </div>
+        </div>
+
+        <!-- PC KONTROLLERİ -->
         <div id="pc-controls">
             <div class="key-row"><div class="key" id="key-w">W</div></div>
             <div class="key-row"><div class="key" id="key-a">A</div><div class="key" id="key-s">S</div><div class="key" id="key-d">D</div></div>
@@ -225,6 +310,18 @@
             document.getElementById(screenId).classList.add('active');
         }
 
+        // --- CANVAS AYARI (Dinamik Boyut) ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- MENÜ OLAYLARI ---
         document.getElementById('btn-play').onclick = () => { document.getElementById('modal-name').style.display = 'flex'; };
 
         document.getElementById('btn-confirm-name').onclick = () => {
@@ -253,6 +350,7 @@
             document.getElementById('modal-create').style.display = 'none';
         };
 
+        // --- SOCKET OLAYLARI ---
         socket.on('server_list', (list) => {
             serverListData = list;
             let container = document.getElementById('server-list-container');
@@ -292,22 +390,12 @@
         };
 
         socket.on('join_error', (msg) => { alert(msg); });
-
-        socket.on('server_created', (room) => {
-            currentRoom = room;
-            myTeam = "spectator"; 
-            showLobby(room);
-        });
-
-        socket.on('joined_successfully', (room) => {
-            currentRoom = room;
-            showLobby(room);
-        });
+        socket.on('server_created', (room) => { currentRoom = room; myTeam = "spectator"; showLobby(room); });
+        socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
 
         function showLobby(room) {
             switchScreen('screen-lobby');
             document.getElementById('lobby-room-name').innerText = room.name;
-            
             if (room.type === 'private') {
                 let codeEl = document.getElementById('lobby-room-code');
                 codeEl.innerText = "ODA KODU: " + room.id;
@@ -315,7 +403,6 @@
             } else {
                 document.getElementById('lobby-room-code').style.display = 'none';
             }
-
             document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
         }
 
@@ -332,7 +419,6 @@
                     if (p.team === 'red') redList.innerHTML += el;
                     else if (p.team === 'blue') blueList.innerHTML += el;
                     else specList.innerHTML += el;
-                    
                     if (p.id === socket.id) myTeam = p.team;
                 });
             }
@@ -350,43 +436,30 @@
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing'; 
+            resizeCanvas();
         });
 
-        // YENİ: MAÇ BİTTİĞİNDE LOBİYE DÖN
         socket.on('game_ended', (room) => {
             currentRoom = room;
             switchScreen('screen-lobby');
-            // Arayüzü temizle
-            document.getElementById('red-players').innerHTML = "";
-            document.getElementById('blue-players').innerHTML = "";
-            document.getElementById('spec-players').innerHTML = "";
         });
 
         function leaveRoom() {
-            if (confirm("Odadan ayrılmak istiyor musunuz?")) {
-                window.location.href = window.location.pathname;
-            }
+            if (confirm("Odadan ayrılmak istiyor musunuz?")) window.location.href = window.location.pathname;
         }
 
-        // YENİ: MENÜ BUTONU MANTIĞI
         function goToLobby() {
             if (currentRoom && currentRoom.status === 'playing') {
                 if (currentRoom.hostId === socket.id) {
-                    // Host ise maçı bitirme onayı sor
-                    if (confirm("Maçı sonlandırmak istediğinden emin misin?")) {
-                        socket.emit('stop_game');
-                    }
+                    if (confirm("Maçı sonlandırmak istediğinden emin misin?")) socket.emit('stop_game');
                 } else {
                     alert("Maç devam ederken sadece sunucu sahibi maçı sonlandırabilir.");
                 }
-            } else {
-                switchScreen('screen-lobby');
-            }
+            } else switchScreen('screen-lobby');
         }
 
         socket.on('game_state', (room) => {
             if (room.status !== 'playing') return;
-            
             currentRoom = room; 
             
             let currentIds = [];
@@ -401,33 +474,22 @@
                     players[p.id] = p; 
                 }
             }
-            
-            for (let id in players) {
-                if (!currentIds.includes(id)) delete players[id];
-            }
-
-            ball = room.ball;
-            score = room.score;
+            for (let id in players) { if (!currentIds.includes(id)) delete players[id]; }
+            ball = room.ball; score = room.score;
             
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
-            
             document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
         });
 
+        // --- KLAVYE KONTROLLERİ (PC) ---
         window.addEventListener('keydown', (e) => { 
             if (isSpectator) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
-            
             if (k === ' ') {
-                if (ball.owner === socket.id) {
-                    isCharging = true;
-                    chargeStartTime = Date.now();
-                } else {
-                    // YENİ: Top başkasındayken Space'e basılırsa çalma isteği gönder
-                    socket.emit('tackle');
-                }
+                if (ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
+                else { socket.emit('tackle'); }
             }
             updateKeyVisual(k, true);
         });
@@ -436,12 +498,10 @@
             if (isSpectator) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = false;
-
             if (k === ' ' && isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
-                if (pressDuration < 200 && shotPower < 30) forcePass();
-                else executeKick();
+                if (pressDuration < 200 && shotPower < 30) forcePass(); else executeKick();
             }
             updateKeyVisual(k, false);
         });
@@ -481,15 +541,15 @@
             let vx = Math.cos(angle) * speed;
             let vy = Math.sin(angle) * speed;
             let vz = 2 + (force * 8);
-            
             socket.emit('kick', { vx: vx, vy: vy, vz: vz, shotPower: shotPower });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
 
+        // --- MOBİL KONTROLLER ---
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
-        let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 50;
+        let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
 
         function handleTouch(e) {
             if (isSpectator) return;
@@ -511,10 +571,39 @@
             joystickActive = false; joystickKnob.style.transform = 'translate(-50%, -50%)'; joystickVector = { x: 0, y: 0 };
         });
 
+        // Sprint Butonu (Mavi X)
+        const btnSprint = document.getElementById('btn-sprint');
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = true; });
+        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = false; });
+
+        // Tackle Butonu (Kırmızı O)
+        const btnTackle = document.getElementById('btn-tackle');
+        btnTackle.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            if (!isSpectator && ball.owner !== socket.id) socket.emit('tackle'); 
+        });
+
+        // Action Butonu (Yeşil Üçgen - Şut/Pas)
+        const btnAction = document.getElementById('btn-action');
+        btnAction.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (isSpectator) return;
+            if (ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
+        });
+        btnAction.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (isSpectator) return;
+            if (isCharging) {
+                isCharging = false;
+                let pressDuration = Date.now() - chargeStartTime;
+                if (pressDuration < 200 && shotPower < 30) forcePass(); else executeKick();
+            }
+        });
+
+        // --- HAREKET DÖNGÜSÜ ---
         function updateMovement() {
             if (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing') { 
-                requestAnimationFrame(updateMovement); 
-                return; 
+                requestAnimationFrame(updateMovement); return; 
             }
 
             let isSprinting = false;
@@ -529,9 +618,7 @@
                     currentSpeed = sprintSpeed;
                     stamina -= 1.2;
                     if (stamina <= 0) { stamina = 0; isExhausted = true; }
-                } else {
-                    stamina += 0.15;
-                }
+                } else { stamina += 0.15; }
             }
             if (stamina > maxStamina) stamina = maxStamina;
 
@@ -572,16 +659,15 @@
             }
             moveX = dx; moveY = dy;
 
-            myPlayer.x = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
-            myPlayer.y = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
+            // HAREKET SINIRLARI (Ekran boyutuna göre dinamik)
+            myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
+            myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
             socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
 
             requestAnimationFrame(updateMovement);
         }
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
+        // --- ÇİZİM DÖNGÜSÜ ---
         function drawPitch() {
             const stripeWidth = canvas.width / 16;
             for (let i = 0; i < 16; i++) {
@@ -594,14 +680,13 @@
             ctx.beginPath(); ctx.moveTo(canvas.width / 2, margin); ctx.lineTo(canvas.width / 2, canvas.height - margin); ctx.stroke();
             ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 70, 0, Math.PI * 2); ctx.stroke();
             ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
-            const penaltyW = 160, penaltyH = 260, penaltyY = (canvas.height - penaltyH) / 2;
+            
+            const penaltyW = canvas.width * 0.15, penaltyH = canvas.height * 0.45, penaltyY = (canvas.height - penaltyH) / 2;
             ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH); ctx.strokeRect(canvas.width - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-            const goalAreaW = 60, goalAreaH = 120, goalAreaY = (canvas.height - goalAreaH) / 2;
+            
+            const goalAreaW = canvas.width * 0.05, goalAreaH = canvas.height * 0.2, goalAreaY = (canvas.height - goalAreaH) / 2;
             ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); ctx.strokeRect(canvas.width - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-            ctx.beginPath(); ctx.arc(margin + 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(canvas.width - margin - 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(margin + penaltyW, canvas.height / 2, 50, Math.PI * 0.65, Math.PI * 1.35); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width - margin - penaltyW, canvas.height / 2, 50, -Math.PI * 0.35, Math.PI * 0.35); ctx.stroke();
+            
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(margin - 10, canvas.height / 2 - 100, 10, 200); ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200);
         }
@@ -641,44 +726,61 @@
 
         function gameLoop() {
             if (document.getElementById('screen-game').classList.contains('active')) {
+                // Ekran boyutu değişmişse sahayı ölçekle (Ölçekleme yapısı bozmasın diye basit tutuyoruz)
+                if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) resizeCanvas();
+
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 drawPitch();
                 drawBall();
+
+                // KAMERA (Topu takip et veya herkesi sığdır)
+                // Şimdilik tüm sahayı gösteriyoruz, mobilde sığması için küçültüyoruz.
+                // İleride dinamik kamera eklenebilir.
 
                 for (let id in players) {
                     let p = players[id];
                     if (!p || p.team === 'spectator') continue;
                     
-                    ctx.beginPath(); ctx.arc(p.x, p.y + 5, 22, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                    ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+                    // Mobilde sığması için oyuncu boyutunu küçült
+                    let pSize = window.innerWidth < 800 ? 16 : 22;
+                    
+                    ctx.beginPath(); ctx.arc(p.x, p.y + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
                     
                     ctx.fillStyle = p.team === 'red' ? '#ff0000' : '#1e90ff';
                     ctx.fill(); 
-                    
                     ctx.strokeStyle = p.team === 'red' ? '#000000' : '#cccccc';
-                    ctx.lineWidth = 4; 
+                    ctx.lineWidth = 3; 
                     ctx.stroke();
                     
-                    if (id === ball.owner) {
-                        let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = 26 + (pulse * 8); 
+                    // YENİ: TOP SAHİBİ SAYACI
+                    if (id === ball.owner && ball.possessionTimer > 0) {
+                        let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = pSize + 4 + (pulse * 6); 
                         ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-                        ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 5;
-                        ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 15 + (pulse * 15); ctx.stroke(); ctx.restore();
+                        ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
+                        ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+
+                        // Sayaç
+                        let secs = (ball.possessionTimer / 60).toFixed(1);
+                        ctx.fillStyle = '#eab308';
+                        ctx.font = 'bold 14px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(secs + "s", p.x, p.y - pSize - 15);
                     }
 
                     if (id === socket.id && isCharging && shotPower >= 38) {
                         let intensity = shotPower / 100; let time = Date.now() / 100;
-                        ctx.beginPath(); ctx.arc(p.x, p.y, 35 + (intensity * 20), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
                         for (let i = 0; i < 5; i++) {
-                            let angle = time + (i * Math.PI * 2 / 5); let rad1 = 25; let rad2 = 45 + (intensity * 15);
+                            let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
                             ctx.beginPath(); ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
                             let midAngle = angle + (Math.random() - 0.5) * 0.5;
                             ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
                             ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
-                            ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 3; ctx.stroke();
+                            ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
                         }
                     }
-                    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.fillText(p.name, p.x, p.y - 35);
+                    ctx.fillStyle = '#fff'; ctx.font = `bold ${window.innerWidth < 800 ? 12 : 16}px Arial`; ctx.textAlign = 'center'; ctx.fillText(p.name, p.x, p.y - pSize - 5);
                 }
             }
             requestAnimationFrame(gameLoop);
