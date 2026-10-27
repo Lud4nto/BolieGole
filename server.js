@@ -9,7 +9,8 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 };
+// Top objesine 'shotPower' ve 'lastKickX' eklendi (Direkten dönme hesabı için)
+let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
 let score = { red: 0, blue: 0 };
 
 const width = 1200;
@@ -46,12 +47,14 @@ io.on('connection', (socket) => {
             ball.owner = null; 
             ball.possessionTimer = 0;
             
-            // Top ayağından çıktıktan sonra 0.6 saniye boyunca kimse geri alamaz
-            ball.pickupCooldown = 40; 
+            // Topa vurulduktan sonra 1 saniye boyunca kimse geri alamaz
+            ball.pickupCooldown = 60; 
+            ball.shotPower = data.shotPower; // Şut gücünü kaydet
+            ball.lastKickX = players[socket.id].x; // Nereden vurulduğunu kaydet
             
             // Topu hemen ileri fırlat ki ayağına yapışmasın
-            ball.x += data.vx * 2.5; 
-            ball.y += data.vy * 2.5;
+            ball.x += data.vx * 3; 
+            ball.y += data.vy * 3;
         }
     });
 
@@ -89,7 +92,7 @@ setInterval(() => {
             // 2.5 Saniye bitti mi?
             if (ball.possessionTimer <= 0) {
                 ball.owner = null;
-                ball.vx = Math.cos(angle) * 7; // Topu hafifçe ileri it
+                ball.vx = Math.cos(angle) * 7; 
                 ball.vy = Math.sin(angle) * 7;
                 ball.pickupCooldown = 30; 
             }
@@ -118,11 +121,47 @@ setInterval(() => {
         if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
         if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
         
-        if (ball.x <= 20 && ball.y > 200 && ball.y < 400) {
-            score.blue++; resetBall();
-        } else if (ball.x >= width - 20 && ball.y > 200 && ball.y < 400) {
-            score.red++; resetBall();
+        // --- GOL VE DİREK MANTIĞI ---
+        let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
+        let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
+
+        if (hitLeftGoal || hitRightGoal) {
+            let shouldBounce = false;
+            
+            // Eğer şut gücü %100 ise özel kural devreye girer
+            if (ball.shotPower === 100) {
+                let isOwnHalf = false;
+                let isClose = false;
+                
+                if (hitRightGoal) {
+                    if (ball.lastKickX < 600) isOwnHalf = true;
+                    if (ball.lastKickX > 900) isClose = true;
+                } else if (hitLeftGoal) {
+                    if (ball.lastKickX > 600) isOwnHalf = true;
+                    if (ball.lastKickX < 300) isClose = true;
+                }
+                
+                // Eğer kendi sahasından veya yakından değilse DİREKTEN DÖNER
+                if (!isOwnHalf && !isClose) {
+                    shouldBounce = true;
+                }
+            }
+
+            if (shouldBounce) {
+                // DİREKTEN SEKEN TOP
+                ball.x = hitRightGoal ? width - 30 : 30;
+                ball.vx = -ball.vx * 0.7; // Geri sek
+                ball.vy = (Math.random() - 0.5) * 25; // Rastgele sağa/sola
+                ball.vz = 8; // Havaya dikil
+                ball.shotPower = 0; // Direkten sonra şut gücünü sıfırla ki tekrar tetiklenmesin
+            } else {
+                // GOL!
+                if (hitRightGoal) score.red++;
+                else score.blue++;
+                resetBall();
+            }
         } else {
+            // Saha dışına çıkma engeli (Kale dışı)
             if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
             if (ball.x > width - 20) { ball.x = width - 20; ball.vx *= -0.8; }
         }
@@ -138,10 +177,12 @@ setInterval(() => {
                 ball.owner = id;
                 ball.possessionTimer = 150; // 2.5 saniye
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
+                ball.shotPower = 0;
             } else if (ball.owner !== id) {
                 ball.owner = id;
                 ball.possessionTimer = 150;
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
+                ball.shotPower = 0;
             }
         }
     }
@@ -150,7 +191,7 @@ setInterval(() => {
 }, 1000 / 60);
 
 function resetBall() {
-    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 };
+    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
     for (let id in players) {
         players[id].x = 600 + (players[id].team === 'red' ? -150 : 150);
         players[id].y = 300;
