@@ -67,20 +67,20 @@
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
         /* --- LOBİ & OYUN EKRANI --- */
-        #screen-lobby { background: #0f172a; }
-        .lobby-header { text-align: center; margin-bottom: 30px; }
+        #screen-lobby { background-color: transparent; }
+        .lobby-header { text-align: center; margin-bottom: 30px; z-index: 10; }
         .room-code { font-family: 'Press Start 2P', cursive; font-size: 30px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 10px 20px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 10px; }
         
-        .teams-container { display: flex; gap: 20px; }
-        .team-box { width: 300px; height: 400px; background: rgba(30,41,59,0.8); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; }
-        .team-box.red { border-color: #ff4c4c; background: rgba(255, 76, 76, 0.1); }
-        .team-box.blue { border-color: #4c9aff; background: rgba(76, 154, 255, 0.1); }
-        .team-box.spectator { border-color: #64748b; background: rgba(100, 116, 139, 0.1); }
+        .teams-container { display: flex; gap: 20px; z-index: 10; }
+        .team-box { width: 300px; height: 400px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .team-box.red { border-color: #ff4c4c; background: rgba(255, 76, 76, 0.2); }
+        .team-box.blue { border-color: #4c9aff; background: rgba(76, 154, 255, 0.2); }
+        .team-box.spectator { border-color: #64748b; background: rgba(100, 116, 139, 0.2); }
         .team-box:hover { transform: scale(1.02); }
         .team-title { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-        .player-slot { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        .player-slot { width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; color: white; }
         
-        .start-game-btn { margin-top: 30px; padding: 15px 40px; font-size: 24px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; }
+        .start-game-btn { margin-top: 30px; padding: 15px 40px; font-size: 24px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
         .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
 
         /* --- OYUN EKRANI --- */
@@ -94,7 +94,6 @@
         
         canvas { width: 90vw; height: 70vh; background-color: #111; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
         
-        /* (Diğer oyun içi CSS'ler öncekiyle aynı, yer kaplamaması için buraya kısaca yazıyorum, senin dosyanda tam hali olacak) */
         .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
         #stamina-container { width: 350px; height: 24px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
@@ -181,10 +180,11 @@
         </div>
     </div>
 
-    <!-- 5. LOBİ / TAKIM SEÇİMİ -->
+    <!-- 5. LOBİ / TAKIM SEÇİMİ (Arka plan eklendi) -->
     <div id="screen-lobby" class="screen">
+        <div class="bg-blur" style="opacity: 0.95;"></div>
         <div class="lobby-header">
-            <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 24px;">Oda Adı</h2>
+            <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 24px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
             <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
         </div>
         
@@ -204,7 +204,7 @@
         </div>
 
         <button class="start-game-btn" id="btn-start-game">OYUNU BAŞLAT</button>
-        <button class="menu-btn" style="margin-top:20px; width:200px; padding:10px; font-size:14px;" onclick="leaveRoom()">ODADAN AYRIL</button>
+        <button class="menu-btn" style="margin-top:20px; width:200px; padding:10px; font-size:14px; z-index:10;" onclick="leaveRoom()">ODADAN AYRIL</button>
     </div>
 
     <!-- 6. OYUN EKRANI -->
@@ -274,7 +274,7 @@
 
         // --- MENÜ VE İSİM OLAYLARI ---
         document.getElementById('btn-play').onclick = () => {
-            document.getElementById('modal-name').style.display = 'flex'; // İsim sor
+            document.getElementById('modal-name').style.display = 'flex'; 
         };
 
         document.getElementById('btn-confirm-name').onclick = () => {
@@ -411,7 +411,12 @@
         });
 
         function leaveRoom() {
-            if (confirm("Odadan ayrılmak istiyor musunuz?")) window.location.reload();
+            if (confirm("Odadan ayrılmak istiyor musunuz?")) {
+                // Doğrudan ana menüye dön ve arka planı koru
+                switchScreen('screen-main-menu');
+                // Socket'i odadan çıkarmak için bağlantıyı yenile (opsiyonel, en temizi sayfa yenilemek ama arka planı bozmamak için)
+                window.location.href = window.location.pathname;
+            }
         }
 
         function goToLobby() {
@@ -423,12 +428,28 @@
         socket.on('game_state', (room) => {
             if (room.status !== 'playing') return;
             
-            players = {};
-            room.players.forEach(p => { players[p.id] = p; });
+            // KRİTİK DÜZELTME: Sunucudan gelen veride kendi karakterimizin x,y'sini EZME!
+            let currentIds = [];
+            for (let p of room.players) {
+                currentIds.push(p.id);
+                if (p.id === socket.id) {
+                    if (!myPlayer) myPlayer = p; // İlk defa atanıyorsa
+                    // Diğer bilgileri güncelle (isim, takım), ama x ve y'yi KORU
+                    myPlayer.team = p.team;
+                    myPlayer.name = p.name;
+                } else {
+                    players[p.id] = p; // Diğer oyuncuları güncelle
+                }
+            }
+            
+            // Ayrılan oyuncuları temizle
+            for (let id in players) {
+                if (!currentIds.includes(id)) delete players[id];
+            }
+
             ball = room.ball;
             score = room.score;
             
-            myPlayer = players[socket.id];
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
             
@@ -479,7 +500,7 @@
 
         function getKickAngle() {
             if (moveX !== 0 || moveY !== 0) return Math.atan2(moveY, moveX);
-            else if (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+            else if (myPlayer && myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
             return 0;
         }
 
