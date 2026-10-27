@@ -9,14 +9,17 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-let ball = { x: 400, y: 250, vx: 0, vy: 0 };
+let ball = { x: 600, y: 300, vx: 0, vy: 0 };
 let score = { red: 0, blue: 0 };
+
+const width = 1200;
+const height = 600;
 
 io.on('connection', (socket) => {
     players[socket.id] = {
         id: socket.id,
-        x: 400,
-        y: 250,
+        x: 600,
+        y: 300,
         team: Object.keys(players).length % 2 === 0 ? 'red' : 'blue',
         name: 'Oyuncu' + Math.floor(Math.random() * 100)
     };
@@ -42,30 +45,45 @@ io.on('connection', (socket) => {
     });
 });
 
+// Top Fiziği (Saniyede 60 kez çalışır - 60 FPS)
 setInterval(() => {
     ball.x += ball.vx;
     ball.y += ball.vy;
-    ball.vx *= 0.95;
-    ball.vy *= 0.95;
+    
+    // Sürtünme (Top yavaşlasın)
+    ball.vx *= 0.92; 
+    ball.vy *= 0.92;
 
-    if (ball.x < 10 || ball.x > 790) { ball.vx *= -1; ball.x = Math.max(10, Math.min(790, ball.x)); }
-    if (ball.y < 10 || ball.y > 490) { ball.vy *= -1; ball.y = Math.max(10, Math.min(490, ball.y)); }
+    // Durma eşiği
+    if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
+    if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-    if (ball.x <= 10 && ball.y > 150 && ball.y < 350) {
-        score.blue++;
+    // Duvarlara çarpma (Üst ve Alt)
+    if (ball.y < 15) { ball.y = 15; ball.vy *= -1; }
+    if (ball.y > height - 15) { ball.y = height - 15; ball.vy *= -1; }
+
+    // Gol Kontrolü (Sol ve Sağ Kale)
+    if (ball.x <= 15 && ball.y > 200 && ball.y < 400) {
+        score.blue++; // Sol kaleye gol atıldı, mavi kazandı
         resetBall();
-    } else if (ball.x >= 790 && ball.y > 150 && ball.y < 350) {
-        score.red++;
+    } else if (ball.x >= width - 15 && ball.y > 200 && ball.y < 400) {
+        score.red++; // Sağ kaleye gol atıldı, kırmızı kazandı
         resetBall();
+    } else {
+        // Kale dışındaki duvarlara çarpma
+        if (ball.x < 15) { ball.x = 15; ball.vx *= -1; }
+        if (ball.x > width - 15) { ball.x = width - 15; ball.vx *= -1; }
     }
 
     io.emit('gameState', players, ball, score);
 }, 1000 / 60);
 
 function resetBall() {
-    ball.x = 400; ball.y = 250; ball.vx = 0; ball.vy = 0;
+    ball.x = 600; ball.y = 300; ball.vx = 0; ball.vy = 0;
+    // Oyunu ortadan başlat
     for (let id in players) {
-        players[id].x = 400; players[id].y = 250;
+        players[id].x = 600 + (players[id].team === 'red' ? -100 : 100);
+        players[id].y = 300;
     }
 }
 
