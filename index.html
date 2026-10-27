@@ -70,6 +70,39 @@
             align-items: center; 
             justify-content: center; 
         }
+
+        /* --- SOL ÜST MENÜ BUTONU --- */
+        #in-game-menu-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            color: #2b1b0e;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 154, 158, 0.5);
+            transition: all 0.2s ease;
+            z-index: 100;
+            border: 3px solid #ffffff;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        #in-game-menu-btn:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 154, 158, 0.8);
+            background: linear-gradient(135deg, #fecfef 0%, #ff9a9e 99%);
+        }
+
+        #in-game-menu-btn:active {
+            transform: scale(0.95) translateY(0);
+        }
         
         #scoreboard { font-size: 36px; font-weight: 900; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.3), 2px 2px 4px #000; letter-spacing: 2px; }
         .red-team { color: #ff4c4c; text-shadow: 0 0 15px #ff4c4c; }
@@ -120,10 +153,11 @@
         
         @media (pointer: coarse) {
             .menu-btn { width: 250px; font-size: 18px; padding: 12px; }
+            #in-game-menu-btn { padding: 8px 16px; font-size: 16px; top: 10px; left: 10px; }
             #joystick-zone { display: block; }
             #pc-controls { display: none; }
             canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
-            #scoreboard { position: absolute; top: 80px; font-size: 28px; }
+            #scoreboard { position: absolute; top: 60px; font-size: 28px; }
             #stamina-container { width: 200px; height: 16px; }
             #stamina-text { width: 200px; }
             #power-container { width: 200px; height: 12px; }
@@ -146,6 +180,12 @@
 
     <!-- OYUN EKRANI -->
     <div id="game-container">
+        
+        <!-- YENİ: SOL ÜST MENÜ BUTONU -->
+        <div id="in-game-menu-btn" onclick="goToMenu()">
+            <span style="font-size: 24px;">🏠</span> Menü
+        </div>
+
         <div class="ui-bars">
             <div id="stamina-container">
                 <div id="stamina-bar"></div>
@@ -193,6 +233,21 @@
             alert("Oyundan çıkılıyor...");
             window.location.href = "about:blank"; 
         });
+
+        // YENİ: Oyun içinden menüye dönme fonksiyonu
+        function goToMenu() {
+            // Oyundayken basılı kalan tuşları sıfırla
+            for(let k in keys) keys[k] = false;
+            for(let id in players) {
+                // Eğer tuş görselleri açık kaldıysa kapat
+                let btn = document.getElementById('key-' + k);
+                if(btn) btn.classList.remove('active');
+            }
+            
+            // Ekranları değiştir
+            gameContainer.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
 
         // --- OYUN MANTIĞI ---
         const canvas = document.getElementById('gameCanvas');
@@ -523,19 +578,16 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                // --- NEON YEŞİL YANIP SÖNME EFEKTİ ---
                 if (id === ball.owner) {
                     let time = Date.now();
-                    let pulse = (Math.sin(time / 80) + 1) / 2; // Hızlı nabız (0 ile 1 arası)
-                    let radius = 26 + (pulse * 8); // Boyut değişimi
+                    let pulse = (Math.sin(time / 80) + 1) / 2;
+                    let radius = 26 + (pulse * 8); 
                     
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-                    // Neon yeşil (39FF14) rengi ve parlaklık (Opacity) ayarı
                     ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; 
                     ctx.lineWidth = 5;
-                    // Işık saçması (Glow) için gölge efekti
                     ctx.shadowColor = '#39FF14';
                     ctx.shadowBlur = 15 + (pulse * 15); 
                     ctx.stroke();
