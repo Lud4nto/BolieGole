@@ -22,7 +22,6 @@ function generateRoomCode() {
     return result;
 }
 
-// Çökmeyi önlemek için global hata yakalayıcı
 process.on('uncaughtException', (err) => {
     console.error('Beklenmeyen bir hata oluştu (Çökme engellendi):', err.message);
 });
@@ -40,8 +39,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('create_server', (data) => {
-        if (!data) return; // Veri gelmezse durdur
-        
+        if (!data) return;
         const code = generateRoomCode();
         const hostPlayer = {
             id: socket.id,
@@ -75,7 +73,6 @@ io.on('connection', (socket) => {
     socket.on('join_server', (data) => {
         if (!data) return;
         let s = servers[data.id];
-        
         if (!s) {
             socket.emit('join_error', 'Oda bulunamadı veya kapatılmış.');
             return;
@@ -137,11 +134,35 @@ io.on('connection', (socket) => {
         }
 
         s.status = "playing";
+        // Takımları başlangıç pozisyonlarına yerleştir
+        for (let p of s.players) {
+            if (p.team === 'red') { p.x = 450; p.y = 300; }
+            if (p.team === 'blue') { p.x = 750; p.y = 300; }
+        }
+        resetBall(s); // Topu ortaya al
+
         io.to(s.id).emit('game_started');
 
         s.gameInterval = setInterval(() => {
             updateGame(s);
         }, 1000 / 60);
+    });
+
+    // YENİ: MAÇI DURDURMA (Sadece Host)
+    socket.on('stop_game', () => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.hostId !== socket.id) return;
+
+        if (s.gameInterval) {
+            clearInterval(s.gameInterval);
+            s.gameInterval = null;
+        }
+        s.status = "lobby";
+        s.score = { red: 0, blue: 0 };
+        resetBall(s);
+
+        io.to(s.id).emit('game_ended', s);
     });
 
     socket.on('move', (data) => {
@@ -155,6 +176,28 @@ io.on('connection', (socket) => {
             p.lastDy = data.y - p.y;
             p.x = data.x;
             p.y = data.y;
+        }
+    });
+
+    // YENİ: SPACE İLE TOP ÇALMA (TACKLE)
+    socket.on('tackle', () => {
+        if (!socket.roomId) return;
+        let s = servers[socket.roomId];
+        if (!s || s.status !== "playing") return;
+        
+        let p = s.players.find(pl => pl.id === socket.id);
+        if (!p || p.team === 'spectator') return;
+
+        // Eğer top başkasındaysa ve aramızda mesafe 60'tan azsa çal
+        if (s.ball.owner && s.ball.owner !== socket.id) {
+            let owner = s.players.find(pl => pl.id === s.ball.owner);
+            if (owner) {
+                let dist = Math.hypot(p.x - owner.x, p.y - owner.y);
+                if (dist < 60) {
+                    s.ball.owner = socket.id;
+                    s.ball.possessionTimer = 150; // Çalan kişiye 2.5 saniye koruma
+                }
+            }
         }
     });
 
@@ -286,18 +329,12 @@ function updateGame(s) {
             if (p.team === 'spectator') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             
-            if (dist < 50 && ball.pickupCooldown <= 0) {
-                if (ball.owner === null) {
-                    ball.owner = p.id;
-                    ball.possessionTimer = 150;
-                    ball.vx = 0; ball.vy = 0; ball.vz = 0;
-                    ball.shotPower = 0;
-                } else if (ball.owner !== p.id) {
-                    ball.owner = p.id;
-                    ball.possessionTimer = 150;
-                    ball.vx = 0; ball.vy = 0; ball.vz = 0;
-                    ball.shotPower = 0;
-                }
+            // Otomatik alma (Sadece top boştaysa)
+            if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
+                ball.owner = p.id;
+                ball.possessionTimer = 150;
+                ball.vx = 0; ball.vy = 0; ball.vz = 0;
+                ball.shotPower = 0;
             }
         }
 
