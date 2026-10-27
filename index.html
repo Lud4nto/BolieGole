@@ -16,9 +16,10 @@
         
         .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
         
+        /* Top Sende Uyarısı ve Sayaç */
         #possession-text {
-            display: none; font-size: 18px; font-weight: bold; color: #eab308;
-            text-shadow: 0 0 10px #eab308; margin-top: 5px;
+            display: none; font-size: 20px; font-weight: 900; color: #eab308;
+            text-shadow: 0 0 15px #eab308, 0 0 5px #000; margin-top: 5px; letter-spacing: 1px;
         }
 
         #stamina-container {
@@ -78,7 +79,7 @@
                 <div id="power-bar"></div>
                 <div id="power-text">ŞUT GÜCÜ</div>
             </div>
-            <div id="possession-text">🔥 TOP SENDE! (2 Sn Koruma)</div>
+            <div id="possession-text">🔥 TOP SENDE!</div>
         </div>
 
         <div id="scoreboard">
@@ -120,6 +121,7 @@
 
         let isCharging = false;
         let shotPower = 0;
+        let chargeStartTime = 0; // Tek tık kontrolü için
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
@@ -128,9 +130,9 @@
             if (keys[k] !== undefined) keys[k] = true;
             
             if (k === ' ') {
-                // Sadece topa sahipsen şarj başlat
                 if (ball.owner === socket.id) {
                     isCharging = true;
+                    chargeStartTime = Date.now(); // Süreyi başlat
                 }
             }
             updateKeyVisual(k, true);
@@ -142,10 +144,30 @@
 
             if (k === ' ' && isCharging) {
                 isCharging = false;
-                executeKick();
+                
+                // TEK TIK KONTROLÜ (200 milisaniyeden kısa basıldıysa direkt pas)
+                let pressDuration = Date.now() - chargeStartTime;
+                if (pressDuration < 200) {
+                    forcePass();
+                } else {
+                    executeKick();
+                }
             }
             updateKeyVisual(k, false);
         });
+
+        function forcePass() {
+            if (ball.owner !== socket.id) return;
+            let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
+            // Hızlı pas
+            if (socket) socket.emit('kick', { 
+                vx: Math.cos(angle) * 3, 
+                vy: Math.sin(angle) * 3, 
+                vz: 0 
+            });
+            shotPower = 0;
+            document.getElementById('power-container').style.display = 'none';
+        }
 
         function executeKick() {
             if (ball.owner !== socket.id) return;
@@ -154,12 +176,12 @@
             let vx = 0, vy = 0, vz = 0;
 
             if (shotPower < 38) {
-                // PAS
-                vx = Math.cos(angle) * 2.5;
-                vy = Math.sin(angle) * 2.5;
+                // Bar dolmadıysa Pas
+                vx = Math.cos(angle) * 3;
+                vy = Math.sin(angle) * 3;
                 vz = 0;
             } else {
-                // ŞUT
+                // Bar dolduysa Şut
                 let force = shotPower / 100; 
                 vx = Math.cos(angle) * (6 + (force * 7)); 
                 vy = Math.sin(angle) * (6 + (force * 7));
@@ -222,16 +244,18 @@
                 document.getElementById('score-red').innerText = score.red;
                 document.getElementById('score-blue').innerText = score.blue;
 
-                // Top Sende Uyarısı
+                // --- SAYAÇ VE TOP SENDE UYARISI ---
                 const possText = document.getElementById('possession-text');
                 if (ball.owner === socket.id) {
                     possText.style.display = 'block';
+                    let secondsLeft = (ball.protectionTimer / 60).toFixed(1); // 60 FPS'e bölüyoruz
+                    
                     if (ball.protectionTimer > 0) {
-                        possText.innerText = "🔥 TOP SENDE! (Koruma Aktif)";
-                        possText.style.color = "#eab308";
+                        possText.innerText = `🔥 TOP SENDE! (Koruma: ${secondsLeft} sn)`;
+                        possText.style.color = "#eab308"; // Sarı
                     } else {
-                        possText.innerText = "🔥 TOP SENDE! (Dikkat, çalınabilir!)";
-                        possText.style.color = "#ef4444";
+                        possText.innerText = `🔥 TOP SENDE! (DİKKAT, ÇALINABİLİR!)`;
+                        possText.style.color = "#ef4444"; // Kırmızı
                     }
                 } else {
                     possText.style.display = 'none';
@@ -369,10 +393,9 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                // Top sahibinin etrafında parlama
                 if (id === ball.owner) {
                     ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-                    ctx.strokeStyle = (ball.protectionTimer > 0) ? '#eab308' : 'rgba(255, 255, 255, 0.5)'; // Sarıysa korumalı, beyazsa serbest
+                    ctx.strokeStyle = (ball.protectionTimer > 0) ? '#eab308' : '#ef4444'; 
                     ctx.lineWidth = 4; 
                     ctx.stroke();
                 }
