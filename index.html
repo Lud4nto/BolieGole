@@ -49,12 +49,9 @@
         .join-btn { background: #4c9aff; border: 3px solid #2563eb; box-shadow: 3px 3px 0px #1e3a8a; color: white; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 6px; }
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
-        /* LOBİ VE TAKTİK TAHTASI */
         #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 0 20px; box-sizing: border-box; }
-        
         .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; }
         .lobby-center { display: flex; flex-direction: column; align-items: center; width: 40%; }
-
         .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
         .room-code { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
         
@@ -63,7 +60,6 @@
         .team-title { font-family: 'Press Start 2P', cursive; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
         .player-slot { width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
         
-        /* TAKTİK TAHTASI */
         #tactics-board { width: 100%; height: 380px; background-color: #2e7d32; border: 4px solid #fff; border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         .pitch-line { position: absolute; background: rgba(255,255,255,0.4); }
         .pitch-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); }
@@ -73,6 +69,7 @@
         .slot:hover { transform: translate(-50%, -50%) scale(1.1); }
         .slot.empty { background: rgba(0,0,0,0.5); border-style: dashed; }
         .slot.filled { color: #fff; font-weight: bold; border-width: 3px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .slot.selected-bot { border: 3px solid #eab308; box-shadow: 0 0 15px #eab308; transform: translate(-50%, -50%) scale(1.15); }
         .slot .pos-label { position: absolute; bottom: -15px; font-size: 8px; color: white; font-family: 'Segoe UI', sans-serif; font-weight: bold; text-shadow: 1px 1px 2px black; }
         
         .start-game-btn { margin-top: 10px; padding: 10px 25px; font-size: 18px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
@@ -84,7 +81,11 @@
 
         /* MAĞAZA */
         #screen-shop { background: #0f172a; }
-        .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 80%; max-width: 800px; margin-top: 20px; }
+        .shop-tabs { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; width: 100%; }
+        .tab-btn { padding: 10px 20px; background: #8b5a2b; border: 3px solid #5a3a1b; color: white; font-weight: bold; font-family: 'Press Start 2P', cursive; font-size: 12px; cursor: pointer; border-radius: 6px; }
+        .tab-btn.active { background: #eab308; color: #000; border-color: #a16207; }
+        
+        .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 700px; max-height: 300px; overflow-y: auto; padding: 5px; }
         .shop-item { background: #d4a373; border: 4px solid #8b5a2b; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; color: #2b1b0e; font-weight: bold; }
         .shop-item.selected { border-color: #22c55e; box-shadow: 0 0 15px #22c55e; transform: scale(1.05); }
         .shop-icon { font-size: 40px; margin-bottom: 10px; }
@@ -202,6 +203,7 @@
             #result-score { font-size: 40px; }
             #result-desc { font-size: 16px; }
             .shop-grid { grid-template-columns: repeat(2, 1fr); }
+            .tab-btn { font-size: 10px; padding: 8px 10px; }
         }
     </style>
 </head>
@@ -232,6 +234,14 @@
         <div class="info-box" style="width: 90%; max-width: 850px;">
             <h2>MAĞAZA</h2>
             <p style="color:#4c9aff; font-weight:bold; margin:0;">Tüm eşyalar ÜCRETSİZDİR!</p>
+            
+            <div class="shop-tabs">
+                <button class="tab-btn active" onclick="switchShopTab('outfit', this)">Kıyafet</button>
+                <button class="tab-btn" onclick="switchShopTab('aura', this)">Aura</button>
+                <button class="tab-btn" onclick="switchShopTab('trail', this)">İz</button>
+                <button class="tab-btn" onclick="switchShopTab('ball', this)">Top</button>
+            </div>
+
             <div class="shop-grid" id="shop-items"></div>
             <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
         </div>
@@ -327,11 +337,9 @@
         </div>
     </div>
 
-    <!-- YENİ LOBİ EKRANI (TAKTİK TAHTASI İLE) -->
     <div id="screen-lobby" class="screen">
         <div class="bg-blur" style="opacity: 0.95;"></div>
         
-        <!-- Sol Taraf: Takımlar ve Butonlar -->
         <div class="lobby-side">
             <div class="lobby-header">
                 <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 16px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
@@ -353,16 +361,12 @@
             </div>
         </div>
 
-        <!-- Orta Taraf: Taktik Tahtası -->
         <div class="lobby-center">
             <div id="tactics-board">
-                <!-- Çizgiler CSS ile çizilecek -->
                 <div class="pitch-line" style="top:50%; left:0; width:100%; height:2px;"></div>
                 <div class="pitch-circle"></div>
                 <div class="pitch-box" style="left:0;"></div>
                 <div class="pitch-box" style="right:0;"></div>
-                
-                <!-- Slotlar JS ile doldurulacak -->
             </div>
             <button class="start-game-btn" id="btn-start-game">MAÇI BAŞLAT</button>
         </div>
@@ -484,20 +488,38 @@
         let replayTimer = 0;
 
         let isPractice = false;
-        let shopSelected = localStorage.getItem('bolie_outfit') || 'default';
-        let myNeonColor = localStorage.getItem('bolie_neonColor') || '#39FF14';
+        let selectedBotId = null;
 
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
+        // EŞYALAR
+        let equipped = JSON.parse(localStorage.getItem('bolie_equipped')) || { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
+        
+        const SHOP_ITEMS = {
+            outfit: [
+                { id: 'default', name: 'Normal', icon: '⚽' },
+                { id: 'crown', name: 'Taç', icon: '👑' },
+                { id: 'glasses', name: 'Gözlük', icon: '🕶️' },
+                { id: 'cap', name: 'Kasket', icon: '🧢' }
+            ],
+            aura: [
+                { id: 'none', name: 'Yok', icon: '🚫' },
+                { id: 'fire', name: 'Alev', icon: '🔥' },
+                { id: 'ice', name: 'Buz', icon: '❄️' },
+                { id: 'toxic', name: 'Zehir', icon: '☢️' },
+                { id: 'rainbow', name: 'Gökkuşağı', icon: '🌈' }
+            ],
+            trail: [
+                { id: 'none', name: 'Yok', icon: '🚫' },
+                { id: 'solid', name: 'Renkli İz', icon: '🎨' },
+                { id: 'stars', name: 'Yıldız', icon: '✨' }
+            ],
+            ball: [
+                { id: 'classic', name: 'Klasik', icon: '⚽' },
+                { id: 'fire', name: 'Ateş', icon: '🔥' },
+                { id: 'neon', name: 'Neon', icon: '🟢' },
+                { id: 'beach', name: 'Plaj', icon: '🏐' }
+            ]
+        };
 
-        const OUTFITS = [
-            { id: 'default', name: 'Normal', icon: '⚽' },
-            { id: 'crown', name: 'Taç', icon: '👑' },
-            { id: 'band', name: 'Bandana', icon: '🥋' },
-            { id: 'glasses', name: 'Gözlük', icon: '🕶️' },
-            { id: 'cap', name: 'Kasket', icon: '🧢' }
-        ];
-
-        // TAKTİK TAHTASI VERİSİ (Sunucuyla aynı olmalı)
         const FORMATION_SLOTS = {
             red: [
                 { id: 'R_GK', name: 'GK', x: 60, y: 300 },
@@ -514,9 +536,6 @@
                 { id: 'B_FWD', name: 'FWD', x: 650, y: 300 }
             ]
         };
-        // Tahtayı HTML'e göre ölçekle (Saha 1200x600, Tahta 100%x100%)
-        const BOARD_W = 600; // Taktik tahtasının tahmini genişliği (CSS'te esnek olacak ama oranlayacağız)
-        const BOARD_H = 380;
 
         // --- SES AYARLARI ---
         const musicSlider = document.getElementById('vol-music');
@@ -587,14 +606,26 @@
         }
 
         // --- MAĞAZA ---
+        let currentShopTab = 'outfit';
+        window.switchShopTab = (tab, btn) => {
+            currentShopTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderShop();
+        };
+
         function renderShop() {
             let grid = document.getElementById('shop-items');
             grid.innerHTML = '';
-            OUTFITS.forEach(o => {
+            SHOP_ITEMS[currentShopTab].forEach(o => {
                 let div = document.createElement('div');
-                div.className = 'shop-item' + (shopSelected === o.id ? ' selected' : '');
+                div.className = 'shop-item' + (equipped[currentShopTab] === o.id ? ' selected' : '');
                 div.innerHTML = `<div class="shop-icon">${o.icon}</div><div>${o.name}</div>`;
-                div.onclick = () => { shopSelected = o.id; localStorage.setItem('bolie_outfit', o.id); renderShop(); };
+                div.onclick = () => { 
+                    equipped[currentShopTab] = o.id; 
+                    localStorage.setItem('bolie_equipped', JSON.stringify(equipped)); 
+                    renderShop(); 
+                };
                 grid.appendChild(div);
             });
         }
@@ -635,7 +666,7 @@
             let blueColor = document.getElementById('input-blue-color').value;
             let weather = document.getElementById('input-weather').value;
 
-            socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, outfit: shopSelected, neonColor: myNeonColor });
+            socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball });
             document.getElementById('modal-create').style.display = 'none';
         };
 
@@ -671,7 +702,7 @@
                 let srv = serverListData.find(s => s.id === id);
                 if (srv && srv.hasPassword) { pass = prompt("Bu oda şifreli. Lütfen şifreyi girin:"); if (pass === null) return; }
             }
-            socket.emit('join_server', { id: id, password: pass, playerName: myPlayerName, outfit: shopSelected, neonColor: myNeonColor });
+            socket.emit('join_server', { id: id, password: pass, playerName: myPlayerName, equipped: equipped });
         };
 
         socket.on('join_error', (msg) => { alert(msg); });
@@ -683,7 +714,6 @@
         // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ
         function renderTacticsBoard(room) {
             let board = document.getElementById('tactics-board');
-            // Eski slotları temizle
             board.querySelectorAll('.slot').forEach(el => el.remove());
 
             let renderTeam = (team) => {
@@ -691,7 +721,6 @@
                     let el = document.createElement('div');
                     el.className = 'slot ' + (room.formation[team][slot.id] ? 'filled' : 'empty');
                     
-                    // Koordinatları 1200x600'den, tahtanın boyutuna ölçekle
                     let boardRect = board.getBoundingClientRect();
                     let pxX = (slot.x / 1200) * boardRect.width;
                     let pxY = (slot.y / 600) * boardRect.height;
@@ -703,6 +732,9 @@
                         if (p) {
                             el.innerText = p.name.substring(0, 3);
                             el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
+                            
+                            // Bot seçiliyse parlat
+                            if (selectedBotId === p.id) el.classList.add('selected-bot');
                         }
                     } else {
                         el.innerText = '+';
@@ -714,15 +746,23 @@
                     lbl.innerText = slot.name;
                     el.appendChild(lbl);
 
-                    // Tıklama olayı
                     el.onclick = (e) => {
                         e.stopPropagation();
-                        if (myTeam === team) {
+                        let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
+                        
+                        // Eğer dolu bir slota tıklandıysa ve bot ise, seç (sadece oda sahibi)
+                        if (p && p.isBot && room.hostId === socket.id) {
+                            selectedBotId = p.id;
+                            renderTacticsBoard(room);
+                        } 
+                        // Eğer boş slota tıklandıysa ve bir bot seçiliyse, botu oraya taşı
+                        else if (!p && selectedBotId && room.hostId === socket.id) {
+                            socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
+                            selectedBotId = null;
+                        }
+                        // Eğer kendi takımınsa ve insan oyuncuysa, o pozisyona geç
+                        else if (myTeam === team && !p) {
                             socket.emit('change_position', slot.id);
-                        } else {
-                            // Takım değiştir ve o pozisyona geç
-                            socket.emit('change_team', team);
-                            setTimeout(() => socket.emit('change_position', slot.id), 200);
                         }
                     };
                     board.appendChild(el);
@@ -907,13 +947,13 @@
                 currentIds.push(p.id);
                 if (p.id === socket.id) {
                     if (!myPlayer) myPlayer = p; 
-                    myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position;
+                    myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped;
                     players[socket.id] = myPlayer; 
                 } else {
                     if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
                     else {
                         players[p.id].x = p.x; players[p.id].y = p.y;
-                        players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position;
+                        players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position; players[p.id].equipped = p.equipped;
                     }
                 }
             }
@@ -1144,10 +1184,10 @@
 
         function startPracticeMode() {
             isPractice = true; isSpectator = false; switchScreen('screen-game');
-            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 600, y: 300, lastDx: 0, lastDy: 0 };
+            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 600, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
             players = { "p1": myPlayer };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null };
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = "";
             document.getElementById('score-red').innerText = ""; document.getElementById('score-blue').innerText = "";
@@ -1202,227 +1242,4 @@
             ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
             ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
             ctx.beginPath(); ctx.arc(600, 300, 70, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(600, 300, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
-            
-            const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
-            ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH); ctx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-            
-            const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
-            ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); ctx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
-
-            if (!isPractice && currentRoom && currentRoom.isKickoff) {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
-                else { ctx.fillRect(592, margin, 8, 600 - (margin * 2)); }
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.fillText("SANTRA", 600, 60);
-            }
-        }
-
-        function drawBall() {
-            let drawY = ball.y - (ball.z || 0);
-            let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
-            ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * shadowScale})`; ctx.fill();
-
-            let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-            if (speed > 5 && ball.z === 0) ballTrail.push({ x: ball.x, y: drawY, alpha: 0.5 });
-            if (ballTrail.length > 8) ballTrail.shift();
-            for (let i = 0; i < ballTrail.length; i++) {
-                let t = ballTrail[i]; t.alpha -= 0.05;
-                if (t.alpha > 0) {
-                    ctx.beginPath(); ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${t.alpha})`; ctx.fill();
-                }
-            }
-
-            ballRotation += speed * 0.05;
-            ctx.save(); ctx.translate(ball.x, drawY); ctx.rotate(ballRotation);
-            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#1a1a1a'; ctx.stroke();
-            function drawPentagon(radius, offsetX, offsetY, angle) {
-                ctx.beginPath();
-                for (let i = 0; i < 5; i++) {
-                    let a = angle + i * (Math.PI * 2 / 5);
-                    let x = offsetX + Math.cos(a) * radius; let y = offsetY + Math.sin(a) * radius;
-                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
-                ctx.closePath(); ctx.fillStyle = '#1a1a1a'; ctx.fill();
-            }
-            drawPentagon(5.5, 0, 0, 0); drawPentagon(4, 10, 0, 0.5); drawPentagon(4, -10, 0, 1.5); drawPentagon(4, 0, 10, 0.8); drawPentagon(4, 0, -10, 1.2);
-            ctx.restore();
-        }
-
-        function gameLoop(now) {
-            now = now || performance.now();
-            let dt = Math.min((now - lastRenderTime) / 1000, 0.1);
-            lastRenderTime = now;
-
-            if (document.getElementById('screen-game').classList.contains('active')) {
-                if (isPractice) {
-                    if (ball.owner === null) {
-                        ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
-                        ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
-                        if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
-                        if (Math.abs(ball.vx) < 0.1) ball.vx = 0;
-                        if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
-                        if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
-                        if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
-                        
-                        let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
-                        let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
-                        if (hitLeftGoal || hitRightGoal) {
-                            if (ball.z <= 80) {
-                                if (hitRightGoal) score.red++; else score.blue++;
-                                playKickSound(true);
-                                ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-                            } else {
-                                ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7;
-                            }
-                        } else {
-                            if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
-                            if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
-                        }
-                    }
-                    if (ball.owner === null && myPlayer) {
-                        let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-                        if (dist < 50 && ball.pickupCooldown <= 0) { ball.owner = myPlayer.id; ball.vx = 0; ball.vy = 0; ball.z = 0; }
-                    }
-                    if (ball.pickupCooldown > 0) ball.pickupCooldown--;
-                    if (ball.owner === myPlayer.id) {
-                        let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
-                        ball.x = myPlayer.x + Math.cos(angle) * 35;
-                        ball.y = myPlayer.y + Math.sin(angle) * 35;
-                    }
-                }
-
-                ctx.clearRect(0, 0, 1200, 600);
-
-                let targetCamX = 600;
-                let targetCamY = 300;
-                let targetZoom = 1.0;
-
-                if (isPractice) {
-                     targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2;
-                } else if (currentRoom) {
-                    let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-                    if (currentRoom.status === 'goal_replay') {
-                        updateReplay(now);
-                        targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
-                    } else if (currentRoom.status === 'playing') {
-                        if (ball.owner === null && speed > 15) {
-                            targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; 
-                        }
-                    }
-                }
-
-                cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
-                cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
-                cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
-
-                let viewW = 1200 / cameraZoom;
-                let viewH = 600 / cameraZoom;
-                let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
-                let clampY = Math.max(viewH / 2, Math.min(600 - viewH / 2, cameraY));
-
-                ctx.save();
-                ctx.translate(600, 300);
-                ctx.scale(cameraZoom, cameraZoom);
-                ctx.translate(-clampX, -clampY);
-
-                drawStadium(); 
-                drawPitch();   
-                
-                if (currentRoom && currentRoom.powerups) {
-                    for (let pu of currentRoom.powerups) {
-                        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pu.x, pu.y, 15, 0, Math.PI*2); ctx.fill();
-                        ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
-                        let icon = pu.type === 'freeze' ? '❄️' : pu.type === 'speed' ? '⚡' : pu.type === 'power' ? '🦶' : '🧲';
-                        ctx.fillText(icon, pu.x, pu.y + 7);
-                    }
-                }
-
-                drawBall();
-
-                if (currentRoom || isPractice) {
-                    let lerpFactor = Math.min(1, 15 * dt);
-                    for (let id in players) {
-                        let p = players[id];
-                        if (!p || p.team === 'spectator') continue;
-                        
-                        if (id !== socket.id && !isPractice) {
-                            if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
-                            p.renderX += (p.x - p.renderX) * lerpFactor;
-                            p.renderY += (p.y - p.renderY) * lerpFactor;
-                        }
-                        let px = (id === socket.id || isPractice) ? p.x : p.renderX;
-                        let py = (id === socket.id || isPractice) ? p.y : p.renderY;
-
-                        let pSize = 22;
-                        ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                        ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
-                        
-                        let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
-                        if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
-                        if (isPractice) teamColor = '#ff0000';
-                        
-                        ctx.fillStyle = teamColor;
-                        ctx.fill(); 
-                        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
-
-                        if (p.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
-                        else if (p.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
-                        else if (p.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
-                        else if (p.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
-                        
-                        if (!isPractice && currentRoom.emotes) {
-                            for (let em of currentRoom.emotes) {
-                                if (em.playerId === id) {
-                                    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20);
-                                }
-                            }
-                        }
-
-                        if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
-                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
-                            let radius = pSize + 4 + (pulse * 6); 
-                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
-                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
-                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
-                        }
-
-                        if (id === socket.id && isCharging && shotPower >= 38) {
-                            let intensity = shotPower / 100; let time = Date.now() / 100;
-                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
-                            for (let i = 0; i < 5; i++) {
-                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
-                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
-                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
-                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
-                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
-                            }
-                        }
-                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
-                        ctx.fillText(p.name, px, py - pSize - 5);
-                    }
-                }
-                
-                ctx.restore();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Ekran boyutu değiştiğinde taktik tahtasını yeniden çiz
-        window.addEventListener('resize', () => {
-            if (currentRoom && currentRoom.status === 'lobby') {
-                renderTacticsBoard(currentRoom);
-            }
-        });
-
-        requestAnimationFrame(updateMovement);
-        requestAnimationFrame(gameLoop);
-    </script>
-</body>
-</html>
+            ctx.beginPath(); ctx.arc(600
