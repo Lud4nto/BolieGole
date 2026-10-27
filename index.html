@@ -500,28 +500,28 @@
             currentRoom = room;
 
             // 🔧 FIX: müzik sadece status değişince kontrol edilsin (60Hz değil)
-            if (room.status !== lastAudioStatus) {
-                lastAudioStatus = room.status;
-                let music = document.getElementById('bgMusic');
-                if (room.status === 'playing') {
-                    if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
-                } else {
-                    music.pause();
-                }
-                if (room.status === 'halftime_break') {
+            if (room.status === 'playing') {
+                document.getElementById('overlay-message').style.display = 'none';
+                document.getElementById('overlay-replay').style.display = 'none';
+            } else if (room.status === 'halftime_break') {
                     document.getElementById('overlay-message').style.display = 'flex';
                     document.getElementById('msg-title').innerText = "DEVRE ARASI";
                     document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
-                }
-                if (room.status === 'goal_replay') {
+                    document.getElementById('overlay-replay').style.display = 'none';
+            } else if (room.status === 'goal_replay') {
                     document.getElementById('overlay-replay').style.display = 'flex';
                     document.getElementById('overlay-message').style.display = 'none';
-                }
-                if (room.status === 'playing') {
-                    document.getElementById('overlay-message').style.display = 'none';
-                    document.getElementById('overlay-replay').style.display = 'none';
-                }
             }
+                // Müzik sadece status değişince
+                if (room.status !== lastAudioStatus) {
+                    lastAudioStatus = room.status;
+                    let music = document.getElementById('bgMusic');
+                    if (room.status === 'playing') {
+                        if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
+    } else {
+        music.pause();
+    }
+}
 
             let currentIds = [];
             for (let p of room.players) {
