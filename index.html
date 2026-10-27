@@ -451,6 +451,21 @@
             } else switchScreen('screen-lobby');
         }
 
+        // YENİ: Zorla Işınlama (Titreşim Önleyici)
+        socket.on('force_positions', (serverPlayers) => {
+            for(let sp of serverPlayers) {
+                if (sp.id === socket.id) {
+                    if(!myPlayer) myPlayer = sp;
+                    myPlayer.x = sp.x;
+                    myPlayer.y = sp.y;
+                } else {
+                    if(!players[sp.id]) players[sp.id] = sp;
+                    players[sp.id].x = sp.x;
+                    players[sp.id].y = sp.y;
+                }
+            }
+        });
+
         socket.on('game_state', (room) => {
             currentRoom = room; 
             
@@ -477,11 +492,7 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    // KRİTİK DÜZELTME: Santra veya devre arasında sunucunun konumunu zorla kabul et
-                    if (room.isKickoff || room.status === 'halftime_break') {
-                        myPlayer.x = p.x;
-                        myPlayer.y = p.y;
-                    }
+                    // Titreşim yaratan zorla konum ataması buradan kaldırıldı.
                     players[socket.id] = myPlayer; 
                 } else {
                     players[p.id] = p; 
@@ -699,7 +710,6 @@
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, 1200, 600);
             
-            // Atatürk Olimpiyat Stadı tarzı tribünler (Saha kenarında, uzakta)
             let tribuneColor = '#1e293b'; 
             ctx.fillStyle = tribuneColor;
             ctx.fillRect(0, 0, 1200, 25); 
@@ -707,7 +717,6 @@
             ctx.fillRect(0, 0, 25, 600); 
             ctx.fillRect(1175, 0, 25, 600); 
 
-            // Tribün üstündeki renkli taraftar noktaları
             for(let i=0; i<1200; i+=15) {
                 for(let j=0; j<600; j+=15) {
                     if (i < 25 || i > 1175 || j < 25 || j > 575) {
@@ -720,7 +729,6 @@
                 }
             }
 
-            // Reklam panoları
             ctx.fillStyle = '#334155';
             ctx.fillRect(25, 25, 1150, 15);
             ctx.fillRect(25, 560, 1150, 15);
@@ -836,26 +844,4 @@
 
                         if (id === socket.id && isCharging && shotPower >= 38) {
                             let intensity = shotPower / 100; let time = Date.now() / 100;
-                            ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
-                            for (let i = 0; i < 5; i++) {
-                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
-                                ctx.beginPath(); ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
-                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                                ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
-                                ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
-                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
-                            }
-                        }
-                        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
-                        ctx.fillText(p.name, p.x, p.y - pSize - 5);
-                    }
-                }
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        updateMovement();
-        gameLoop();
-    </script>
-</body>
-</html>
+                            ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${int
