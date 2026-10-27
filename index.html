@@ -14,10 +14,13 @@
         
         canvas { width: 90vw; height: 70vh; background-color: #111; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); }
         
-        /* Üst Barlar Konteyneri */
         .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
         
-        /* Kondisyon Barı */
+        #possession-text {
+            display: none; font-size: 18px; font-weight: bold; color: #eab308;
+            text-shadow: 0 0 10px #eab308; margin-top: 5px;
+        }
+
         #stamina-container {
             width: 350px; height: 24px; background: rgba(15, 23, 42, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
@@ -27,17 +30,15 @@
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
         #stamina-text { position: absolute; width: 350px; text-align: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 2px #000; }
 
-        /* Şut Gücü Barı */
         #power-container {
             width: 350px; height: 16px; background: rgba(15, 23, 42, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
-            overflow: hidden; display: none; align-items: center; /* Başlangıçta gizli */
+            overflow: hidden; display: none; align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear, background 0.1s; }
         #power-text { position: absolute; width: 350px; text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 2px #000; }
 
-        /* PC Kontrolleri */
         #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
         .key-row { display: flex; gap: 12px; }
         .key {
@@ -77,6 +78,7 @@
                 <div id="power-bar"></div>
                 <div id="power-text">ŞUT GÜCÜ</div>
             </div>
+            <div id="possession-text">🔥 TOP SENDE! (2 Sn Koruma)</div>
         </div>
 
         <div id="scoreboard">
@@ -107,20 +109,17 @@
 
         let myPlayer = null;
         let players = {};
-        let ball = { x: 600, y: 300, z: 0 };
+        let ball = { x: 600, y: 300, z: 0, owner: null, protectionTimer: 0 };
         let score = { red: 0, blue: 0 };
 
-        // Kondisyon Ayarları
         let stamina = 100;
         let isExhausted = false; 
         const maxStamina = 100;
         const normalSpeed = 4.5;
         const sprintSpeed = 7.5;
 
-        // Şut Ayarları
         let isCharging = false;
         let shotPower = 0;
-        let canCharge = false;
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
@@ -128,13 +127,10 @@
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
             
-            // Space'e basıldığında şarj başlat (eğer topa yakınsa)
             if (k === ' ') {
-                if (myPlayer && ball) {
-                    let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-                    if (dist < 70) { // Topa yeterince yakınsa şarj etmeye başla
-                        isCharging = true;
-                    }
+                // Sadece topa sahipsen şarj başlat
+                if (ball.owner === socket.id) {
+                    isCharging = true;
                 }
             }
             updateKeyVisual(k, true);
@@ -144,7 +140,6 @@
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = false;
 
-            // Space bırakıldığında topu fırlat
             if (k === ' ' && isCharging) {
                 isCharging = false;
                 executeKick();
@@ -153,30 +148,26 @@
         });
 
         function executeKick() {
-            if (!myPlayer || !ball) return;
-            let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+            if (ball.owner !== socket.id) return;
             
-            if (dist < 70) {
-                let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
-                let vx = 0, vy = 0, vz = 0;
+            let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
+            let vx = 0, vy = 0, vz = 0;
 
-                if (shotPower < 38) {
-                    // PAS (Kısa basış veya %38 altı)
-                    vx = Math.cos(angle) * 2.5;
-                    vy = Math.sin(angle) * 2.5;
-                    vz = 0;
-                } else {
-                    // ŞUT (Uzun basış, %38 üstü)
-                    let force = shotPower / 100; // 0.38 ile 1.0 arası
-                    vx = Math.cos(angle) * (6 + (force * 7)); // Hız 6 ile 13 arası
-                    vy = Math.sin(angle) * (6 + (force * 7));
-                    vz = 2 + (force * 6); // Zıplama yüksekliği
-                }
-                
-                if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
+            if (shotPower < 38) {
+                // PAS
+                vx = Math.cos(angle) * 2.5;
+                vy = Math.sin(angle) * 2.5;
+                vz = 0;
+            } else {
+                // ŞUT
+                let force = shotPower / 100; 
+                vx = Math.cos(angle) * (6 + (force * 7)); 
+                vy = Math.sin(angle) * (6 + (force * 7));
+                vz = 2 + (force * 6);
             }
             
-            // Sıfırla
+            if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
+            
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -194,7 +185,6 @@
             }
         }
 
-        // Mobil Joystick
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 50;
@@ -231,13 +221,27 @@
                 ball = b; score = s;
                 document.getElementById('score-red').innerText = score.red;
                 document.getElementById('score-blue').innerText = score.blue;
+
+                // Top Sende Uyarısı
+                const possText = document.getElementById('possession-text');
+                if (ball.owner === socket.id) {
+                    possText.style.display = 'block';
+                    if (ball.protectionTimer > 0) {
+                        possText.innerText = "🔥 TOP SENDE! (Koruma Aktif)";
+                        possText.style.color = "#eab308";
+                    } else {
+                        possText.innerText = "🔥 TOP SENDE! (Dikkat, çalınabilir!)";
+                        possText.style.color = "#ef4444";
+                    }
+                } else {
+                    possText.style.display = 'none';
+                }
             });
         }
 
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
 
-            // --- KONDİSYON MANTIĞI ---
             let isSprinting = false;
             let currentSpeed = normalSpeed;
 
@@ -266,36 +270,21 @@
             else if (stamina < 30) bar.style.background = 'linear-gradient(90deg, #f97316, #ea580c)';
             else bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
 
-            // --- ŞUT GÜCÜ MANTIĞI ---
-            let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-            
-            // Eğer topa yakınsa ve Space'e basılıyorsa gücü artır
-            if (isCharging && distToBall < 70) {
-                document.getElementById('power-container').style.display = 'flex'; // Barı göster
-                
-                shotPower += 2.5; // Dolma hızı (Hızlıca dolsun)
+            if (isCharging && ball.owner === socket.id) {
+                document.getElementById('power-container').style.display = 'flex'; 
+                shotPower += 2.5; 
                 if (shotPower > 100) shotPower = 100;
 
                 const pBar = document.getElementById('power-bar');
                 pBar.style.width = shotPower + '%';
                 
-                // %38'in altı kırmızı (pas), üstü yeşilden sarıya
-                if (shotPower < 38) {
-                    pBar.style.background = '#ef4444'; 
-                } else {
-                    pBar.style.background = `linear-gradient(90deg, #22c55e ${shotPower}%, #eab308)`; 
-                }
+                if (shotPower < 38) pBar.style.background = '#ef4444'; 
+                else pBar.style.background = `linear-gradient(90deg, #22c55e ${shotPower}%, #eab308)`; 
             } else if (!isCharging) {
                 document.getElementById('power-container').style.display = 'none';
                 shotPower = 0;
-            } else if (isCharging && distToBall >= 70) {
-                // Topa uzaksa şarjı iptal et
-                isCharging = false;
-                shotPower = 0;
-                document.getElementById('power-container').style.display = 'none';
             }
 
-            // --- HAREKET ---
             let dx = 0, dy = 0;
             if (keys.w || keys.ArrowUp) dy -= 1;
             if (keys.s || keys.ArrowDown) dy += 1;
@@ -305,7 +294,6 @@
 
             if (dx !== 0 || dy !== 0) {
                 let length = Math.hypot(dx, dy);
-                // Şarj ederken yavaşla (gerçekçilik)
                 let speedMultiplier = isCharging ? 0.5 : 1;
                 dx = (dx / length) * (currentSpeed * speedMultiplier);
                 dy = (dy / length) * (currentSpeed * speedMultiplier);
@@ -381,11 +369,11 @@
                 ctx.fill(); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
                 
-                // Şarj eden oyuncunun etrafında parlama
-                if (id === socket.id && isCharging) {
+                // Top sahibinin etrafında parlama
+                if (id === ball.owner) {
                     ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-                    ctx.strokeStyle = shotPower >= 38 ? '#eab308' : '#ef4444';
-                    ctx.lineWidth = 3; 
+                    ctx.strokeStyle = (ball.protectionTimer > 0) ? '#eab308' : 'rgba(255, 255, 255, 0.5)'; // Sarıysa korumalı, beyazsa serbest
+                    ctx.lineWidth = 4; 
                     ctx.stroke();
                 }
 
