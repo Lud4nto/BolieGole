@@ -45,11 +45,13 @@ io.on('connection', (socket) => {
             ball.vz = data.vz;
             ball.owner = null; 
             ball.possessionTimer = 0;
-            ball.pickupCooldown = 20; // Şut sonrası 0.3 saniye dokunulmazlık
             
-            // Topu oyuncunun hemen önüne fırlat
-            ball.x += data.vx * 1.5; 
-            ball.y += data.vy * 1.5;
+            // Top ayağından çıktıktan sonra 0.6 saniye boyunca kimse geri alamaz
+            ball.pickupCooldown = 40; 
+            
+            // Topu hemen ileri fırlat ki ayağına yapışmasın
+            ball.x += data.vx * 2.5; 
+            ball.y += data.vy * 2.5;
         }
     });
 
@@ -65,7 +67,7 @@ io.on('connection', (socket) => {
 setInterval(() => {
     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
 
-    // 1. Top Sahipliği Mantığı
+    // 1. Top Sahipliği
     if (ball.owner !== null) {
         if (ball.possessionTimer > 0) {
             ball.possessionTimer -= 1; 
@@ -84,10 +86,10 @@ setInterval(() => {
             ball.vy = 0;
             ball.z = 0;
 
-            // SÜRE BİTTİYSE: Topu bırak!
+            // 2.5 Saniye bitti mi?
             if (ball.possessionTimer <= 0) {
                 ball.owner = null;
-                ball.vx = Math.cos(angle) * 7; // İleri doğru fırlat
+                ball.vx = Math.cos(angle) * 7; // Topu hafifçe ileri it
                 ball.vy = Math.sin(angle) * 7;
                 ball.pickupCooldown = 30; 
             }
@@ -134,7 +136,7 @@ setInterval(() => {
         if (dist < 45 && ball.pickupCooldown <= 0) {
             if (ball.owner === null) {
                 ball.owner = id;
-                ball.possessionTimer = 150;
+                ball.possessionTimer = 150; // 2.5 saniye
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             } else if (ball.owner !== id) {
                 ball.owner = id;
