@@ -9,8 +9,8 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// Top objesine 'possessionTimer' eklendi (2 saniyelik tutma süresi)
-let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0 };
+// 150 tick = 2.5 saniye. pickupCooldown top düştükten sonra kimsenin hemen alamamasını sağlar.
+let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 };
 let score = { red: 0, blue: 0 };
 
 const width = 1200;
@@ -40,15 +40,14 @@ io.on('connection', (socket) => {
     });
 
     socket.on('kick', (data) => {
-        // Sadece topun sahibi şut çekebilir
         if (ball.owner === socket.id) {
             ball.vx = data.vx;
             ball.vy = data.vy;
             ball.vz = data.vz;
             ball.owner = null; 
             ball.possessionTimer = 0;
+            ball.pickupCooldown = 15; // Şut çekildikten sonra 0.25 sn kimse alamaz
             
-            // Topu hemen önüne fırlat ki ayağına yapışmasın
             ball.x += data.vx * 1.5; 
             ball.y += data.vy * 1.5;
         }
@@ -64,6 +63,8 @@ io.on('connection', (socket) => {
 });
 
 setInterval(() => {
+    if (ball.pickupCooldown > 0) ball.pickupCooldown--;
+
     // 1. Top Sahipliği Mantığı
     if (ball.owner !== null) {
         if (ball.possessionTimer > 0) {
@@ -77,19 +78,20 @@ setInterval(() => {
             let angle = Math.atan2(owner.lastDy, owner.lastDx);
             if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0; 
             
-            // Top oyuncunun önünde durur
+            // Topu oyuncunun önünde tut
             ball.x = owner.x + Math.cos(angle) * 35;
             ball.y = owner.y + Math.sin(angle) * 35;
             ball.vx = 0; 
             ball.vy = 0;
             ball.z = 0;
 
-            // SÜRE BİTTİYSE: Top düşsün ve serbest kalsın!
+            // SÜRE BİTTİYSE: Topu bırak!
             if (ball.possessionTimer <= 0) {
                 ball.owner = null;
-                // Topa hafif bir yuvarlanma hızı ver ki ileri doğru düşsün
-                ball.vx = Math.cos(angle) * 2;
-                ball.vy = Math.sin(angle) * 2;
+                // Topu baktığı yöne doğru fırlat ki ayağından kopsun
+                ball.vx = Math.cos(angle) * 6;
+                ball.vy = Math.sin(angle) * 6;
+                ball.pickupCooldown = 30; // 0.5 saniye boyunca yerden alınamaz
             }
         }
     }
@@ -113,7 +115,6 @@ setInterval(() => {
         if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
         if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-        // Sınırlar
         if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
         if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
         
@@ -132,16 +133,15 @@ setInterval(() => {
         let p = players[id];
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        if (dist < 45) {
+        // Topa 45 birimden yakınsa VE yerden alma yasağı bittiyse alabilir
+        if (dist < 45 && ball.pickupCooldown <= 0) {
             if (ball.owner === null) {
-                // Boştaki topu al
                 ball.owner = id;
-                ball.possessionTimer = 120; // 2 saniye
+                ball.possessionTimer = 150; // 2.5 saniye
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             } else if (ball.owner !== id) {
-                // Başkasının ayağındaki topu ÇAL
                 ball.owner = id;
-                ball.possessionTimer = 120; // Çalan kişiye 2 saniye
+                ball.possessionTimer = 150; // 2.5 saniye
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             }
         }
@@ -151,7 +151,7 @@ setInterval(() => {
 }, 1000 / 60);
 
 function resetBall() {
-    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0 };
+    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 };
     for (let id in players) {
         players[id].x = 600 + (players[id].team === 'red' ? -150 : 150);
         players[id].y = 300;
