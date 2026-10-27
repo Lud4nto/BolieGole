@@ -3,10 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Critiball</title>
+    <title>BolieGole</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
         body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* --- ANA MENÜ CSS --- */
+        #main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('menu.png'); /* Arka plan resmi */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999; /* Her şeyin üstünde dursun */
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 180px; /* Resimdeki başlığın altında kalması için ayarlandı */
+        }
+
+        .menu-btn {
+            width: 320px;
+            padding: 15px;
+            background-color: #d4a373; /* Ahşap rengi */
+            border: 4px solid #8b5a2b; /* Koyu ahşap kenarlık */
+            box-shadow: 4px 4px 0px #5a3a1b; /* 3D gölge efekti */
+            border-radius: 8px;
+            font-family: 'Press Start 2P', cursive; /* Piksel fontu */
+            font-size: 24px;
+            color: #2b1b0e;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+            transition: all 0.1s ease;
+        }
+
+        .menu-btn:hover {
+            background-color: #e0b88e;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #5a3a1b;
+        }
+
+        .menu-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #5a3a1b;
+        }
+
+        /* Oyun Kapsayıcısı (Başlangıçta gizli) */
+        #game-container { 
+            display: none; /* Menü açıkken oyun gizli */
+            position: relative; 
+            width: 100vw; 
+            height: 100vh; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
         
         #scoreboard { font-size: 36px; font-weight: 900; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.3), 2px 2px 4px #000; letter-spacing: 2px; }
         .red-team { color: #ff4c4c; text-shadow: 0 0 15px #ff4c4c; }
@@ -56,6 +119,7 @@
         #joystick-knob { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; background: rgba(76, 154, 255, 0.6); box-shadow: 0 0 15px rgba(76, 154, 255, 0.5); border-radius: 50%; transform: translate(-50%, -50%); }
         
         @media (pointer: coarse) {
+            .menu-btn { width: 250px; font-size: 18px; padding: 12px; }
             #joystick-zone { display: block; }
             #pc-controls { display: none; }
             canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
@@ -68,6 +132,19 @@
     </style>
 </head>
 <body>
+
+    <!-- ANA MENÜ -->
+    <div id="main-menu">
+        <div class="menu-buttons">
+            <button class="menu-btn" id="btn-play">PLAY</button>
+            <button class="menu-btn" id="btn-continue">CONTINUE</button>
+            <button class="menu-btn" id="btn-options">OPTIONS</button>
+            <button class="menu-btn" id="btn-credits">CREDITS</button>
+            <button class="menu-btn" id="btn-exit">EXIT</button>
+        </div>
+    </div>
+
+    <!-- OYUN EKRANI -->
     <div id="game-container">
         <div class="ui-bars">
             <div id="stamina-container">
@@ -103,6 +180,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // --- MENÜ MANTIĞI ---
+        const mainMenu = document.getElementById('main-menu');
+        const gameContainer = document.getElementById('game-container');
+
+        document.getElementById('btn-play').addEventListener('click', () => {
+            mainMenu.style.display = 'none'; // Menüyü gizle
+            gameContainer.style.display = 'flex'; // Oyunu göster
+        });
+
+        document.getElementById('btn-exit').addEventListener('click', () => {
+            alert("Oyundan çıkılıyor...");
+            // Tarayıcıda pencereyi kapatmak bazen engellenir, o yüzden sayfayı boşaltıyoruz.
+            window.location.href = "about:blank"; 
+        });
+
+        // --- OYUN MANTIĞI ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let socket = null; try { socket = io(); } catch(e) {}
@@ -123,7 +216,6 @@
         let chargeStartTime = 0;
         let moveX = 0, moveY = 0;
 
-        // Topun görsel animasyonu için
         let ballRotation = 0;
         let ballTrail = [];
 
@@ -359,24 +451,17 @@
             ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200);
         }
 
-        // --- 1000X GÜZEL TOP ÇİZİMİ ---
         function drawBall() {
             let drawY = ball.y - (ball.z || 0);
-
-            // 1. Gölge
             let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
             ctx.beginPath();
             ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * shadowScale})`;
             ctx.fill();
 
-            // 2. İz (Trail)
             let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-            if (speed > 5 && ball.z === 0) {
-                ballTrail.push({ x: ball.x, y: drawY, alpha: 0.5 });
-            }
+            if (speed > 5 && ball.z === 0) ballTrail.push({ x: ball.x, y: drawY, alpha: 0.5 });
             if (ballTrail.length > 8) ballTrail.shift();
-            
             for (let i = 0; i < ballTrail.length; i++) {
                 let t = ballTrail[i];
                 t.alpha -= 0.05;
@@ -388,14 +473,11 @@
                 }
             }
 
-            // 3. Topun Kendisi (Dönen 3D Efekt)
             ballRotation += speed * 0.05;
-            
             ctx.save();
             ctx.translate(ball.x, drawY);
             ctx.rotate(ballRotation);
 
-            // Beyaz Gövde
             ctx.beginPath();
             ctx.arc(0, 0, 15, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
@@ -404,7 +486,6 @@
             ctx.strokeStyle = '#1a1a1a';
             ctx.stroke();
 
-            // Siyah Beşgenler
             function drawPentagon(radius, offsetX, offsetY, angle) {
                 ctx.beginPath();
                 for (let i = 0; i < 5; i++) {
@@ -418,23 +499,19 @@
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fill();
             }
-            
-            drawPentagon(5.5, 0, 0, 0); // Merkez
-            drawPentagon(4, 10, 0, 0.5); // Sağ
-            drawPentagon(4, -10, 0, 1.5); // Sol
-            drawPentagon(4, 0, 10, 0.8); // Alt
-            drawPentagon(4, 0, -10, 1.2); // Üst
-
+            drawPentagon(5.5, 0, 0, 0);
+            drawPentagon(4, 10, 0, 0.5);
+            drawPentagon(4, -10, 0, 1.5);
+            drawPentagon(4, 0, 10, 0.8);
+            drawPentagon(4, 0, -10, 1.2);
             ctx.restore();
         }
 
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPitch();
-
             drawBall();
 
-            // Oyuncular
             for (let id in players) {
                 let p = players[id];
                 if (!p) continue;
@@ -454,7 +531,6 @@
                     ctx.stroke();
                 }
 
-                // KARADELİK VE YILDIRIM EFEKTİ
                 if (id === socket.id && isCharging && shotPower >= 38) {
                     let intensity = shotPower / 100;
                     let time = Date.now() / 100;
