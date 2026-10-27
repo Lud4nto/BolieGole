@@ -8,11 +8,10 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-let servers = {}; // Tüm aktif odaları tutar
+let servers = {}; 
 const width = 1200;
 const height = 600;
 
-// 6 haneli büyük harf ve rakamlardan oluşan rastgele kod üretici
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -24,26 +23,23 @@ function generateRoomCode() {
 }
 
 io.on('connection', (socket) => {
-    // --- ODA LİSTESİNİ GÖNDER ---
     socket.on('get_servers', () => {
         let list = [];
         for (let id in servers) {
             let s = servers[id];
             if (s.status === "lobby") {
-                list.push({ id: s.id, name: s.name, type: s.type, hasPassword: s.password !== "", playerCount: s.players.length });
+                list.push({ id: s.id, name: s.name, type: s.type, playerCount: s.players.length });
             }
         }
         socket.emit('server_list', list);
     });
 
-    // --- ODA OLUŞTUR (DÜZELTİLDİ) ---
     socket.on('create_server', (data) => {
         const code = generateRoomCode();
         
-        // Odayı kuran kişiyi (Host) direkt oyuncu olarak ekliyoruz
         const hostPlayer = {
             id: socket.id,
-            name: data.name + " (Host)",
+            name: data.playerName || "Host",
             team: "spectator",
             lastDx: 0, lastDy: 0,
             x: 600, y: 300
@@ -52,10 +48,10 @@ io.on('connection', (socket) => {
         servers[code] = {
             id: code,
             name: data.name,
-            type: data.type,
+            type: data.type, 
             password: data.password || "",
             hostId: socket.id,
-            players: [hostPlayer], // Host oyuncu listesine eklendi
+            players: [hostPlayer], 
             status: "lobby",
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 },
             score: { red: 0, blue: 0 },
@@ -63,30 +59,40 @@ io.on('connection', (socket) => {
             emptyTimer: null
         };
 
-        socket.join(code); // Socket'i odaya dahil et
-        socket.roomId = code; // Socket'in oda ID'sini ata
+        socket.join(code); 
+        socket.roomId = code; 
 
         socket.emit('server_created', servers[code]);
-        io.to(code).emit('update_lobby', servers[code]); // Host'a arayüzü gönder
+        io.to(code).emit('update_lobby', servers[code]); 
     });
 
-    // --- ODAYA KATIL ---
     socket.on('join_server', (data) => {
         let s = servers[data.id];
         if (!s) {
             socket.emit('join_error', 'Oda bulunamadı veya kapatılmış.');
             return;
         }
-        if (s.type === 'community' && s.password !== "" && s.password !== data.password) {
-            socket.emit('join_error', 'Hatalı şifre!');
-            return;
+
+        // KESİN KONTROL: Eğer özel odaysa, girilen şifre/kod ODA ID'si ile birebir aynı olmalı
+        if (s.type === 'private') {
+            if (data.password !== s.id) {
+                socket.emit('join_error', 'Hatalı Oda Kodu!');
+                return;
+            }
+        } 
+        // Eğer topluluk odasıysa ve şifre varsa, girilen şifre eşleşmeli
+        else if (s.type === 'community' && s.password !== "") {
+            if (data.password !== s.password) {
+                socket.emit('join_error', 'Hatalı Şifre!');
+                return;
+            }
         }
         
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
 
         let newPlayer = {
             id: socket.id,
-            name: "Oyuncu" + Math.floor(Math.random() * 100),
+            name: data.playerName || "Oyuncu",
             team: "spectator",
             lastDx: 0, lastDy: 0,
             x: 600, y: 300
@@ -100,7 +106,6 @@ io.on('connection', (socket) => {
         io.to(data.id).emit('update_lobby', s);
     });
 
-    // --- TAKIM DEĞİŞTİR ---
     socket.on('change_team', (team) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "lobby") return;
@@ -112,7 +117,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- OYUNU BAŞLAT (Sadece Host) ---
     socket.on('start_game', () => {
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
@@ -133,7 +137,6 @@ io.on('connection', (socket) => {
         }, 1000 / 60);
     });
 
-    // --- HAREKET ---
     socket.on('move', (data) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "playing") return;
@@ -146,7 +149,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- ŞUT / PAS ---
     socket.on('kick', (data) => {
         let s = servers[socket.roomId];
         if (!s || s.status !== "playing") return;
@@ -167,7 +169,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- ODADAN AYRILMA / ÇIKIŞ ---
     socket.on('disconnect', () => {
         let s = servers[socket.roomId];
         if (s) {
@@ -179,7 +180,6 @@ io.on('connection', (socket) => {
                     if (servers[s.id] && servers[s.id].players.length === 0) {
                         if (servers[s.id].gameInterval) clearInterval(servers[s.id].gameInterval);
                         delete servers[s.id];
-                        console.log(`Oda kapatıldı: ${s.id}`);
                     }
                 }, 5 * 60 * 1000); 
             }
@@ -187,7 +187,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- OYUN DÖNGÜSÜ (Her oda için) ---
 function updateGame(s) {
     let ball = s.ball;
     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
@@ -300,4 +299,4 @@ function resetBall(s) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => { console.log('BolieGole Multiplayer Server Çalışıyor'); });
+server.listen(PORT, '0.0.0.0', () => { console.log('BolieGole Server Çalışıyor'); });
