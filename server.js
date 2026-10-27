@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
         resetBall(s, null); 
 
         io.to(s.id).emit('game_started');
-        io.to(s.id).emit('play_whistle'); // Başlama düdüğü
+        io.to(s.id).emit('play_whistle'); 
         s.gameInterval = setInterval(() => { updateGame(s); }, 1000 / 60);
     });
 
@@ -116,10 +116,11 @@ io.on('connection', (socket) => {
         
         let p = s.players.find(pl => pl.id === socket.id);
         if (p && p.team !== 'spectator') {
-            // SANTRA BARİYERİ
+            // KESİN BARİYER KONTROLÜ (Santra)
             if (s.isKickoff && p.team !== s.concedingTeam) {
-                if (s.concedingTeam === 'blue' && data.x > 590) data.x = 590;
-                if (s.concedingTeam === 'red' && data.x < 610) data.x = 610;
+                // Gol atan takım (Örn: Kırmızı), rakibin sahasına (x > 600) geçemez
+                if (s.concedingTeam === 'blue' && data.x > 595) data.x = 595; 
+                if (s.concedingTeam === 'red' && data.x < 605) data.x = 605;
             }
             p.lastDx = data.x - p.x; p.lastDy = data.y - p.y;
             p.x = data.x; p.y = data.y;
@@ -134,11 +135,14 @@ io.on('connection', (socket) => {
         if (!p || p.team === 'spectator') return;
 
         if (s.ball.owner && s.ball.owner !== socket.id) {
+            // Santra sırasında gol atan takım top çalamaz
+            if (s.isKickoff && p.team !== s.concedingTeam) return;
+
             let owner = s.players.find(pl => pl.id === s.ball.owner);
             if (owner && Math.hypot(p.x - owner.x, p.y - owner.y) < 60) {
                 s.ball.owner = socket.id;
                 s.ball.possessionTimer = 150; 
-                if (s.isKickoff && p.team === s.concedingTeam) { s.isKickoff = false; s.concedingTeam = null; }
+                if (s.isKickoff) { s.isKickoff = false; s.concedingTeam = null; }
             }
         }
     });
@@ -187,13 +191,13 @@ function updateGame(s) {
                 s.half = 2;
                 s.matchTime = 0;
                 for (let p of s.players) {
-                    if (p.team === 'red') { p.x = 750; p.y = 300; } // Saha değişti
+                    if (p.team === 'red') { p.x = 750; p.y = 300; } 
                     if (p.team === 'blue') { p.x = 450; p.y = 300; }
                 }
                 resetBall(s, null);
                 io.to(s.id).emit('play_whistle');
+                io.to(s.id).emit('game_state', s); // Anında ışınla
             }
-            io.to(s.id).emit('game_state', s);
             return;
         }
 
@@ -201,27 +205,19 @@ function updateGame(s) {
             s.replayTimer -= 1/60;
             if (s.replayTimer <= 0) {
                 s.status = 'playing';
-                s.isKickoff = true;
-                // Gol yiyen takım topun başına, atan takım kendi sahasına
-                for (let p of s.players) {
-                    if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; }
-                    else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
-                }
-                s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
                 io.to(s.id).emit('play_whistle');
+                io.to(s.id).emit('game_state', s); // Anında ışınla
             }
-            io.to(s.id).emit('game_state', s);
             return;
         }
 
         if (s.status !== 'playing') return;
 
         s.matchTime += 1/60;
-        if (s.half === 1 && s.matchTime >= 300) { // 5 Dakika
+        if (s.half === 1 && s.matchTime >= 300) {
             s.status = 'halftime_break';
-            s.breakTimer = 15; // 15 saniye mola
+            s.breakTimer = 15; 
             s.matchTime = 300;
-            s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
             io.to(s.id).emit('game_state', s);
             return;
         } else if (s.half === 2 && s.matchTime >= 300) {
@@ -282,7 +278,18 @@ function updateGame(s) {
                     else { s.score.blue++; s.concedingTeam = 'red'; }
                     s.status = 'goal_replay';
                     s.replayTimer = 10;
+                    
+                    // GOL SONRASI ANINDA DİZİLİŞ
+                    s.isKickoff = true;
+                    for (let p of s.players) {
+                        if (p.team === 'spectator') continue;
+                        if (p.team === s.concedingTeam) { p.x = s.concedingTeam === 'red' ? 500 : 700; p.y = 300; } 
+                        else { p.x = p.team === 'red' ? 200 : 1000; p.y = 300; }
+                    }
+                    s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
+
                     io.to(s.id).emit('goal_scored', s);
+                    io.to(s.id).emit('game_state', s);
                 }
             } else {
                 if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
@@ -294,6 +301,9 @@ function updateGame(s) {
             if (p.team === 'spectator') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
+                // SANTRA KORUMASI: Gol atan takım topu alamaz
+                if (s.isKickoff && p.team !== s.concedingTeam) continue; 
+
                 ball.owner = p.id; ball.possessionTimer = 150; ball.vx = 0; ball.vy = 0; ball.vz = 0; ball.shotPower = 0;
             }
         }
