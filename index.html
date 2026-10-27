@@ -1281,16 +1281,14 @@
             requestAnimationFrame(updateMovement);
         }
 
-        function startPracticeMode() {
+                function startPracticeMode() {
             isPractice = true; isSpectator = false; switchScreen('screen-game');
-            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
             
-            // Antrenman Modu İçin Botlar (Rakip Takım)
-            let bot1 = { id: "bot1", name: "Bot 1", team: "blue", position: "DEF", x: 800, y: 200, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
-            let bot2 = { id: "bot2", name: "Bot 2", team: "blue", position: "GK", x: 1140, y: 300, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
-            let bot3 = { id: "bot3", name: "Bot 3", team: "blue", position: "FWD", x: 800, y: 400, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
+            // Sen (Forvet olarak başla)
+            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 600, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
             
-            players = { "p1": myPlayer, "bot1": bot1, "bot2": bot2, "bot3": bot3 };
+            // SADECE SEN VARSIN, HİÇ BOT YOK!
+            players = { "p1": myPlayer };
             
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
             currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
@@ -1299,9 +1297,9 @@
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
             
-            document.getElementById('label-red').innerText = "SEN"; document.getElementById('label-blue').innerText = "BOTLAR";
+            document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
             document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
-            document.getElementById('match-timer').innerText = "SERBEST OYUN (R: Topu Yenile)";
+            document.getElementById('match-timer').innerText = "SERBEST ÇALIŞMA (R: Topu Yenile)";
         }
 
         const canvas = document.getElementById('gameCanvas');
