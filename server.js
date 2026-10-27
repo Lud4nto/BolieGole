@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
         const code = generateRoomCode();
         const hostPlayer = {
             id: socket.id,
-            name: data.playerName || "Host",
+            name: data.playerName || "Kurucu",
             team: "spectator",
             lastDx: 0, lastDy: 0,
             x: 600, y: 300
@@ -59,6 +59,8 @@ io.on('connection', (socket) => {
             status: "lobby",
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0 },
             score: { red: 0, blue: 0 },
+            isKickoff: false,
+            concedingTeam: null, // Gol yiyen takım
             gameInterval: null,
             emptyTimer: null
         };
@@ -130,11 +132,9 @@ io.on('connection', (socket) => {
         }
 
         s.status = "playing";
-        for (let p of s.players) {
-            if (p.team === 'red') { p.x = 450; p.y = 300; }
-            if (p.team === 'blue') { p.x = 750; p.y = 300; }
-        }
-        resetBall(s); 
+        s.score = { red: 0, blue: 0 };
+        s.isKickoff = false;
+        resetBall(s, null); 
 
         io.to(s.id).emit('game_started');
         s.gameInterval = setInterval(() => { updateGame(s); }, 1000 / 60);
@@ -148,8 +148,7 @@ io.on('connection', (socket) => {
         if (s.gameInterval) { clearInterval(s.gameInterval); s.gameInterval = null; }
         s.status = "lobby";
         s.score = { red: 0, blue: 0 };
-        resetBall(s);
-
+        resetBall(s, null);
         io.to(s.id).emit('game_ended', s);
     });
 
@@ -160,6 +159,15 @@ io.on('connection', (socket) => {
         
         let p = s.players.find(pl => pl.id === socket.id);
         if (p && p.team !== 'spectator') {
+            // Bariyer Kontrolü
+            if (s.isKickoff) {
+                if (p.team !== s.concedingTeam) {
+                    // Gol atan takım orta sahayı geçemez
+                    if (s.concedingTeam === 'blue' && p.x > 600) p.x = 600;
+                    if (s.concedingTeam === 'red' && p.x < 600) p.x = 600;
+                }
+            }
+
             p.lastDx = data.x - p.x;
             p.lastDy = data.y - p.y;
             p.x = data.x;
@@ -182,6 +190,7 @@ io.on('connection', (socket) => {
                 if (dist < 60) {
                     s.ball.owner = socket.id;
                     s.ball.possessionTimer = 150; 
+                    checkKickoff(s); // Top çalındığında santra bitti mi kontrol et
                 }
             }
         }
@@ -205,6 +214,8 @@ io.on('connection', (socket) => {
             s.ball.lastKickX = p ? p.x : 0;
             s.ball.x += s.ball.vx * 3; 
             s.ball.y += s.ball.vy * 3;
+            
+            checkKickoff(s); // Vurulduğunda santra bitti mi kontrol et
         }
     });
 
@@ -226,6 +237,25 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+function checkKickoff(s) {
+    if (!s.isKickoff) return;
+    // Eğer topa dokunan kişi gol yiyen takımdansa bariyer kalkar
+    if (s.ball.owner) {
+        let owner = s.players.find(p => p.id === s.ball.owner);
+        if (owner && owner.team === s.concedingTeam) {
+            s.isKickoff = false;
+            s.concedingTeam = null;
+        }
+    } else if (s.ball.vx !== 0 || s.ball.vy !== 0) {
+        // Eğer topu gol yiyen takımdan biri vurduysa (kick)
+        let lastKicker = s.players.find(p => p.x === s.ball.lastKickX); // Basit kontrol
+        // Daha kesin kontrol için son vuran kişiyi de tutabiliriz ama saha içinde zaten top sahibi vuruyor.
+        // Eğer top hareketliyse ve sahibi yoksa, muhtemelen gol yiyen takım vurmuştur.
+        s.isKickoff = false;
+        s.concedingTeam = null;
+    }
+}
 
 function updateGame(s) {
     try {
@@ -276,7 +306,6 @@ function updateGame(s) {
             if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
             if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
             
-            // Çarpışma Mantığı (Ekrandaki çizgilerle tam uyumlu)
             let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
             let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
 
@@ -302,8 +331,9 @@ function updateGame(s) {
                     ball.vz = 8; 
                     ball.shotPower = 0; 
                 } else {
-                    if (hitRightGoal) s.score.red++; else s.score.blue++;
-                    resetBall(s);
+                    // GOL OLDU!
+                    if (hitRightGoal) { s.score.red++; resetBall(s, 'blue'); } // Kırmızı attı, Mavi yedi
+                    else { s.score.blue++; resetBall(s, 'red'); } // Mavi attı, Kırmızı yedi
                 }
             } else {
                 if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
@@ -311,6 +341,7 @@ function updateGame(s) {
             }
         }
 
+        // Otomatik alma (Sadece top boştaysa)
         for (let p of s.players) {
             if (p.team === 'spectator') continue;
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
@@ -320,6 +351,7 @@ function updateGame(s) {
                 ball.possessionTimer = 150;
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
                 ball.shotPower = 0;
+                checkKickoff(s);
             }
         }
 
@@ -329,13 +361,36 @@ function updateGame(s) {
     }
 }
 
-function resetBall(s) {
+function resetBall(s, concededBy = null) {
     s.ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
-    for (let p of s.players) {
-        if (p.team === 'red') { p.x = 450; p.y = 300; }
-        if (p.team === 'blue') { p.x = 750; p.y = 300; }
+    
+    if (concededBy) {
+        s.isKickoff = true;
+        s.concedingTeam = concededBy;
+        
+        for (let p of s.players) {
+            if (p.team === 'spectator') continue;
+            
+            if (p.team === concededBy) {
+                // Gol yiyen takım ortaya (topun başına) geçer
+                p.x = concededBy === 'red' ? 500 : 700;
+                p.y = 300;
+            } else {
+                // Gol atan takım kendi sahasına çekilir
+                p.x = p.team === 'red' ? 200 : 1000;
+                p.y = 300;
+            }
+        }
+    } else {
+        // Maç başlangıcı
+        s.isKickoff = false;
+        s.concedingTeam = null;
+        for (let p of s.players) {
+            if (p.team === 'red') { p.x = 450; p.y = 300; }
+            if (p.team === 'blue') { p.x = 750; p.y = 300; }
+        }
     }
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => { console.log('Server Çalışıyor'); });
+server.listen(PORT, '0.0.0.0', () => { console.log('Sunucu Çalışıyor'); });
