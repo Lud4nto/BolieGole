@@ -9,19 +9,10 @@
 
         body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
         
-        #orientation-warning {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0f172a; color: white; z-index: 99999;
-            flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; font-size: 24px; font-weight: bold; padding: 20px;
-        }
+        #orientation-warning { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 24px; font-weight: bold; padding: 20px; }
         #orientation-warning svg { width: 100px; height: 100px; margin-bottom: 20px; animation: rotateAnim 2s infinite ease-in-out; }
         @keyframes rotateAnim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
-        
-        @media (orientation: portrait) and (pointer: coarse) {
-            #orientation-warning { display: flex; }
-            .screen, #modal-name, #modal-create { display: none !important; }
-        }
+        @media (orientation: portrait) and (pointer: coarse) { #orientation-warning { display: flex; } .screen, #modal-name, #modal-create { display: none !important; } }
 
         .screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .active { display: flex; }
@@ -79,11 +70,12 @@
 
         #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; }
         
-        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; }
+        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; text-align: center; }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
+        #match-timer { font-size: 16px; color: #eab308; display: block; margin-top: 5px; }
         
-        .ui-bars { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
+        .ui-bars { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
         #stamina-container { width: 250px; height: 18px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
         #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; }
@@ -109,12 +101,32 @@
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
         .wide-key { width: 110px; }
 
+        /* DEVRE ARASI / MAÇ SONU EKRANI */
+        #overlay-message {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 5000;
+            color: white; text-align: center; backdrop-filter: blur(10px);
+        }
+        #overlay-message h1 { font-family: 'Press Start 2P', cursive; font-size: 48px; margin-bottom: 20px; color: #eab308; }
+        #overlay-message p { font-size: 24px; font-weight: bold; }
+
+        /* GOL TEKRARI EKRANI */
+        #overlay-replay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 6000; pointer-events: none;
+        }
+        #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000; animation: pop 1s infinite alternate; }
+        @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
+
         @media (pointer: coarse) {
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
             #in-game-menu-btn { font-size: 14px; padding: 6px 12px; }
             #scoreboard { font-size: 18px; }
-            .ui-bars { top: 45px; }
+            #match-timer { font-size: 12px; }
+            .ui-bars { top: 55px; }
             .menu-btn { width: 260px; padding: 10px; font-size: 18px; }
             .modal-content { width: 80%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
@@ -223,6 +235,7 @@
                 <span class="red-team">KIRMIZI <span id="score-red">0</span></span> 
                 <span style="color:#64748b">:</span> 
                 <span class="blue-team"><span id="score-blue">0</span> MAVİ</span>
+                <span id="match-timer">1. Yarı 00:00</span>
             </div>
             
             <div class="ui-bars">
@@ -250,9 +263,21 @@
                 <div class="key-row"><div class="key wide-key" id="key-space">BOŞLUK</div><div class="key" id="key-f">F</div></div>
             </div>
         </div>
+
+        <div id="overlay-message">
+            <h1 id="msg-title">DEVRE ARASI</h1>
+            <p id="msg-desc">15 saniye mola. Saha değişiyor...</p>
+        </div>
+
+        <div id="overlay-replay">
+            <h1 id="replay-text">GOL!</h1>
+        </div>
     </div>
 
-    <audio id="goalSound" src="https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg" preload="auto"></audio>
+    <!-- SES DOSYALARI (GitHub'a yükledikten sonra burayı güncelle) -->
+    <audio id="bgMusic" src="bg_music.mp3" loop preload="auto"></audio>
+    <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
+    <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -282,8 +307,7 @@
 
         let ballRotation = 0;
         let ballTrail = [];
-        
-        let lastScore = { red: 0, blue: 0 };
+        let stadiumFlags = [];
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
@@ -407,12 +431,23 @@
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing'; 
-            lastScore = { red: 0, blue: 0 };
+            document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
         });
 
         socket.on('game_ended', (room) => {
             currentRoom = room;
             switchScreen('screen-lobby');
+            document.getElementById('bgMusic').pause();
+        });
+
+        socket.on('play_whistle', () => {
+            let whistle = document.getElementById('whistleSound');
+            whistle.currentTime = 0;
+            whistle.play().catch(e=>console.log("Düdük çalınamadı"));
+        });
+
+        socket.on('goal_scored', (room) => {
+            document.getElementById('goalSound').play().catch(e=>console.log("Gol sesi çalınamadı"));
         });
 
         function leaveRoom() {
@@ -430,15 +465,24 @@
         }
 
         socket.on('game_state', (room) => {
-            if (room.status !== 'playing') return;
             currentRoom = room; 
             
-            // Gol Sesi Kontrolü
-            if (room.score.red > lastScore.red || room.score.blue > lastScore.blue) {
-                document.getElementById('goalSound').play();
-                lastScore = { red: room.score.red, blue: room.score.blue };
+            if (room.status === 'halftime_break') {
+                document.getElementById('overlay-message').style.display = 'flex';
+                document.getElementById('msg-title').innerText = "DEVRE ARASI";
+                document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
+                document.getElementById('bgMusic').pause();
+            } else if (room.status === 'goal_replay') {
+                document.getElementById('overlay-replay').style.display = 'flex';
+                document.getElementById('overlay-message').style.display = 'none';
+                document.getElementById('bgMusic').pause();
+            } else if (room.status === 'playing') {
+                document.getElementById('overlay-message').style.display = 'none';
+                document.getElementById('overlay-replay').style.display = 'none';
+                let music = document.getElementById('bgMusic');
+                if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
             }
-            
+
             let currentIds = [];
             for (let p of room.players) {
                 currentIds.push(p.id);
@@ -457,9 +501,15 @@
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
             document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
+
+            // Süre güncelle
+            let m = Math.floor(room.matchTime / 60);
+            let s = Math.floor(room.matchTime % 60);
+            let timeStr = (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
+            document.getElementById('match-timer').innerText = (room.half === 1 ? "1. Yarı " : "2. Yarı ") + timeStr;
         });
 
-        // --- KLAVYE KONTROLLERİ (PC) ---
+        // --- KLAVYE KONTROLLERİ ---
         window.addEventListener('keydown', (e) => { 
             if (isSpectator) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
@@ -644,25 +694,37 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Tribün Çizimi (Arka plan)
         function drawStadium() {
-            // Siyah dış alan
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, 1200, 600);
             
-            // Taraftar noktaları
-            for(let i=0; i<1200; i+=12) {
-                for(let j=0; j<600; j+=12) {
-                    // Sadece saha dışındaki alanları doldur (Kenarlar ve üst/alt)
-                    if (i < 30 || i > 1170 || j < 30 || j > 570) {
-                        if (Math.random() > 0.5) { // Rastgele renkler
-                            let colors = ['#ef4444', '#3b82f6', '#ffffff', '#fbbf24'];
+            // Atatürk Olimpiyat Stadı tarzı tribünler (Saha kenarında, uzakta)
+            let tribuneColor = '#1e293b'; // Koyu gri/mavi tribün rengi
+            ctx.fillStyle = tribuneColor;
+            ctx.fillRect(0, 0, 1200, 25); // Üst tribün
+            ctx.fillRect(0, 575, 1200, 25); // Alt tribün
+            ctx.fillRect(0, 0, 25, 600); // Sol tribün
+            ctx.fillRect(1175, 0, 25, 600); // Sağ tribün
+
+            // Tribün üstündeki renkli taraftar noktaları (Atmosfer)
+            for(let i=0; i<1200; i+=15) {
+                for(let j=0; j<600; j+=15) {
+                    if (i < 25 || i > 1175 || j < 25 || j > 575) {
+                        if (Math.random() > 0.6) {
+                            let colors = ['#ef4444', '#3b82f6', '#ffffff', '#fbbf24', '#f97316'];
                             ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                            ctx.fillRect(i, j, 8, 8);
+                            ctx.fillRect(i, j, 6, 6);
                         }
                     }
                 }
             }
+
+            // Reklam panoları (Sahanın hemen dışında)
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(25, 25, 1150, 15);
+            ctx.fillRect(25, 560, 1150, 15);
+            ctx.fillRect(25, 25, 15, 550);
+            ctx.fillRect(1160, 25, 15, 550);
         }
 
         function drawPitch() {
@@ -673,7 +735,7 @@
             }
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            const margin = 30;
+            const margin = 40; // Sahanın dışına biraz boşluk
             
             ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
             ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
@@ -689,18 +751,16 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
 
-            // Bariyer Çizgisi (Santra)
+            // SANTRA BARIYERİ ÇİZGİSİ
             if (currentRoom && currentRoom.isKickoff) {
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-                if (currentRoom.concedingTeam === 'blue') {
-                    ctx.fillRect(600, 30, 10, 540); // Mavi yedi, Kırmızı geçemez
-                } else {
-                    ctx.fillRect(590, 30, 10, 540); // Kırmızı yedi, Mavi geçemez
-                }
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
+                else { ctx.fillRect(592, margin, 8, 600 - (margin * 2)); }
+                
                 ctx.fillStyle = '#fff';
-                ctx.font = 'bold 24px Arial';
+                ctx.font = 'bold 20px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText("SANTRA", 600, 50);
+                ctx.fillText("SANTRA", 600, 60);
             }
         }
 
@@ -740,52 +800,54 @@
         function gameLoop() {
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
-                drawStadium(); // Önce tribünleri çiz
-                drawPitch();   // Sonra sahayı çiz
+                drawStadium(); // Tribünleri çiz
+                drawPitch();   // Saha ve çizgiler
                 drawBall();
 
-                for (let id in players) {
-                    let p = players[id];
-                    if (!p || p.team === 'spectator') continue;
-                    
-                    let pSize = 22;
-                    ctx.beginPath(); ctx.arc(p.x, p.y + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                    ctx.beginPath(); ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
-                    
-                    ctx.fillStyle = p.team === 'red' ? '#ff0000' : '#1e90ff';
-                    ctx.fill(); 
-                    ctx.strokeStyle = p.team === 'red' ? '#000000' : '#cccccc';
-                    ctx.lineWidth = 3; 
-                    ctx.stroke();
-                    
-                    if (id === ball.owner && ball.possessionTimer > 0) {
-                        let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
-                        let radius = pSize + 4 + (pulse * 6); 
-                        ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-                        ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
-                        ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+                if (currentRoom && currentRoom.status !== 'goal_replay') {
+                    for (let id in players) {
+                        let p = players[id];
+                        if (!p || p.team === 'spectator') continue;
+                        
+                        let pSize = 22;
+                        ctx.beginPath(); ctx.arc(p.x, p.y + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
+                        
+                        ctx.fillStyle = p.team === 'red' ? '#ff0000' : '#1e90ff';
+                        ctx.fill(); 
+                        ctx.strokeStyle = p.team === 'red' ? '#000000' : '#cccccc';
+                        ctx.lineWidth = 3; 
+                        ctx.stroke();
+                        
+                        if (id === ball.owner && ball.possessionTimer > 0) {
+                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
+                            let radius = pSize + 4 + (pulse * 6); 
+                            ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
+                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
 
-                        let secs = (ball.possessionTimer / 60).toFixed(1);
-                        ctx.fillStyle = '#eab308';
-                        ctx.font = 'bold 14px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(secs + "s", p.x, p.y - pSize - 15);
-                    }
-
-                    if (id === socket.id && isCharging && shotPower >= 38) {
-                        let intensity = shotPower / 100; let time = Date.now() / 100;
-                        ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
-                        for (let i = 0; i < 5; i++) {
-                            let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
-                            ctx.beginPath(); ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
-                            let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                            ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
-                            ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
-                            ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            let secs = (ball.possessionTimer / 60).toFixed(1);
+                            ctx.fillStyle = '#eab308';
+                            ctx.font = 'bold 14px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(secs + "s", p.x, p.y - pSize - 15);
                         }
+
+                        if (id === socket.id && isCharging && shotPower >= 38) {
+                            let intensity = shotPower / 100; let time = Date.now() / 100;
+                            ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                            for (let i = 0; i < 5; i++) {
+                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
+                                ctx.beginPath(); ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                                ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
+                                ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
+                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            }
+                        }
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
+                        ctx.fillText(p.name, p.x, p.y - pSize - 5);
                     }
-                    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
-                    ctx.fillText(p.name, p.x, p.y - pSize - 5);
                 }
             }
             requestAnimationFrame(gameLoop);
