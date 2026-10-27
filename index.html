@@ -270,7 +270,11 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        
+
+        // 🔧 Sabitler
+        const BASE_FRAME = 60;   // eski kodun varsaydığı frame hızı
+        const MOVE_EMIT_MS = 33; // ~30Hz gönderim
+
         let myPlayerName = "";
         let currentRoom = null;
         let myTeam = "spectator";
@@ -292,11 +296,25 @@
         let shotPower = 0;
         let chargeStartTime = 0;
         let moveX = 0, moveY = 0;
+        let localLastDx = 0, localLastDy = 0; // 🔧 FIX: şut yönü için
 
         let ballRotation = 0;
         let ballTrail = [];
 
+        // 🔧 FIX: son gönderim zamanları (throttle)
+        let lastMoveEmit = 0;
+        let lastFrameTime = performance.now();
+        let lastRenderTime = performance.now();
+        let lastAudioStatus = '';
+
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
+
+        // 🔧 FIX: XSS koruması
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -345,9 +363,10 @@
                 let typeStr = srv.type === 'private' ? '🔒 Özel Oda' : '🌐 Topluluk';
                 let div = document.createElement('div');
                 div.className = 'server-item';
+                // 🔧 FIX: escapeHtml ile XSS koruması
                 div.innerHTML = `
                     <div>
-                        <h3>${srv.name} <span style="font-size:12px;">(${srv.playerCount}/10)</span></h3>
+                        <h3>${escapeHtml(srv.name)} <span style="font-size:12px;">(${srv.playerCount}/10)</span></h3>
                         <span>${typeStr}</span>
                     </div>
                     <button class="join-btn" onclick="joinRoom('${srv.id}', '${srv.type}')">KATIL</button>
@@ -397,7 +416,8 @@
                 redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
 
                 room.players.forEach(p => {
-                    let el = `<div class="player-slot">${p.name}</div>`;
+                    // 🔧 FIX: escapeHtml ile XSS koruması
+                    let el = `<div class="player-slot">${escapeHtml(p.name)}</div>`;
                     if (p.team === 'red') redList.innerHTML += el;
                     else if (p.team === 'blue') blueList.innerHTML += el;
                     else specList.innerHTML += el;
@@ -417,13 +437,18 @@
         socket.on('game_started', () => {
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
-            if(currentRoom) currentRoom.status = 'playing'; 
+            if(currentRoom) currentRoom.status = 'playing';
+            ballTrail = [];        // 🔧 reset
+            ballRotation = 0;      // 🔧 reset
+            lastAudioStatus = '';  // 🔧 ses kontrolü reset
             document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
         });
 
         socket.on('game_ended', (room) => {
             currentRoom = room;
             switchScreen('screen-lobby');
+            ballTrail = [];        // 🔧 reset
+            ballRotation = 0;      // 🔧 reset
             document.getElementById('bgMusic').pause();
         });
 
@@ -451,38 +476,51 @@
             } else switchScreen('screen-lobby');
         }
 
-        // YENİ: Zorla Işınlama (Titreşim Önleyici)
+        // force_positions - sunucudan snap
         socket.on('force_positions', (serverPlayers) => {
-            for(let sp of serverPlayers) {
+            for (let sp of serverPlayers) {
                 if (sp.id === socket.id) {
-                    if(!myPlayer) myPlayer = sp;
+                    if (!myPlayer) myPlayer = sp;
                     myPlayer.x = sp.x;
                     myPlayer.y = sp.y;
                 } else {
-                    if(!players[sp.id]) players[sp.id] = sp;
-                    players[sp.id].x = sp.x;
-                    players[sp.id].y = sp.y;
+                    if (!players[sp.id]) {
+                        players[sp.id] = { ...sp, renderX: sp.x, renderY: sp.y };
+                    } else {
+                        players[sp.id].x = sp.x;
+                        players[sp.id].y = sp.y;
+                        players[sp.id].renderX = sp.x;
+                        players[sp.id].renderY = sp.y;
+                    }
                 }
             }
         });
 
         socket.on('game_state', (room) => {
-            currentRoom = room; 
-            
-            if (room.status === 'halftime_break') {
-                document.getElementById('overlay-message').style.display = 'flex';
-                document.getElementById('msg-title').innerText = "DEVRE ARASI";
-                document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
-                document.getElementById('bgMusic').pause();
-            } else if (room.status === 'goal_replay') {
-                document.getElementById('overlay-replay').style.display = 'flex';
-                document.getElementById('overlay-message').style.display = 'none';
-                document.getElementById('bgMusic').pause();
-            } else if (room.status === 'playing') {
-                document.getElementById('overlay-message').style.display = 'none';
-                document.getElementById('overlay-replay').style.display = 'none';
+            currentRoom = room;
+
+            // 🔧 FIX: müzik sadece status değişince kontrol edilsin (60Hz değil)
+            if (room.status !== lastAudioStatus) {
+                lastAudioStatus = room.status;
                 let music = document.getElementById('bgMusic');
-                if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
+                if (room.status === 'playing') {
+                    if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
+                } else {
+                    music.pause();
+                }
+                if (room.status === 'halftime_break') {
+                    document.getElementById('overlay-message').style.display = 'flex';
+                    document.getElementById('msg-title').innerText = "DEVRE ARASI";
+                    document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
+                }
+                if (room.status === 'goal_replay') {
+                    document.getElementById('overlay-replay').style.display = 'flex';
+                    document.getElementById('overlay-message').style.display = 'none';
+                }
+                if (room.status === 'playing') {
+                    document.getElementById('overlay-message').style.display = 'none';
+                    document.getElementById('overlay-replay').style.display = 'none';
+                }
             }
 
             let currentIds = [];
@@ -492,10 +530,22 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    // Titreşim yaratan zorla konum ataması buradan kaldırıldı.
+                    // 🔧 Santra/devre arası snap (titreşim fix)
+                    if (room.isKickoff || room.status === 'halftime_break') {
+                        myPlayer.x = p.x;
+                        myPlayer.y = p.y;
+                    }
                     players[socket.id] = myPlayer; 
                 } else {
-                    players[p.id] = p; 
+                    if (!players[p.id]) {
+                        players[p.id] = { ...p, renderX: p.x, renderY: p.y };
+                    } else {
+                        players[p.id].x = p.x;
+                        players[p.id].y = p.y;
+                        players[p.id].team = p.team;
+                        players[p.id].name = p.name;
+                        // renderX/Y korunur (lerp için)
+                    }
                 }
             }
             for (let id in players) { if (!currentIds.includes(id)) delete players[id]; }
@@ -505,7 +555,6 @@
             document.getElementById('score-blue').innerText = score.blue;
             document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
 
-            // Süre güncelle
             let m = Math.floor(room.matchTime / 60);
             let s = Math.floor(room.matchTime % 60);
             let timeStr = (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
@@ -550,8 +599,9 @@
         }
 
         function getKickAngle() {
+            // 🔧 FIX: myPlayer.lastDx yerine client-side localLastDx
             if (moveX !== 0 || moveY !== 0) return Math.atan2(moveY, moveX);
-            else if (myPlayer && (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0)) return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+            if (localLastDx !== 0 || localLastDy !== 0) return Math.atan2(localLastDy, localLastDx);
             return 0;
         }
 
@@ -595,15 +645,21 @@
             joystickVector.y = dy / maxDistance;
         }
 
+        function resetJoystick() {
+            joystickActive = false;
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+            joystickVector = { x: 0, y: 0 };
+        }
+
         joystickZone.addEventListener('touchstart', (e) => { joystickActive = true; handleTouch(e); });
         joystickZone.addEventListener('touchmove', (e) => { if(joystickActive) handleTouch(e); });
-        joystickZone.addEventListener('touchend', () => {
-            joystickActive = false; joystickKnob.style.transform = 'translate(-50%, -50%)'; joystickVector = { x: 0, y: 0 };
-        });
+        joystickZone.addEventListener('touchend', resetJoystick);
+        joystickZone.addEventListener('touchcancel', resetJoystick); // 🔧 FIX
 
         const btnSprint = document.getElementById('btn-sprint');
         btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = true; });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = false; });
+        btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; }); // 🔧 FIX
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
@@ -626,26 +682,46 @@
                 if (pressDuration < 200 && shotPower < 30) forcePass(); else executeKick();
             }
         });
+        btnAction.addEventListener('touchcancel', (e) => { // 🔧 FIX
+            e.preventDefault();
+            if (isSpectator) return;
+            if (isCharging) {
+                isCharging = false;
+                let pressDuration = Date.now() - chargeStartTime;
+                if (pressDuration < 200 && shotPower < 30) forcePass(); else executeKick();
+            }
+        });
 
-        // --- HAREKET DÖNGÜSÜ ---
-        function updateMovement() {
+        // --- HAREKET DÖNGÜSÜ (deltaTime ile) ---
+        function updateMovement(now) {
+            now = now || performance.now();
+            let dt = Math.min((now - lastFrameTime) / 1000, 0.1); // saniye, max 100ms
+            lastFrameTime = now;
+
             if (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing') { 
                 requestAnimationFrame(updateMovement); return; 
+            }
+
+            // 🔧 FIX: top çalınırsa şarj sıfırlansın (hile engeli)
+            if (isCharging && ball.owner !== socket.id) {
+                isCharging = false;
+                shotPower = 0;
+                document.getElementById('power-container').style.display = 'none';
             }
 
             let isSprinting = false;
             let currentSpeed = normalSpeed;
 
             if (isExhausted) {
-                stamina += 0.15;
+                stamina += 0.15 * BASE_FRAME * dt;
                 if (stamina >= 30) isExhausted = false;
             } else {
                 if (keys['f']) {
                     isSprinting = true;
                     currentSpeed = sprintSpeed;
-                    stamina -= 1.2;
+                    stamina -= 1.2 * BASE_FRAME * dt;
                     if (stamina <= 0) { stamina = 0; isExhausted = true; }
-                } else { stamina += 0.15; }
+                } else { stamina += 0.15 * BASE_FRAME * dt; }
             }
             if (stamina > maxStamina) stamina = maxStamina;
 
@@ -659,7 +735,7 @@
 
             if (isCharging && ball.owner === socket.id) {
                 document.getElementById('power-container').style.display = 'flex'; 
-                shotPower += 3.5;
+                shotPower += 3.5 * BASE_FRAME * dt;
                 if (shotPower > 100) shotPower = 100;
                 const pBar = document.getElementById('power-bar');
                 pBar.style.width = shotPower + '%';
@@ -680,16 +756,15 @@
             if (dx !== 0 || dy !== 0) {
                 let length = Math.hypot(dx, dy);
                 let speedMultiplier = isCharging ? 0.5 : 1;
-                dx = (dx / length) * (currentSpeed * speedMultiplier);
-                dy = (dy / length) * (currentSpeed * speedMultiplier);
-                myPlayer.lastDx = dx; myPlayer.lastDy = dy;
+                dx = (dx / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+                dy = (dy / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+                localLastDx = dx; localLastDy = dy;
             }
             moveX = dx; moveY = dy;
 
             let newX = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
             let newY = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
 
-            // İSTEMCİ TARAFLI BARİYER (Hayalet Geçişi Engelle)
             if (currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
                 if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
@@ -697,7 +772,12 @@
 
             myPlayer.x = newX;
             myPlayer.y = newY;
-            socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
+
+            // 🔧 FIX: throttle (30Hz) + Math.round (bandwidth)
+            if (now - lastMoveEmit >= MOVE_EMIT_MS) {
+                socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
+                lastMoveEmit = now;
+            }
 
             requestAnimationFrame(updateMovement);
         }
@@ -760,7 +840,6 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
 
-            // SANTRA BARIYERİ
             if (currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
                 if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
@@ -806,7 +885,11 @@
             ctx.restore();
         }
 
-        function gameLoop() {
+        function gameLoop(now) {
+            now = now || performance.now();
+            let dt = Math.min((now - lastRenderTime) / 1000, 0.1);
+            lastRenderTime = now;
+
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
                 drawStadium(); 
@@ -814,13 +897,23 @@
                 drawBall();
 
                 if (currentRoom && currentRoom.status !== 'goal_replay') {
+                    let lerpFactor = Math.min(1, 15 * dt); // 🔧 lerp
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
                         
+                        // 🔧 FIX: renderX/renderY yoksa hedefle başlat, varsa lerp
+                        if (id !== socket.id) {
+                            if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
+                            p.renderX += (p.x - p.renderX) * lerpFactor;
+                            p.renderY += (p.y - p.renderY) * lerpFactor;
+                        }
+                        let px = (id === socket.id) ? p.x : p.renderX;
+                        let py = (id === socket.id) ? p.y : p.renderY;
+
                         let pSize = 22;
-                        ctx.beginPath(); ctx.arc(p.x, p.y + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                        ctx.beginPath(); ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
+                        ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+                        ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
                         
                         ctx.fillStyle = p.team === 'red' ? '#ff0000' : '#1e90ff';
                         ctx.fill(); 
@@ -831,7 +924,7 @@
                         if (id === ball.owner && ball.possessionTimer > 0) {
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
                             let radius = pSize + 4 + (pulse * 6); 
-                            ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
                             ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
                             ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
 
@@ -839,9 +932,31 @@
                             ctx.fillStyle = '#eab308';
                             ctx.font = 'bold 14px Arial';
                             ctx.textAlign = 'center';
-                            ctx.fillText(secs + "s", p.x, p.y - pSize - 15);
+                            ctx.fillText(secs + "s", px, py - pSize - 15);
                         }
 
                         if (id === socket.id && isCharging && shotPower >= 38) {
                             let intensity = shotPower / 100; let time = Date.now() / 100;
-                            ctx.beginPath(); ctx.arc(p.x, p.y, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${int
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                            for (let i = 0; i < 5; i++) {
+                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
+                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
+                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
+                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            }
+                        }
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
+                        ctx.fillText(p.name, px, py - pSize - 5);
+                    }
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(updateMovement);
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
