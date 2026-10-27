@@ -9,7 +9,6 @@
 
         body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
         
-        /* --- YATAY EKRAN UYARISI --- */
         #orientation-warning {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #0f172a; color: white; z-index: 99999;
@@ -24,7 +23,6 @@
             .screen, #modal-name, #modal-create { display: none !important; }
         }
 
-        /* --- EKRANLAR --- */
         .screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .active { display: flex; }
 
@@ -72,43 +70,16 @@
         .start-game-btn { margin-top: 20px; padding: 12px 30px; font-size: 20px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
         .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
 
-        /* --- OYUN EKRANI --- */
         #screen-game { background: #000; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 1000; }
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
         
-        /* KUSURSUZ ORANTI: Canvas'ı 16:9'a kilitler ve ekrana sığdırır */
-        #game-wrapper {
-            position: relative; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-        }
-        
-        canvas { 
-            /* Ekrana sığması için maksimum boyutlar */
-            max-width: 100vw; max-height: 100vh;
-            width: 100%; height: 100%;
-            object-fit: contain; /* ESNETMEZ, ORANTIYI KORUR */
-            background-color: #2e7d32;
-        }
+        #game-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        canvas { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; background-color: #111; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-        /* UI Katmanları (Canvas üstünde) */
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Tıklamalar canvas'a geçsin */
-        }
-
-        #in-game-menu-btn { 
-            position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); 
-            color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; 
-            display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; 
-        }
+        #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; }
         
-        #scoreboard { 
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; 
-            text-shadow: 2px 2px 0px #000; white-space: nowrap;
-        }
+        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
         
@@ -120,38 +91,17 @@
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
         #power-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
 
-        /* MOBİL KONTROLLER */
         #mobile-controls { position: absolute; bottom: 20px; right: 20px; display: none; gap: 15px; align-items: flex-end; pointer-events: auto; }
-        
-        .mob-btn {
-            width: 75px; height: 75px;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-            border: 3px solid rgba(255,255,255,0.2);
-            transition: transform 0.1s;
-            pointer-events: auto;
-        }
+        .mob-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transition: transform 0.1s; pointer-events: auto; }
         .mob-btn:active { transform: scale(0.9); }
         .mob-btn svg { width: 55%; height: 55%; }
-
         #btn-sprint { background: #1d4ed8; } 
         #btn-tackle { background: #dc2626; } 
         #btn-action { background: #059669; } 
 
-        #joystick-zone { 
-            position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; 
-            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); 
-            border-radius: 50%; display: none; backdrop-filter: blur(5px); pointer-events: auto;
-        }
-        #joystick-knob { 
-            position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; 
-            background: rgba(76, 154, 255, 0.6); border: 2px solid #fff; 
-            border-radius: 50%; transform: translate(-50%, -50%); 
-            box-shadow: 0 0 15px rgba(76, 154, 255, 0.5); 
-        }
+        #joystick-zone { position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: none; backdrop-filter: blur(5px); pointer-events: auto; }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: rgba(76, 154, 255, 0.6); border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 15px rgba(76, 154, 255, 0.5); }
 
-        /* PC Kontrolleri */
         #pc-controls { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: auto; }
         .key-row { display: flex; gap: 10px; }
         .key { width: 50px; height: 50px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #94a3b8; transition: 0.1s; }
@@ -195,10 +145,10 @@
     <div id="screen-main-menu" class="screen active">
         <div class="bg-image"></div>
         <div class="menu-buttons">
-            <button class="menu-btn" id="btn-play">PLAY</button>
-            <button class="menu-btn" id="btn-options">OPTIONS</button>
-            <button class="menu-btn" id="btn-credits">CREDITS</button>
-            <button class="menu-btn" id="btn-exit">EXIT</button>
+            <button class="menu-btn" id="btn-play">OYNA</button>
+            <button class="menu-btn" id="btn-options">AYARLAR</button>
+            <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
+            <button class="menu-btn" id="btn-exit">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -258,11 +208,10 @@
                 <div id="spec-players"></div>
             </div>
         </div>
-        <button class="start-game-btn" id="btn-start-game">OYUNU BAŞLAT</button>
+        <button class="start-game-btn" id="btn-start-game">MAÇI BAŞLAT</button>
         <button class="menu-btn" style="margin-top:15px; width:150px; padding:8px; font-size:12px; z-index:10;" onclick="leaveRoom()">ODADAN AYRIL</button>
     </div>
 
-    <!-- OYUN EKRANI (Tam orantılı) -->
     <div id="screen-game" class="screen">
         <div id="game-wrapper">
             <canvas id="gameCanvas" width="1200" height="600"></canvas>
@@ -298,10 +247,12 @@
             <div id="pc-controls">
                 <div class="key-row"><div class="key" id="key-w">W</div></div>
                 <div class="key-row"><div class="key" id="key-a">A</div><div class="key" id="key-s">S</div><div class="key" id="key-d">D</div></div>
-                <div class="key-row"><div class="key wide-key" id="key-space">SPACE</div><div class="key" id="key-f">F</div></div>
+                <div class="key-row"><div class="key wide-key" id="key-space">BOŞLUK</div><div class="key" id="key-f">F</div></div>
             </div>
         </div>
     </div>
+
+    <audio id="goalSound" src="https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg" preload="auto"></audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -331,6 +282,8 @@
 
         let ballRotation = 0;
         let ballTrail = [];
+        
+        let lastScore = { red: 0, blue: 0 };
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
@@ -454,6 +407,7 @@
             switchScreen('screen-game');
             isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing'; 
+            lastScore = { red: 0, blue: 0 };
         });
 
         socket.on('game_ended', (room) => {
@@ -478,6 +432,12 @@
         socket.on('game_state', (room) => {
             if (room.status !== 'playing') return;
             currentRoom = room; 
+            
+            // Gol Sesi Kontrolü
+            if (room.score.red > lastScore.red || room.score.blue > lastScore.blue) {
+                document.getElementById('goalSound').play();
+                lastScore = { red: room.score.red, blue: room.score.blue };
+            }
             
             let currentIds = [];
             for (let p of room.players) {
@@ -684,8 +644,28 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Tribün Çizimi (Arka plan)
+        function drawStadium() {
+            // Siyah dış alan
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, 1200, 600);
+            
+            // Taraftar noktaları
+            for(let i=0; i<1200; i+=12) {
+                for(let j=0; j<600; j+=12) {
+                    // Sadece saha dışındaki alanları doldur (Kenarlar ve üst/alt)
+                    if (i < 30 || i > 1170 || j < 30 || j > 570) {
+                        if (Math.random() > 0.5) { // Rastgele renkler
+                            let colors = ['#ef4444', '#3b82f6', '#ffffff', '#fbbf24'];
+                            ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                            ctx.fillRect(i, j, 8, 8);
+                        }
+                    }
+                }
+            }
+        }
+
         function drawPitch() {
-            // Sabit 1200x600 Çizim
             const stripeWidth = 1200 / 16;
             for (let i = 0; i < 16; i++) {
                 ctx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
@@ -695,34 +675,33 @@
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             const margin = 30;
             
-            // Dış Çerçeve
             ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
-            
-            // Orta Çizgi
             ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
-            
-            // Orta Yuvarlak
             ctx.beginPath(); ctx.arc(600, 300, 70, 0, Math.PI * 2); ctx.stroke();
             ctx.beginPath(); ctx.arc(600, 300, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
             
-            // Ceza Sahası (Penaltı)
-            const penaltyW = 160; 
-            const penaltyH = 300; // Yükseklik 300 birim (Kalenin 1.5 katı)
-            const penaltyY = (600 - penaltyH) / 2;
-            ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH); 
-            ctx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
+            const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
+            ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH); ctx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
             
-            // Kale Sahası (6 Pas)
-            const goalAreaW = 60;
-            const goalAreaH = 180; 
-            const goalAreaY = (600 - goalAreaH) / 2;
-            ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); 
-            ctx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
+            const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
+            ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); ctx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
             
-            // Kalelerin Beyaz Çizgileri (Sunucudaki 200-400 aralığı ile aynı)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.fillRect(margin - 10, 200, 10, 200); 
-            ctx.fillRect(1200 - margin, 200, 10, 200);
+            ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
+
+            // Bariyer Çizgisi (Santra)
+            if (currentRoom && currentRoom.isKickoff) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                if (currentRoom.concedingTeam === 'blue') {
+                    ctx.fillRect(600, 30, 10, 540); // Mavi yedi, Kırmızı geçemez
+                } else {
+                    ctx.fillRect(590, 30, 10, 540); // Kırmızı yedi, Mavi geçemez
+                }
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText("SANTRA", 600, 50);
+            }
         }
 
         function drawBall() {
@@ -761,7 +740,8 @@
         function gameLoop() {
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
-                drawPitch();
+                drawStadium(); // Önce tribünleri çiz
+                drawPitch();   // Sonra sahayı çiz
                 drawBall();
 
                 for (let id in players) {
@@ -778,7 +758,6 @@
                     ctx.lineWidth = 3; 
                     ctx.stroke();
                     
-                    // 2.5 SANİYE SAYACI
                     if (id === ball.owner && ball.possessionTimer > 0) {
                         let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
                         let radius = pSize + 4 + (pulse * 6); 
