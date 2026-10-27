@@ -1,334 +1,107 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Critiball</title>
-    <style>
-        body { margin: 0; padding: 0; background-color: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.use(express.static(__dirname));
+
+let players = {};
+let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0 };
+let score = { red: 0, blue: 0 };
+
+const width = 1200;
+const height = 600;
+
+io.on('connection', (socket) => {
+    players[socket.id] = {
+        id: socket.id,
+        x: 600,
+        y: 300,
+        team: Object.keys(players).length % 2 === 0 ? 'red' : 'blue',
+        name: 'Oyuncu' + Math.floor(Math.random() * 100)
+    };
+
+    socket.emit('currentPlayers', players, ball, score);
+    socket.broadcast.emit('newPlayer', players[socket.id]);
+
+    socket.on('move', (data) => {
+        if (players[socket.id]) {
+            players[socket.id].x = data.x;
+            players[socket.id].y = data.y;
+        }
+    });
+
+    socket.on('kick', (data) => {
+        ball.vx = data.vx;
+        ball.vy = data.vy;
+        ball.vz = data.vz;
+    });
+
+    socket.on('disconnect', () => {
+        delete players[socket.id];
+        io.emit('playerDisconnected', socket.id);
+    });
+});
+
+setInterval(() => {
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    ball.z += ball.vz;
+    
+    ball.vx *= 0.98;
+    ball.vy *= 0.98;
+    ball.vz -= 0.8; 
+
+    if (ball.z <= 0) {
+        ball.z = 0;
+        ball.vz *= -0.6;
+        if (Math.abs(ball.vz) < 1) ball.vz = 0; 
+    }
+
+    if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
+    if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
+
+    if (ball.y < 15) { ball.y = 15; ball.vy *= -0.8; }
+    if (ball.y > height - 15) { ball.y = height - 15; ball.vy *= -0.8; }
+    
+    if (ball.x <= 15 && ball.y > 200 && ball.y < 400) {
+        score.blue++; resetBall();
+    } else if (ball.x >= width - 15 && ball.y > 200 && ball.y < 400) {
+        score.red++; resetBall();
+    } else {
+        if (ball.x < 15) { ball.x = 15; ball.vx *= -0.8; }
+        if (ball.x > width - 15) { ball.x = width - 15; ball.vx *= -0.8; }
+    }
+
+    for (let id in players) {
+        let p = players[id];
+        let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        /* Skor Tabelası */
-        #scoreboard { 
-            font-size: 36px; font-weight: 900; margin-bottom: 20px; 
-            text-shadow: 0 0 10px rgba(255,255,255,0.3), 2px 2px 4px #000; 
-            letter-spacing: 2px;
+        if (dist < 45) {
+            let angle = Math.atan2(ball.y - p.y, ball.x - p.x);
+            ball.x = p.x + Math.cos(angle) * 45;
+            ball.y = p.y + Math.sin(angle) * 45;
+            ball.vx += Math.cos(angle) * 1.5;
+            ball.vy += Math.sin(angle) * 1.5;
         }
-        .red-team { color: #ff4c4c; text-shadow: 0 0 15px #ff4c4c; }
-        .blue-team { color: #4c9aff; text-shadow: 0 0 15px #4c9aff; }
-        
-        canvas { 
-            width: 90vw; height: 70vh; 
-            background-color: #111; 
-            border: 2px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 16px; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); 
-        }
-        
-        /* Kondisyon Barı */
-        #stamina-container {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 350px; height: 24px;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            border-radius: 12px;
-            overflow: hidden; display: flex; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-        }
-        #stamina-bar {
-            height: 100%; width: 100%;
-            background: linear-gradient(90deg, #22c55e, #eab308);
-            transition: width 0.1s linear, background 0.3s;
-            box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
-        }
-        #stamina-text {
-            position: absolute; width: 100%; text-align: center;
-            font-size: 12px; font-weight: 900; letter-spacing: 1px; 
-            color: #fff; text-shadow: 1px 1px 2px #000;
-        }
+    }
 
-        /* PC Kontrolleri */
-        #pc-controls { 
-            position: absolute; bottom: 30px; right: 30px; 
-            display: flex; flex-direction: column; align-items: flex-end; gap: 12px; 
-        }
-        .key-row { display: flex; gap: 12px; }
-        .key {
-            width: 60px; height: 60px;
-            background: rgba(30, 41, 59, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 20px; color: #94a3b8;
-            transition: 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-        }
-        .key.active { 
-            background: rgba(76, 154, 255, 0.9); 
-            color: white; border-color: #fff; 
-            transform: translateY(4px); 
-            box-shadow: 0 0 20px #4c9aff; 
-        }
-        .wide-key { width: 130px; }
+    io.emit('gameState', players, ball, score);
+}, 1000 / 60);
 
-        #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; display: none; backdrop-filter: blur(5px); }
-        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; background: rgba(76, 154, 255, 0.6); box-shadow: 0 0 15px rgba(76, 154, 255, 0.5); border-radius: 50%; transform: translate(-50%, -50%); }
-        
-        @media (pointer: coarse) {
-            #joystick-zone { display: block; }
-            #pc-controls { display: none; }
-            canvas { width: 100vw; height: 100vh; border-radius: 0; border: none; }
-            #scoreboard { position: absolute; top: 60px; font-size: 28px; }
-            #stamina-container { top: 20px; width: 200px; height: 16px; }
-        }
-    </style>
-</head>
-<body>
-    <div id="game-container">
-        <div id="stamina-container">
-            <div id="stamina-bar"></div>
-            <div id="stamina-text">DEPAR KONDİSYONU</div>
-        </div>
+function resetBall() {
+    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0 };
+    for (let id in players) {
+        players[id].x = 600 + (players[id].team === 'red' ? -150 : 150);
+        players[id].y = 300;
+    }
+}
 
-        <div id="scoreboard">
-            <span class="red-team">KIRMIZI <span id="score-red">0</span></span> 
-            <span style="color:#64748b">:</span> 
-            <span class="blue-team"><span id="score-blue">0</span> MAVİ</span>
-        </div>
-        
-        <canvas id="gameCanvas" width="1200" height="600"></canvas>
-
-        <div id="joystick-zone"><div id="joystick-knob"></div></div>
-
-        <div id="pc-controls">
-            <div class="key-row"><div class="key" id="key-w">W</div></div>
-            <div class="key-row"><div class="key" id="key-a">A</div><div class="key" id="key-s">S</div><div class="key" id="key-d">D</div></div>
-            <div class="key-row">
-                <div class="key wide-key" id="key-space">SPACE</div>
-                <div class="key" id="key-f">F</div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let socket = null; try { socket = io(); } catch(e) {}
-
-        let myPlayer = null;
-        let players = {};
-        let ball = { x: 600, y: 300, z: 0 };
-        let score = { red: 0, blue: 0 };
-
-        // Kondisyon Ayarları
-        let stamina = 100;
-        let isExhausted = false; // Tükenmişlik durumu
-        const maxStamina = 100;
-        const normalSpeed = 4.5;
-        const sprintSpeed = 7.5;
-
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
-        
-        window.addEventListener('keydown', (e) => { 
-            let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
-            if (keys[k] !== undefined) keys[k] = true;
-            updateKeyVisual(k, true);
-        });
-        window.addEventListener('keyup', (e) => { 
-            let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
-            if (keys[k] !== undefined) keys[k] = false;
-            updateKeyVisual(k, false);
-        });
-
-        function updateKeyVisual(key, isPressed) {
-            let id = '';
-            if(['w','a','s','d','f'].includes(key)) id = `key-${key}`;
-            if(key === ' ') id = 'key-space';
-            if(id) {
-                const el = document.getElementById(id);
-                if(el) isPressed ? el.classList.add('active') : el.classList.remove('active');
-            }
-        }
-
-        // Mobil Joystick
-        const joystickZone = document.getElementById('joystick-zone');
-        const joystickKnob = document.getElementById('joystick-knob');
-        let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 50;
-
-        function handleTouch(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = joystickZone.getBoundingClientRect();
-            let dx = touch.clientX - (rect.left + rect.width / 2);
-            let dy = touch.clientY - (rect.top + rect.height / 2);
-            const distance = Math.sqrt(dx*dx + dy*dy);
-            if (distance > maxDistance) { dx = (dx / distance) * maxDistance; dy = (dy / distance) * maxDistance; }
-            joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            joystickVector.x = dx / maxDistance;
-            joystickVector.y = dy / maxDistance;
-        }
-
-        joystickZone.addEventListener('touchstart', (e) => { joystickActive = true; handleTouch(e); });
-        joystickZone.addEventListener('touchmove', (e) => { if(joystickActive) handleTouch(e); });
-        joystickZone.addEventListener('touchend', () => {
-            joystickActive = false; joystickKnob.style.transform = 'translate(-50%, -50%)'; joystickVector = { x: 0, y: 0 };
-        });
-
-        if (socket) {
-            socket.on('currentPlayers', (p, b, s) => {
-                players = p; ball = b; score = s; 
-                if (players[socket.id]) myPlayer = players[socket.id];
-            });
-            socket.on('newPlayer', (player) => { players[player.id] = player; });
-            socket.on('playerDisconnected', (id) => { delete players[id]; });
-            
-            socket.on('gameState', (p, b, s) => {
-                for(let id in p) {
-                    if(id !== socket.id) players[id] = p[id];
-                }
-                ball = b; score = s;
-                document.getElementById('score-red').innerText = score.red;
-                document.getElementById('score-blue').innerText = score.blue;
-            });
-        }
-
-        function updateMovement() {
-            if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
-
-            // Tükenmişlik Kontrolü (0'a düşerse depar atmayı kilitler)
-            if (stamina <= 0) isExhausted = true;
-            // 30'un üstüne çıkarsa deparı tekrar açar
-            if (stamina >= 30) isExhausted = false;
-
-            // Sadece F'ye basılıysa ve TÜKENMEMİŞSE depar atabilir
-            let isSprinting = keys['f'] && !isExhausted;
-            let currentSpeed = isSprinting ? sprintSpeed : normalSpeed;
-
-            // Kondisyon Barı Mantığı
-            if (isSprinting) {
-                stamina -= 1.5;
-                if (stamina < 0) stamina = 0;
-            } else {
-                stamina += 0.8;
-                if (stamina > maxStamina) stamina = maxStamina;
-            }
-
-            // Bar Görseli
-            const bar = document.getElementById('stamina-bar');
-            bar.style.width = (stamina / maxStamina) * 100 + '%';
-            if (isExhausted || stamina < 30) { 
-                bar.style.background = 'linear-gradient(90deg, #ef4444, #b91c1c)'; 
-            } else { 
-                bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)'; 
-            }
-
-            let dx = 0, dy = 0;
-            if (keys.w || keys.ArrowUp) dy -= 1;
-            if (keys.s || keys.ArrowDown) dy += 1;
-            if (keys.a || keys.ArrowLeft) dx -= 1;
-            if (keys.d || keys.ArrowRight) dx += 1;
-            if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
-
-            // Çapraz hızlanmayı önle
-            if (dx !== 0 || dy !== 0) {
-                let length = Math.hypot(dx, dy);
-                dx = (dx / length) * currentSpeed;
-                dy = (dy / length) * currentSpeed;
-            }
-
-            myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
-            myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
-            if (socket) socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
-
-            // ŞUT (Space)
-            let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-            if (distToBall < 60 && keys[' ']) {
-                if (socket) socket.emit('kick', { 
-                    vx: (ball.x - myPlayer.x) * 5, 
-                    vy: (ball.y - myPlayer.y) * 5,
-                    vz: 6
-                });
-                keys[' '] = false; 
-                updateKeyVisual(' ', false);
-            }
-
-            requestAnimationFrame(updateMovement);
-        }
-
-        function drawPitch() {
-            const stripeWidth = canvas.width / 16;
-            for (let i = 0; i < 16; i++) {
-                ctx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
-                ctx.fillRect(i * stripeWidth, 0, stripeWidth, canvas.height);
-            }
-
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            const margin = 30;
-            ctx.strokeRect(margin, margin, canvas.width - (margin * 2), canvas.height - (margin * 2));
-            ctx.beginPath(); ctx.moveTo(canvas.width / 2, margin); ctx.lineTo(canvas.width / 2, canvas.height - margin); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 70, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill();
-
-            const penaltyW = 160, penaltyH = 260, penaltyY = (canvas.height - penaltyH) / 2;
-            ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH);
-            ctx.strokeRect(canvas.width - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-
-            const goalAreaW = 60, goalAreaH = 120, goalAreaY = (canvas.height - goalAreaH) / 2;
-            ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH);
-            ctx.strokeRect(canvas.width - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-
-            ctx.beginPath(); ctx.arc(margin + 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(canvas.width - margin - 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
-            
-            ctx.beginPath(); ctx.arc(margin + penaltyW, canvas.height / 2, 50, Math.PI * 0.65, Math.PI * 1.35); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width - margin - penaltyW, canvas.height / 2, 50, -Math.PI * 0.35, Math.PI * 0.35); ctx.stroke();
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.fillRect(margin - 10, canvas.height / 2 - 100, 10, 200); 
-            ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200);
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPitch();
-
-            // Top Çizimi (Zıplama ve Gölge)
-            ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15, 8, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-
-            let drawY = ball.y - (ball.z || 0);
-            ctx.beginPath(); ctx.arc(ball.x, drawY, 15, 0, Math.PI * 2); 
-            ctx.fillStyle = '#fff'; ctx.fill();
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-
-            // Oyuncular
-            for (let id in players) {
-                let p = players[id];
-                if (!p) continue;
-                
-                ctx.beginPath(); ctx.arc(p.x, p.y + 5, 22, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-
-                ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
-                ctx.fillStyle = p.team === 'red' ? '#ff4c4c' : '#4c9aff';
-                ctx.fill(); 
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-                
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-                ctx.fillText(p.name, p.x, p.y - 35);
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        updateMovement();
-        gameLoop();
-    </script>
-</body>
-</html>
+const PORT = process.env.PORT || 3000;
+// DÜZELTİLEN KISIM BURASI (0.0.0.0 EKLENDİ)
+server.listen(PORT, '0.0.0.0', () => { 
+    console.log('Critiball Server ' + PORT + ' portunda çalışıyor.'); 
+});
