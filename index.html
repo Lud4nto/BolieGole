@@ -714,6 +714,7 @@
         // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ
         function renderTacticsBoard(room) {
             let board = document.getElementById('tactics-board');
+            if(!board) return;
             board.querySelectorAll('.slot').forEach(el => el.remove());
 
             let renderTeam = (team) => {
@@ -727,15 +728,11 @@
                     el.style.left = pxX + 'px';
                     el.style.top = pxY + 'px';
 
-                    if (room.formation[team][slot.id]) {
-                        let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
-                        if (p) {
-                            el.innerText = p.name.substring(0, 3);
-                            el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
-                            
-                            // Bot seçiliyse parlat
-                            if (selectedBotId === p.id) el.classList.add('selected-bot');
-                        }
+                    let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
+                    if (p) {
+                        el.innerText = p.name.substring(0, 3);
+                        el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
+                        if (selectedBotId === p.id) el.classList.add('selected-bot');
                     } else {
                         el.innerText = '+';
                         el.style.backgroundColor = team === 'red' ? 'rgba(255,76,76,0.5)' : 'rgba(76,154,255,0.5)';
@@ -748,8 +745,6 @@
 
                     el.onclick = (e) => {
                         e.stopPropagation();
-                        let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
-                        
                         // Eğer dolu bir slota tıklandıysa ve bot ise, seç (sadece oda sahibi)
                         if (p && p.isBot && room.hostId === socket.id) {
                             selectedBotId = p.id;
@@ -760,9 +755,15 @@
                             socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
                             selectedBotId = null;
                         }
-                        // Eğer kendi takımınsa ve insan oyuncuysa, o pozisyona geç
-                        else if (myTeam === team && !p) {
-                            socket.emit('change_position', slot.id);
+                        // Eğer boş slota tıklandıysa ve insan oyuncuysa
+                        else if (!p) {
+                            if (myTeam !== team) {
+                                // Önce takıma geç, sonra pozisyona yerleş
+                                socket.emit('change_team', team);
+                                setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
+                            } else {
+                                socket.emit('change_position', slot.id);
+                            }
                         }
                     };
                     board.appendChild(el);
@@ -774,7 +775,9 @@
 
         window.selectTeam = (team) => {
             if (!currentRoom || currentRoom.status !== 'lobby') return;
+            myTeam = team; // Anında güncelle
             socket.emit('change_team', team);
+            if(currentRoom) renderTacticsBoard(currentRoom);
         };
 
         function showLobby(room) {
@@ -799,7 +802,8 @@
             document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
             document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
             
-            renderTacticsBoard(room);
+            // setTimeout ile board'un boyutlarının oturmasını bekle
+            setTimeout(() => renderTacticsBoard(room), 50);
         }
 
         socket.on('update_lobby', (room) => {
@@ -1361,146 +1365,4 @@
                         updateReplay(now);
                         targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
                     } else if (currentRoom.status === 'playing') {
-                        if (ball.owner === null && speed > 15) {
-                            targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; 
-                        }
-                    }
-                }
-
-                cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
-                cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
-                cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
-
-                let viewW = 1200 / cameraZoom;
-                let viewH = 600 / cameraZoom;
-                let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
-                let clampY = Math.max(viewH / 2, Math.min(600 - viewH / 2, cameraY));
-
-                ctx.save();
-                ctx.translate(600, 300);
-                ctx.scale(cameraZoom, cameraZoom);
-                ctx.translate(-clampX, -clampY);
-
-                drawStadium(); 
-                drawPitch();   
-                
-                if (currentRoom && currentRoom.powerups) {
-                    for (let pu of currentRoom.powerups) {
-                        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pu.x, pu.y, 15, 0, Math.PI*2); ctx.fill();
-                        ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
-                        let icon = pu.type === 'freeze' ? '❄️' : pu.type === 'speed' ? '⚡' : pu.type === 'power' ? '🦶' : '🧲';
-                        ctx.fillText(icon, pu.x, pu.y + 7);
-                    }
-                }
-
-                drawBall();
-
-                if (currentRoom || isPractice) {
-                    let lerpFactor = Math.min(1, 15 * dt);
-                    for (let id in players) {
-                        let p = players[id];
-                        if (!p || p.team === 'spectator') continue;
-                        
-                        if (id !== socket.id && !isPractice) {
-                            if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
-                            p.renderX += (p.x - p.renderX) * lerpFactor;
-                            p.renderY += (p.y - p.renderY) * lerpFactor;
-                        }
-                        let px = (id === socket.id || isPractice) ? p.x : p.renderX;
-                        let py = (id === socket.id || isPractice) ? p.y : p.renderY;
-
-                        let pSize = 22;
-                        
-                        // AURA ÇİZİMİ
-                        if (p.equipped && p.equipped.aura && p.equipped.aura !== 'none') {
-                            let glowColor = 'white';
-                            if (p.equipped.aura === 'fire') glowColor = '#ff4500';
-                            else if (p.equipped.aura === 'ice') glowColor = '#00ffff';
-                            else if (p.equipped.aura === 'toxic') glowColor = '#39FF14';
-                            else if (p.equipped.aura === 'rainbow') glowColor = `hsl(${Date.now() % 360}, 100%, 50%)`;
-
-                            ctx.beginPath(); ctx.arc(px, py, pSize + 5, 0, Math.PI * 2);
-                            ctx.fillStyle = glowColor; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1;
-                        }
-
-                        // GÖLGE
-                        ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                        
-                        // OYUNCU
-                        ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
-                        let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
-                        if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
-                        if (isPractice) teamColor = '#ff0000';
-                        
-                        ctx.fillStyle = teamColor;
-                        ctx.fill(); 
-                        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
-
-                        // KIYAFETLER
-                        if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
-                        else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
-                        else if (p.equipped && p.equipped.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
-                        else if (p.equipped && p.equipped.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
-                        
-                        // İZ ÇİZİMİ (TRAIL)
-                        if (p.equipped && p.equipped.trail && p.equipped.trail !== 'none') {
-                            let speed = Math.hypot(p.lastDx || 0, p.lastDy || 0);
-                            if (speed > 1) {
-                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : teamColor;
-                                ctx.fillStyle = trailColor;
-                                let angle = Math.atan2(p.lastDy, p.lastDx);
-                                let backX = px - Math.cos(angle) * pSize;
-                                let backY = py - Math.sin(angle) * pSize;
-                                if (p.equipped.trail === 'stars') {
-                                    ctx.font = '12px Arial'; ctx.fillText('✨', backX, backY);
-                                } else {
-                                    ctx.globalAlpha = 0.5;
-                                    ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill();
-                                    ctx.globalAlpha = 1;
-                                }
-                            }
-                        }
-
-                        if (!isPractice && currentRoom.emotes) {
-                            for (let em of currentRoom.emotes) {
-                                if (em.playerId === id) {
-                                    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20);
-                                }
-                            }
-                        }
-
-                        if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
-                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
-                            let radius = pSize + 4 + (pulse * 6); 
-                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
-                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
-                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
-                        }
-
-                        if (id === socket.id && isCharging && shotPower >= 38) {
-                            let intensity = shotPower / 100; let time = Date.now() / 100;
-                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
-                            for (let i = 0; i < 5; i++) {
-                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
-                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
-                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
-                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
-                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
-                            }
-                        }
-                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
-                        ctx.fillText(p.name, px, py - pSize - 5);
-                    }
-                }
-                
-                ctx.restore();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        requestAnimationFrame(updateMovement);
-        requestAnimationFrame(gameLoop);
-    </script>
-</body>
-</html>
+                        if (ball.
