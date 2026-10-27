@@ -1320,3 +1320,34 @@
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
                             let radius = pSize + 4 + (pulse * 6); 
                             ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
+                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
+                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+                        }
+
+                        if (id === socket.id && isCharging && shotPower >= 38) {
+                            let intensity = shotPower / 100; let time = Date.now() / 100;
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                            for (let i = 0; i < 5; i++) {
+                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
+                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
+                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
+                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            }
+                        }
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
+                        ctx.fillText(p.name, px, py - pSize - 5);
+                    }
+                }
+                
+                ctx.restore();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(updateMovement);
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
