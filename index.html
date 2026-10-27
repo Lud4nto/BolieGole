@@ -11,7 +11,8 @@
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
         
-        canvas { width: 90vw; height: 70vh; background-color: #2e7d32; border: 4px solid #ffffff; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        /* Saha boyutları */
+        canvas { width: 90vw; height: 70vh; background-color: #111; border: 4px solid #ffffff; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
         
         /* PC Kontrolleri */
         #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8; pointer-events: none; }
@@ -35,7 +36,6 @@
     <div id="game-container">
         <div id="scoreboard"><span class="red-team">Kırmızı: <span id="score-red">0</span></span> - <span class="blue-team">Mavi: <span id="score-blue">0</span></span></div>
         
-        <!-- Saha Boyutu -->
         <canvas id="gameCanvas" width="1200" height="600"></canvas>
 
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
@@ -51,7 +51,13 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const socket = io();
+        
+        let socket = null;
+        try {
+            socket = io();
+        } catch(e) {
+            console.log("Socket.io yüklenemedi. Sunucu kapalı olabilir.");
+        }
 
         let myPlayer = null;
         let players = {};
@@ -106,22 +112,24 @@
         });
 
         // Socket Bağlantıları
-        socket.on('currentPlayers', (p, b, s) => {
-            players = p; ball = b; score = s; 
-            if (players[socket.id]) myPlayer = players[socket.id];
-        });
-        socket.on('newPlayer', (player) => { players[player.id] = player; });
-        socket.on('playerDisconnected', (id) => { delete players[id]; });
-        
-        socket.on('gameState', (p, b, s) => {
-            for(let id in p) {
-                if(id !== socket.id) players[id] = p[id]; // Diğer oyuncular
-            }
-            ball = b; 
-            score = s;
-            document.getElementById('score-red').innerText = score.red;
-            document.getElementById('score-blue').innerText = score.blue;
-        });
+        if (socket) {
+            socket.on('currentPlayers', (p, b, s) => {
+                players = p; ball = b; score = s; 
+                if (players[socket.id]) myPlayer = players[socket.id];
+            });
+            socket.on('newPlayer', (player) => { players[player.id] = player; });
+            socket.on('playerDisconnected', (id) => { delete players[id]; });
+            
+            socket.on('gameState', (p, b, s) => {
+                for(let id in p) {
+                    if(id !== socket.id) players[id] = p[id]; // Diğer oyuncular
+                }
+                ball = b; 
+                score = s;
+                document.getElementById('score-red').innerText = score.red;
+                document.getElementById('score-blue').innerText = score.blue;
+            });
+        }
 
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
@@ -137,15 +145,12 @@
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
             myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
-            socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
+            if (socket) socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
 
             // Sadece SPACE (ŞUT) komutu
             let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
             if (distToBall < 50 && keys[' ']) {
-                socket.emit('kick', { 
-                    vx: (ball.x - myPlayer.x) * 4, 
-                    vy: (ball.y - myPlayer.y) * 4 
-                });
+                if (socket) socket.emit('kick', { vx: (ball.x - myPlayer.x) * 4, vy: (ball.y - myPlayer.y) * 4 });
                 keys[' '] = false; 
                 updateKeyVisual(' ', false);
             }
@@ -155,16 +160,15 @@
 
         // --- KODLA SAHA ÇİZİMİ ---
         function drawPitch() {
-            // 1. Çim Şeritleri (Galatasaray Stadyumu tarzı)
+            // 1. Çim Şeritleri
             const stripeWidth = canvas.width / 16;
             for (let i = 0; i < 16; i++) {
-                // Açık ve koyu yeşil tonları
                 ctx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
                 ctx.fillRect(i * stripeWidth, 0, stripeWidth, canvas.height);
             }
 
             // Çizgi Ayarları
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // Beyaz çizgiler
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -185,62 +189,45 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.fill();
 
-            // 5. Ceza Sahaları (Penaltı Alanı)
-            const penaltyW = 160; // Genişlik
-            const penaltyH = 260; // Yükseklik
+            // 5. Ceza Sahaları
+            const penaltyW = 160; 
+            const penaltyH = 260; 
             const penaltyY = (canvas.height - penaltyH) / 2;
             
-            // Sol Ceza Sahası
             ctx.strokeRect(margin, penaltyY, penaltyW, penaltyH);
-            // Sağ Ceza Sahası
             ctx.strokeRect(canvas.width - margin - penaltyW, penaltyY, penaltyW, penaltyH);
 
-            // 6. Kale Sahaları (6 Pas)
+            // 6. Kale Sahaları
             const goalAreaW = 60;
             const goalAreaH = 120;
             const goalAreaY = (canvas.height - goalAreaH) / 2;
             
-            // Sol Kale Sahası
             ctx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH);
-            // Sağ Kale Sahası
             ctx.strokeRect(canvas.width - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
 
             // 7. Penaltı Noktaları
-            ctx.beginPath();
-            ctx.arc(margin + 110, canvas.height / 2, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(canvas.width - margin - 110, canvas.height / 2, 3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(margin + 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(canvas.width - margin - 110, canvas.height / 2, 3, 0, Math.PI * 2); ctx.fill();
 
-            // 8. Ceza Yayları (Dışarıdaki yarım daireler)
-            ctx.beginPath();
-            ctx.arc(margin + penaltyW, canvas.height / 2, 50, Math.PI * 0.65, Math.PI * 1.35);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(canvas.width - margin - penaltyW, canvas.height / 2, 50, -Math.PI * 0.35, Math.PI * 0.35);
-            ctx.stroke();
+            // 8. Ceza Yayları
+            ctx.beginPath(); ctx.arc(margin + penaltyW, canvas.height / 2, 50, Math.PI * 0.65, Math.PI * 1.35); ctx.stroke();
+            ctx.beginPath(); ctx.arc(canvas.width - margin - penaltyW, canvas.height / 2, 50, -Math.PI * 0.35, Math.PI * 0.35); ctx.stroke();
             
-            // 9. Kaleler (Görsel olarak çizilen file/kale alanı - Çarpışma alanları server.js'dedir)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fillRect(margin - 10, canvas.height / 2 - 100, 10, 200); // Sol kale direği
-            ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200); // Sağ kale direği
+            // 9. Kaleler
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillRect(margin - 10, canvas.height / 2 - 100, 10, 200); 
+            ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200);
         }
 
-        function draw() {
+        // ANA ÇİZİM DÖNGÜSÜ
+        function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Siyah arka plan (taç çizgisi dışı)
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Saha çizgilerini ve çimleri çiz
+            // Sadece sahayı çiz (Arka plan resmi YOK)
             drawPitch();
-
-            // --- OYUN NESNELERİ ---
 
             // Topu Çiz
             ctx.beginPath(); ctx.arc(ball.x, ball.y, 15, 0, Math.PI * 2); 
@@ -250,12 +237,13 @@
             // Oyuncuları Çiz
             for (let id in players) {
                 let p = players[id];
-                
-                // Gölge (daha şık durması için)
+                if (!p) continue;
+
+                // Gölge
                 ctx.beginPath(); ctx.arc(p.x, p.y + 5, 22, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
 
-                // Oyuncu
+                // Gövde
                 ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
                 ctx.fillStyle = p.team === 'red' ? '#ff4c4c' : '#4c9aff';
                 ctx.fill(); 
@@ -266,11 +254,13 @@
                 ctx.fillText(p.name, p.x, p.y - 35);
             }
 
-            requestAnimationFrame(draw);
+            // Döngüyü devam ettir
+            requestAnimationFrame(gameLoop);
         }
 
+        // Başlat
         updateMovement();
-        draw();
+        gameLoop();
     </script>
 </body>
 </html>
