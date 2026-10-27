@@ -9,7 +9,6 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// Top objesine 'shotPower' ve 'lastKickX' eklendi (Direkten dönme hesabı için)
 let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0 };
 let score = { red: 0, blue: 0 };
 
@@ -47,12 +46,11 @@ io.on('connection', (socket) => {
             ball.owner = null; 
             ball.possessionTimer = 0;
             
-            // Topa vurulduktan sonra 1 saniye boyunca kimse geri alamaz
-            ball.pickupCooldown = 60; 
-            ball.shotPower = data.shotPower; // Şut gücünü kaydet
-            ball.lastKickX = players[socket.id].x; // Nereden vurulduğunu kaydet
+            // Top havadayken çalınabilsin diye dokunulmazlık süresini kısa tuttuk (0.3 sn)
+            ball.pickupCooldown = 20; 
+            ball.shotPower = data.shotPower;
+            ball.lastKickX = players[socket.id].x; 
             
-            // Topu hemen ileri fırlat ki ayağına yapışmasın
             ball.x += data.vx * 3; 
             ball.y += data.vy * 3;
         }
@@ -70,11 +68,8 @@ io.on('connection', (socket) => {
 setInterval(() => {
     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
 
-    // 1. Top Sahipliği
     if (ball.owner !== null) {
-        if (ball.possessionTimer > 0) {
-            ball.possessionTimer -= 1; 
-        }
+        if (ball.possessionTimer > 0) ball.possessionTimer -= 1; 
 
         if (!players[ball.owner]) {
             ball.owner = null;
@@ -85,11 +80,8 @@ setInterval(() => {
             
             ball.x = owner.x + Math.cos(angle) * 35;
             ball.y = owner.y + Math.sin(angle) * 35;
-            ball.vx = 0; 
-            ball.vy = 0;
-            ball.z = 0;
+            ball.vx = 0; ball.vy = 0; ball.z = 0;
 
-            // 2.5 Saniye bitti mi?
             if (ball.possessionTimer <= 0) {
                 ball.owner = null;
                 ball.vx = Math.cos(angle) * 7; 
@@ -99,14 +91,12 @@ setInterval(() => {
         }
     }
 
-    // 2. Top Fiziği
     if (ball.owner === null) {
         ball.x += ball.vx;
         ball.y += ball.vy;
         ball.z += ball.vz;
         
-        ball.vx *= 0.98;
-        ball.vy *= 0.98;
+        ball.vx *= 0.98; ball.vy *= 0.98;
         ball.vz -= 0.8; 
 
         if (ball.z <= 0) {
@@ -121,18 +111,14 @@ setInterval(() => {
         if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
         if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
         
-        // --- GOL VE DİREK MANTIĞI ---
         let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
         let hitRightGoal = ball.x >= width - 25 && ball.y > 200 && ball.y < 400;
 
         if (hitLeftGoal || hitRightGoal) {
             let shouldBounce = false;
-            
-            // Eğer şut gücü %100 ise özel kural devreye girer
             if (ball.shotPower === 100) {
                 let isOwnHalf = false;
                 let isClose = false;
-                
                 if (hitRightGoal) {
                     if (ball.lastKickX < 600) isOwnHalf = true;
                     if (ball.lastKickX > 900) isClose = true;
@@ -140,39 +126,32 @@ setInterval(() => {
                     if (ball.lastKickX > 600) isOwnHalf = true;
                     if (ball.lastKickX < 300) isClose = true;
                 }
-                
-                // Eğer kendi sahasından veya yakından değilse DİREKTEN DÖNER
-                if (!isOwnHalf && !isClose) {
-                    shouldBounce = true;
-                }
+                if (!isOwnHalf && !isClose) shouldBounce = true;
             }
 
             if (shouldBounce) {
-                // DİREKTEN SEKEN TOP
                 ball.x = hitRightGoal ? width - 30 : 30;
-                ball.vx = -ball.vx * 0.7; // Geri sek
-                ball.vy = (Math.random() - 0.5) * 25; // Rastgele sağa/sola
-                ball.vz = 8; // Havaya dikil
-                ball.shotPower = 0; // Direkten sonra şut gücünü sıfırla ki tekrar tetiklenmesin
+                ball.vx = -ball.vx * 0.7; 
+                ball.vy = (Math.random() - 0.5) * 25; 
+                ball.vz = 8; 
+                ball.shotPower = 0; 
             } else {
-                // GOL!
-                if (hitRightGoal) score.red++;
-                else score.blue++;
+                if (hitRightGoal) score.red++; else score.blue++;
                 resetBall();
             }
         } else {
-            // Saha dışına çıkma engeli (Kale dışı)
             if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
             if (ball.x > width - 20) { ball.x = width - 20; ball.vx *= -0.8; }
         }
     }
 
-    // 3. Top Alma / Çalma
+    // --- HAVADAKİ TOPU ÇALMA MANTIĞI ---
     for (let id in players) {
         let p = players[id];
+        // 2D düzlemde mesafe 50'den yakınsa (z ekseni fark etmez)
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        if (dist < 45 && ball.pickupCooldown <= 0) {
+        if (dist < 50 && ball.pickupCooldown <= 0) {
             if (ball.owner === null) {
                 ball.owner = id;
                 ball.possessionTimer = 150; // 2.5 saniye
