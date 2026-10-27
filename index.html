@@ -16,7 +16,6 @@
         
         .ui-bars { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; }
         
-        /* Top Sende Uyarısı ve Sayaç */
         #possession-text {
             display: none; font-size: 20px; font-weight: 900; color: #eab308;
             text-shadow: 0 0 15px #eab308, 0 0 5px #000; margin-top: 5px; letter-spacing: 1px;
@@ -121,7 +120,7 @@
 
         let isCharging = false;
         let shotPower = 0;
-        let chargeStartTime = 0; // Tek tık kontrolü için
+        let chargeStartTime = 0;
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
@@ -132,7 +131,7 @@
             if (k === ' ') {
                 if (ball.owner === socket.id) {
                     isCharging = true;
-                    chargeStartTime = Date.now(); // Süreyi başlat
+                    chargeStartTime = Date.now();
                 }
             }
             updateKeyVisual(k, true);
@@ -144,10 +143,9 @@
 
             if (k === ' ' && isCharging) {
                 isCharging = false;
-                
-                // TEK TIK KONTROLÜ (200 milisaniyeden kısa basıldıysa direkt pas)
+                // 150 milisaniyeden kısa basıldıysa direkt pas (Tek Tık)
                 let pressDuration = Date.now() - chargeStartTime;
-                if (pressDuration < 200) {
+                if (pressDuration < 150) {
                     forcePass();
                 } else {
                     executeKick();
@@ -158,13 +156,8 @@
 
         function forcePass() {
             if (ball.owner !== socket.id) return;
-            let angle = Math.atan2(ball.y - myPlayer.y, ball.x - myPlayer.x);
-            // Hızlı pas
-            if (socket) socket.emit('kick', { 
-                vx: Math.cos(angle) * 3, 
-                vy: Math.sin(angle) * 3, 
-                vz: 0 
-            });
+            let angle = Math.atan2(myPlayer.lastDy || 0, myPlayer.lastDx || 1);
+            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4, vz: 0 });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -176,20 +169,17 @@
             let vx = 0, vy = 0, vz = 0;
 
             if (shotPower < 38) {
-                // Bar dolmadıysa Pas
-                vx = Math.cos(angle) * 3;
-                vy = Math.sin(angle) * 3;
+                vx = Math.cos(angle) * 4;
+                vy = Math.sin(angle) * 4;
                 vz = 0;
             } else {
-                // Bar dolduysa Şut
                 let force = shotPower / 100; 
-                vx = Math.cos(angle) * (6 + (force * 7)); 
-                vy = Math.sin(angle) * (6 + (force * 7));
+                vx = Math.cos(angle) * (8 + (force * 8)); 
+                vy = Math.sin(angle) * (8 + (force * 8));
                 vz = 2 + (force * 6);
             }
             
             if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
-            
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -244,24 +234,25 @@
                 document.getElementById('score-red').innerText = score.red;
                 document.getElementById('score-blue').innerText = score.blue;
 
-                // --- SAYAÇ VE TOP SENDE UYARISI ---
                 const possText = document.getElementById('possession-text');
                 if (ball.owner === socket.id) {
                     possText.style.display = 'block';
-                    let secondsLeft = (ball.protectionTimer / 60).toFixed(1); // 60 FPS'e bölüyoruz
+                    let secondsLeft = (ball.protectionTimer / 60).toFixed(1);
                     
                     if (ball.protectionTimer > 0) {
                         possText.innerText = `🔥 TOP SENDE! (Koruma: ${secondsLeft} sn)`;
-                        possText.style.color = "#eab308"; // Sarı
+                        possText.style.color = "#eab308";
                     } else {
                         possText.innerText = `🔥 TOP SENDE! (DİKKAT, ÇALINABİLİR!)`;
-                        possText.style.color = "#ef4444"; // Kırmızı
+                        possText.style.color = "#ef4444";
                     }
                 } else {
                     possText.style.display = 'none';
                 }
             });
         }
+
+        let lastMoveX = 0, lastMoveY = 0;
 
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
@@ -321,6 +312,10 @@
                 let speedMultiplier = isCharging ? 0.5 : 1;
                 dx = (dx / length) * (currentSpeed * speedMultiplier);
                 dy = (dy / length) * (currentSpeed * speedMultiplier);
+                
+                // Yönü kaydet (Pas atmak için)
+                myPlayer.lastDx = dx;
+                myPlayer.lastDy = dy;
             }
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
