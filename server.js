@@ -101,7 +101,4 @@ function resetBall() {
 }
 
 const PORT = process.env.PORT || 3000;
-// DÜZELTİLEN KISIM BURASI (0.0.0.0 EKLENDİ)
-server.listen(PORT, '0.0.0.0', () => { 
-    console.log('Critiball Server ' + PORT + ' portunda çalışıyor.'); 
-});
+server.listen(PORT, '0.0.0.0', () => { console.log('Critiball Server Çalışıyor'); });
