@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
             score: { red: 0, blue: 0 }, matchTime: 0, half: 1, isKickoff: false, concedingTeam: null,
             gameInterval: null, emptyTimer: null, breakTimer: 0, replayTimer: 0,
             history: [], emotes: [], botCounter: 0,
-            powerups: [], powerupTimer: 0,
+            powerups: [], powerupTimer: 0, tickCount: 0,
             formation: { red: {}, blue: {} }
         };
 
@@ -369,6 +369,9 @@ io.on('connection', (socket) => {
 
 function updateGame(s) {
     try {
+        // TICK SAYACI (30Hz Gönderim İçin)
+        s.tickCount = (s.tickCount || 0) + 1;
+
         let speedMult = 1.0, friction = 0.98;
         if (s.weather === 'rain') { friction = 0.99; speedMult = 1.05; }
         if (s.weather === 'snow') { friction = 0.95; speedMult = 0.9; }
@@ -469,8 +472,8 @@ function updateGame(s) {
                 s.status = 'playing'; s.half = 2; s.matchTime = 0;
                 resetBall(s, null, true);
                 io.to(s.id).emit('play_whistle');
-                io.to(s.id).emit('game_state', s);
             }
+            if (s.tickCount % 2 === 0) io.to(s.id).emit('game_state', s);
             return;
         }
 
@@ -481,7 +484,7 @@ function updateGame(s) {
                 resetBall(s, s.concedingTeam, false); 
                 io.to(s.id).emit('play_whistle');
             }
-            io.to(s.id).emit('game_state', s);
+            if (s.tickCount % 2 === 0) io.to(s.id).emit('game_state', s);
             return;
         }
 
@@ -570,7 +573,6 @@ function updateGame(s) {
                     
                     s.status = 'goal_replay'; s.replayTimer = 3;
                     io.to(s.id).emit('goal_scored', { score: s.score, lastKickName: ball.lastKickName, replay: s.history, redName: s.redName, blueName: s.blueName });
-                    io.to(s.id).emit('game_state', s);
                     return;
                 }
             } else {
@@ -580,7 +582,7 @@ function updateGame(s) {
         }
 
         for (let p of s.players) {
-            if (p.team === 'spectator') continue; // ARTIK KALECİLER DE TOPU ALABİLİR
+            if (p.team === 'spectator') continue; // Kaleciler de alabilir
             let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
             if (dist < 50 && ball.pickupCooldown <= 0 && ball.owner === null) {
                 if (s.isKickoff && p.team !== s.concedingTeam) continue; 
@@ -589,7 +591,10 @@ function updateGame(s) {
             }
         }
 
-        io.to(s.id).emit('game_state', s);
+        // SADECE 30Hz'DE GÖNDER (Optimizasyon)
+        if (s.tickCount % 2 === 0) {
+            io.to(s.id).emit('game_state', s);
+        }
     } catch (e) { console.log("Hata:", e.message); }
 }
 
