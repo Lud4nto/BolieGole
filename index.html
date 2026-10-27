@@ -768,7 +768,6 @@
         
         document.getElementById('btn-add-bot').onclick = () => { socket.emit('add_bot'); };
 
-        // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ
         function renderTacticsBoard(room) {
             let board = document.getElementById('tactics-board');
             if(!board) return;
@@ -787,7 +786,7 @@
 
                     let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
                     if (p) {
-                        el.innerText = p.name.substring(0, 3);
+                        el.innerText = p.name.substring(0, 4);
                         el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
                         if (selectedBotId === p.id) el.classList.add('selected-bot');
                     } else {
@@ -800,6 +799,7 @@
                     lbl.innerText = slot.name;
                     el.appendChild(lbl);
 
+                    // TEK TIKLAMA (Seçme veya Taşıma)
                     el.onclick = (e) => {
                         e.stopPropagation();
                         if (p && p.isBot && room.hostId === socket.id) {
@@ -817,6 +817,25 @@
                                 setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
                             } else {
                                 socket.emit('change_position', slot.id);
+                            }
+                        }
+                    };
+
+                    // ÇİFT TIKLAMA (Bot Zorluk Seçimi)
+                    el.ondblclick = (e) => {
+                        e.stopPropagation();
+                        if (p && p.isBot && room.hostId === socket.id) {
+                            let currentDiff = p.difficulty || 3;
+                            let d = prompt(
+                                "Bot Zorluk Seçimi:\n" +
+                                "1 - AFK (Hareket Etmez)\n" +
+                                "2 - Kolay\n" +
+                                "3 - Normal (Klasik)\n" +
+                                "4 - Extra Profesyonel (Ordu)\n\n" +
+                                "Lütfen 1, 2, 3 veya 4 girin:", currentDiff
+                            );
+                            if (d && [1,2,3,4].includes(parseInt(d))) {
+                                socket.emit('change_bot_difficulty', { botId: p.id, difficulty: parseInt(d) });
                             }
                         }
                     };
