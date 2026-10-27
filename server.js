@@ -147,15 +147,12 @@ io.on('connection', (socket) => {
         let bot = s.players.find(p => p.id === data.botId);
         if (!bot || !bot.isBot) return;
         
-        // Eğer hedef slot doluysa iptal et
         if (s.formation[bot.team][data.newSlotId]) return;
 
-        // Eski slotu temizle
         if (bot.position && s.formation[bot.team][bot.position] === bot.id) {
             delete s.formation[bot.team][bot.position];
         }
         
-        // Yeni slota ata
         bot.position = data.newSlotId;
         s.formation[bot.team][data.newSlotId] = bot.id;
         
@@ -614,6 +611,14 @@ function resetBall(s, concededBy = null, isHalftime = false) {
 
     if (concededBy) {
         s.isKickoff = true; s.concedingTeam = concededBy;
+        
+        // 🚨 1v1 KONTROLÜ: Gol yiyen takımda sadece 1 kişi varsa topu kaleye yakın başlat
+        let concedingPlayers = s.players.filter(p => p.team === concededBy);
+        if (concedingPlayers.length === 1) {
+            s.ball.x = concededBy === 'red' ? 150 : 1050;
+            s.ball.y = 300;
+        }
+
         s.players.forEach(p => { if(p.team !== 'spectator') setPos(p); });
     } else {
         s.isKickoff = false; s.concedingTeam = null;
