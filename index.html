@@ -166,8 +166,8 @@
         function forcePass() {
             if (ball.owner !== socket.id) return;
             let angle = getKickAngle();
-            // Pas hızı 15 yapıldı (Çok hızlı, sen koşarken bile top kaçar)
-            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0 });
+            // Pas hızı 15
+            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -176,21 +176,16 @@
             if (ball.owner !== socket.id) return;
             
             let angle = getKickAngle();
-            let vx = 0, vy = 0, vz = 0;
-
-            if (shotPower < 30) { 
-                vx = Math.cos(angle) * 15;
-                vy = Math.sin(angle) * 15;
-                vz = 0;
-            } else {
-                let force = shotPower / 100; 
-                // Şut hızı 22 ile 37 arası yapıldı (Füze gibi)
-                vx = Math.cos(angle) * (22 + (force * 15)); 
-                vy = Math.sin(angle) * (22 + (force * 15));
-                vz = 2 + (force * 10);
-            }
+            let force = shotPower / 100; 
             
-            if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
+            // Min Hız: 8, Max Hız: 35 (Bar doluluğuna göre değişir)
+            let speed = 8 + (force * 27);
+            
+            let vx = Math.cos(angle) * speed;
+            let vy = Math.sin(angle) * speed;
+            let vz = 2 + (force * 8);
+            
+            if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz, shotPower: shotPower });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -290,7 +285,7 @@
 
             if (isCharging && ball.owner === socket.id) {
                 document.getElementById('power-container').style.display = 'flex'; 
-                shotPower += 3.5; // Daha hızlı dolsun
+                shotPower += 3.5;
                 if (shotPower > 100) shotPower = 100;
 
                 const pBar = document.getElementById('power-bar');
@@ -320,7 +315,6 @@
                 myPlayer.lastDy = dy;
             }
             
-            // Anlık hareketi kaydet
             moveX = dx; moveY = dy;
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
