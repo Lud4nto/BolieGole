@@ -94,7 +94,7 @@
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
         
         #game-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        canvas { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; background-color: #111; outline: none; }
+        canvas { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; background-color: #111; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
         #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; }
@@ -374,7 +374,7 @@
 
     <div id="screen-game" class="screen">
         <div id="game-wrapper">
-            <canvas id="gameCanvas" width="1200" height="600" tabindex="0"></canvas>
+            <canvas id="gameCanvas" width="1200" height="600"></canvas>
         </div>
         
         <div id="ui-layer">
@@ -536,8 +536,6 @@
                 { id: 'B_FWD', name: 'FWD', x: 650, y: 300 }
             ]
         };
-
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
         // --- SES AYARLARI ---
         const musicSlider = document.getElementById('vol-music');
@@ -747,17 +745,20 @@
 
                     el.onclick = (e) => {
                         e.stopPropagation();
+                        // Eğer dolu bir slota tıklandıysa ve bot ise, seç (sadece oda sahibi)
                         if (p && p.isBot && room.hostId === socket.id) {
                             selectedBotId = p.id;
                             renderTacticsBoard(room);
                         } 
+                        // Eğer boş slota tıklandıysa ve bir bot seçiliyse, botu oraya taşı
                         else if (!p && selectedBotId && room.hostId === socket.id) {
                             socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
                             selectedBotId = null;
                         }
+                        // Eğer boş slota tıklandıysa ve insan oyuncuysa
                         else if (!p) {
                             if (myTeam !== team) {
-                                myTeam = team; // Anında güncelle
+                                // Önce takıma geç, sonra pozisyona yerleş
                                 socket.emit('change_team', team);
                                 setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
                             } else {
@@ -774,7 +775,7 @@
 
         window.selectTeam = (team) => {
             if (!currentRoom || currentRoom.status !== 'lobby') return;
-            myTeam = team;
+            myTeam = team; // Anında güncelle
             socket.emit('change_team', team);
             if(currentRoom) renderTacticsBoard(currentRoom);
         };
@@ -801,6 +802,7 @@
             document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
             document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
             
+            // setTimeout ile board'un boyutlarının oturmasını bekle
             setTimeout(() => renderTacticsBoard(room), 50);
         }
 
@@ -819,7 +821,7 @@
                     if (p.team === 'red') redList.innerHTML += el;
                     else if (p.team === 'blue') blueList.innerHTML += el;
                     else specList.innerHTML += el;
-                    if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); }
+                    if (p.id === socket.id) myTeam = p.team;
                 });
             }
         });
@@ -829,17 +831,11 @@
 
         socket.on('game_started', () => {
             switchScreen('screen-game');
-            if(myPlayer) isSpectator = (myPlayer.team === 'spectator');
-            else isSpectator = (myTeam === 'spectator');
-            
+            isSpectator = (myTeam === 'spectator');
             if(currentRoom) currentRoom.status = 'playing';
             ballTrail = []; ballRotation = 0;
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             lastAudioStatus = '';
-            
-            // KLAVYE ODAKLANMASI İÇİN
-            const canvas = document.getElementById('gameCanvas');
-            if (canvas) canvas.focus();
             
             document.getElementById('label-red').innerText = currentRoom.redName;
             document.getElementById('label-red').style.color = currentRoom.redColor;
@@ -957,7 +953,6 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped;
                     players[socket.id] = myPlayer; 
-                    isSpectator = (p.team === 'spectator');
                 } else {
                     if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
                     else {
@@ -983,29 +978,18 @@
 
         window.addEventListener('keydown', (e) => { 
             if (isSpectator && !isPractice) return;
-            
-            // TUŞ İSMİ DÜZELTMESİ (Ok tuşları için)
-            let k = e.key;
-            if (k === ' ') k = ' ';
-            else if (k.length === 1) k = k.toLowerCase();
-
+            let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
             if (k === ' ') {
                 if (isPractice || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
                 else if (!isPractice) { socket.emit('tackle'); }
             }
             updateKeyVisual(k, true);
-            // Sayfanın aşağı kaymasını engelle
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
         });
 
         window.addEventListener('keyup', (e) => { 
             if (isSpectator && !isPractice) return;
-            
-            let k = e.key;
-            if (k === ' ') k = ' ';
-            else if (k.length === 1) k = k.toLowerCase();
-
+            let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = false;
             if (k === ' ' && isCharging) {
                 isCharging = false;
@@ -1209,10 +1193,6 @@
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
             currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
-            
-            const canvas = document.getElementById('gameCanvas');
-            if (canvas) canvas.focus();
-            
             document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = "";
             document.getElementById('score-red').innerText = ""; document.getElementById('score-blue').innerText = "";
             document.getElementById('match-timer').innerText = "";
@@ -1345,4 +1325,181 @@
                         if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
                         
                         let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
-                       
+                        let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
+                        if (hitLeftGoal || hitRightGoal) {
+                            if (ball.z <= 80) {
+                                if (hitRightGoal) score.red++; else score.blue++;
+                                playKickSound(true);
+                                ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+                            } else {
+                                ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7;
+                            }
+                        } else {
+                            if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
+                            if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
+                        }
+                    }
+                    if (ball.owner === null && myPlayer) {
+                        let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+                        if (dist < 50 && ball.pickupCooldown <= 0) { ball.owner = myPlayer.id; ball.vx = 0; ball.vy = 0; ball.z = 0; }
+                    }
+                    if (ball.pickupCooldown > 0) ball.pickupCooldown--;
+                    if (ball.owner === myPlayer.id) {
+                        let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+                        ball.x = myPlayer.x + Math.cos(angle) * 35;
+                        ball.y = myPlayer.y + Math.sin(angle) * 35;
+                    }
+                }
+
+                ctx.clearRect(0, 0, 1200, 600);
+
+                let targetCamX = 600;
+                let targetCamY = 300;
+                let targetZoom = 1.0;
+
+                if (isPractice) {
+                     targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2;
+                } else if (currentRoom) {
+                    let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
+                    if (currentRoom.status === 'goal_replay') {
+                        updateReplay(now);
+                        targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
+                    } else if (currentRoom.status === 'playing') {
+                        if (ball.owner === null && speed > 15) {
+                            targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; 
+                        }
+                    }
+                }
+
+                cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
+                cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
+                cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
+
+                let viewW = 1200 / cameraZoom;
+                let viewH = 600 / cameraZoom;
+                let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
+                let clampY = Math.max(viewH / 2, Math.min(600 - viewH / 2, cameraY));
+
+                ctx.save();
+                ctx.translate(600, 300);
+                ctx.scale(cameraZoom, cameraZoom);
+                ctx.translate(-clampX, -clampY);
+
+                drawStadium(); 
+                drawPitch();   
+                
+                if (currentRoom && currentRoom.powerups) {
+                    for (let pu of currentRoom.powerups) {
+                        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pu.x, pu.y, 15, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.textAlign = 'center';
+                        let icon = pu.type === 'freeze' ? '❄️' : pu.type === 'speed' ? '⚡' : pu.type === 'power' ? '🦶' : '🧲';
+                        ctx.fillText(icon, pu.x, pu.y + 7);
+                    }
+                }
+
+                drawBall();
+
+                if (currentRoom || isPractice) {
+                    let lerpFactor = Math.min(1, 15 * dt);
+                    for (let id in players) {
+                        let p = players[id];
+                        if (!p || p.team === 'spectator') continue;
+                        
+                        if (id !== socket.id && !isPractice) {
+                            if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
+                            p.renderX += (p.x - p.renderX) * lerpFactor;
+                            p.renderY += (p.y - p.renderY) * lerpFactor;
+                        }
+                        let px = (id === socket.id || isPractice) ? p.x : p.renderX;
+                        let py = (id === socket.id || isPractice) ? p.y : p.renderY;
+
+                        let pSize = 22;
+                        
+                        if (p.equipped && p.equipped.aura && p.equipped.aura !== 'none') {
+                            let glowColor = 'white';
+                            if (p.equipped.aura === 'fire') glowColor = '#ff4500';
+                            else if (p.equipped.aura === 'ice') glowColor = '#00ffff';
+                            else if (p.equipped.aura === 'toxic') glowColor = '#39FF14';
+                            else if (p.equipped.aura === 'rainbow') glowColor = `hsl(${Date.now() % 360}, 100%, 50%)`;
+
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 5, 0, Math.PI * 2);
+                            ctx.fillStyle = glowColor; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1;
+                        }
+
+                        ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+                        
+                        ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                        let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
+                        if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
+                        if (isPractice) teamColor = '#ff0000';
+                        
+                        ctx.fillStyle = teamColor;
+                        ctx.fill(); 
+                        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
+
+                        if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
+                        else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
+                        else if (p.equipped && p.equipped.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
+                        else if (p.equipped && p.equipped.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
+                        
+                        if (p.equipped && p.equipped.trail && p.equipped.trail !== 'none') {
+                            let speed = Math.hypot(p.lastDx || 0, p.lastDy || 0);
+                            if (speed > 1) {
+                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : teamColor;
+                                ctx.fillStyle = trailColor;
+                                let angle = Math.atan2(p.lastDy, p.lastDx);
+                                let backX = px - Math.cos(angle) * pSize;
+                                let backY = py - Math.sin(angle) * pSize;
+                                if (p.equipped.trail === 'stars') {
+                                    ctx.font = '12px Arial'; ctx.fillText('✨', backX, backY);
+                                } else {
+                                    ctx.globalAlpha = 0.5;
+                                    ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill();
+                                    ctx.globalAlpha = 1;
+                                }
+                            }
+                        }
+
+                        if (!isPractice && currentRoom.emotes) {
+                            for (let em of currentRoom.emotes) {
+                                if (em.playerId === id) {
+                                    ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20);
+                                }
+                            }
+                        }
+
+                        if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
+                            let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
+                            let radius = pSize + 4 + (pulse * 6); 
+                            ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
+                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
+                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
+                        }
+
+                        if (id === socket.id && isCharging && shotPower >= 38) {
+                            let intensity = shotPower / 100; let time = Date.now() / 100;
+                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
+                            for (let i = 0; i < 5; i++) {
+                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
+                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
+                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
+                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
+                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
+                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
+                            }
+                        }
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; 
+                        ctx.fillText(p.name, px, py - pSize - 5);
+                    }
+                }
+                
+                ctx.restore();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(updateMovement);
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
