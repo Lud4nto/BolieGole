@@ -23,7 +23,7 @@
         .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 24px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 180px; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 180px; z-index: 10; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
@@ -109,6 +109,18 @@
         #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000; animation: pop 1s infinite alternate; }
         @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
 
+        /* YENİ EKLENEN AYARLAR VE YAPIMCILAR EKRANLARI İÇİN CSS */
+        .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
+        .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 24px; margin: 0; text-align: center; }
+        
+        .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 16px; }
+        input[type="range"] { -webkit-appearance: none; width: 150px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #ef4444; border: 2px solid #7f1d1d; border-radius: 50%; cursor: pointer; }
+        
+        .credit-text { font-size: 16px; font-weight: bold; text-align: center; line-height: 1.5; }
+        .credit-text a { color: #1d4ed8; text-decoration: none; }
+        .credit-text a:hover { text-decoration: underline; }
+
         @media (pointer: coarse) {
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
@@ -130,6 +142,9 @@
             .team-title { font-size: 12px; margin-bottom: 5px; }
             .player-slot { padding: 5px; font-size: 11px; margin-bottom: 5px; }
             .start-game-btn { margin-top: 10px; padding: 8px 20px; font-size: 16px; }
+            .info-box { width: 85%; padding: 20px; }
+            .info-box h2 { font-size: 18px; }
+            .credit-text { font-size: 14px; }
         }
     </style>
 </head>
@@ -150,6 +165,53 @@
             <button class="menu-btn" id="btn-options">AYARLAR</button>
             <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
             <button class="menu-btn" id="btn-exit">ÇIKIŞ</button>
+        </div>
+    </div>
+
+    <!-- YENİ EKLENEN AYARLAR EKRANI -->
+    <div id="screen-options" class="screen">
+        <div class="bg-blur"></div>
+        <div class="info-box">
+            <h2>AYARLAR</h2>
+            
+            <div class="setting-row">
+                <span>Müzik</span>
+                <input type="range" id="vol-music" min="0" max="100" value="50">
+            </div>
+            <div class="setting-row">
+                <span>Gol Sesi</span>
+                <input type="range" id="vol-goal" min="0" max="100" value="100">
+            </div>
+            <div class="setting-row">
+                <span>Düdük Sesi</span>
+                <input type="range" id="vol-whistle" min="0" max="100" value="100">
+            </div>
+            <div class="setting-row">
+                <span>Tam Ekran</span>
+                <button class="create-btn" id="btn-fullscreen" style="padding: 5px 10px; font-size: 12px;">AÇ / KAPAT</button>
+            </div>
+
+            <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
+        </div>
+    </div>
+
+    <!-- YENİ EKLENEN YAPIMCILAR EKRANI -->
+    <div id="screen-credits" class="screen">
+        <div class="bg-blur"></div>
+        <div class="info-box">
+            <h2>YAPIMCILAR</h2>
+            <div class="credit-text">
+                <p style="font-size: 20px; color: #eab308; text-shadow: 2px 2px 0 #000; margin-bottom: 5px;">BOLIEGOLE</p>
+                <p>Web Tabanlı Çok Oyunculu Futbol</p>
+                <br>
+                <p><b>Tasarım & Kodlama:</b><br> Mustafa A.</p>
+                <br>
+                <p><b>Teknolojiler:</b><br> HTML5 Canvas, Socket.io, Node.js</p>
+                <br>
+                <p style="font-size: 12px; color: #5a3a1b;">© 2026 - Tüm Hakları Saklıdır</p>
+                <br><p><b>Projeyi tavsiye eden değerli arkadaşım:</b><br> Ömer Kaan K.</p>
+            </div>
+            <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
         </div>
     </div>
 
@@ -300,7 +362,6 @@
         let ballRotation = 0;
         let ballTrail = [];
 
-        // 🎥 KAMERA DEĞİŞKENLERİ 🎥
         let cameraX = 600;
         let cameraY = 300;
         let cameraZoom = 1.0;
@@ -311,6 +372,44 @@
         let lastAudioStatus = '';
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
+
+        // --- SES AYARLARI (LOCALSTORAGE) ---
+        const musicSlider = document.getElementById('vol-music');
+        const goalSlider = document.getElementById('vol-goal');
+        const whistleSlider = document.getElementById('vol-whistle');
+        const bgMusic = document.getElementById('bgMusic');
+        const goalSound = document.getElementById('goalSound');
+        const whistleSound = document.getElementById('whistleSound');
+
+        function loadAudioSettings() {
+            let savedMusic = localStorage.getItem('bolie_music_vol');
+            let savedGoal = localStorage.getItem('bolie_goal_vol');
+            let savedWhistle = localStorage.getItem('bolie_whistle_vol');
+
+            if (savedMusic !== null) { musicSlider.value = savedMusic; bgMusic.volume = savedMusic / 100; }
+            else { bgMusic.volume = 0.5; }
+
+            if (savedGoal !== null) { goalSlider.value = savedGoal; goalSound.volume = savedGoal / 100; }
+            else { goalSound.volume = 1.0; }
+
+            if (savedWhistle !== null) { whistleSlider.value = savedWhistle; whistleSound.volume = savedWhistle / 100; }
+            else { whistleSound.volume = 1.0; }
+        }
+
+        musicSlider.addEventListener('input', (e) => { bgMusic.volume = e.target.value / 100; localStorage.setItem('bolie_music_vol', e.target.value); });
+        goalSlider.addEventListener('input', (e) => { goalSound.volume = e.target.value / 100; localStorage.setItem('bolie_goal_vol', e.target.value); });
+        whistleSlider.addEventListener('input', (e) => { whistleSound.volume = e.target.value / 100; localStorage.setItem('bolie_whistle_vol', e.target.value); });
+        
+        loadAudioSettings(); // Sayfa açılınca ayarları yükle
+
+        // Tam Ekran Butonu
+        document.getElementById('btn-fullscreen').onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+            }
+        };
 
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, function (c) {
@@ -324,6 +423,8 @@
         }
 
         document.getElementById('btn-play').onclick = () => { document.getElementById('modal-name').style.display = 'flex'; };
+        document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
+        document.getElementById('btn-credits').onclick = () => switchScreen('screen-credits');
 
         document.getElementById('btn-confirm-name').onclick = () => {
             let name = document.getElementById('input-player-name').value.trim();
@@ -438,12 +539,9 @@
             if(currentRoom) currentRoom.status = 'playing';
             ballTrail = [];
             ballRotation = 0;
-            
-            // Kamerayı sıfırla
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
-            
             lastAudioStatus = '';
-            document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
+            bgMusic.play().catch(e=>console.log("Müzik engellendi"));
         });
 
         socket.on('game_ended', (room) => {
@@ -451,17 +549,16 @@
             switchScreen('screen-lobby');
             ballTrail = [];
             ballRotation = 0;
-            document.getElementById('bgMusic').pause();
+            bgMusic.pause();
         });
 
         socket.on('play_whistle', () => {
-            let whistle = document.getElementById('whistleSound');
-            whistle.currentTime = 0;
-            whistle.play().catch(e=>console.log("Düdük çalınamadı"));
+            whistleSound.currentTime = 0;
+            whistleSound.play().catch(e=>console.log("Düdük çalınamadı"));
         });
 
         socket.on('goal_scored', (room) => {
-            document.getElementById('goalSound').play().catch(e=>console.log("Gol sesi çalınamadı"));
+            goalSound.play().catch(e=>console.log("Gol sesi çalınamadı"));
         });
 
         function leaveRoom() {
@@ -515,11 +612,10 @@
 
             if (room.status !== lastAudioStatus) {
                 lastAudioStatus = room.status;
-                let music = document.getElementById('bgMusic');
                 if (room.status === 'playing') {
-                    if (music.paused) music.play().catch(e=>console.log("Müzik devam edemedi"));
+                    if (bgMusic.paused) bgMusic.play().catch(e=>console.log("Müzik devam edemedi"));
                 } else {
-                    music.pause();
+                    bgMusic.pause();
                 }
             }
 
@@ -530,7 +626,6 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    // 🔧 TİTREŞİM FIX
                     players[socket.id] = myPlayer; 
                 } else {
                     if (!players[p.id]) {
@@ -881,38 +976,25 @@
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
 
-                // 🎥 KAMERA TAKİP MANTIĞI 🎥
-                let targetCamX = 600; // Varsayılan: Orta saha
+                let targetCamX = 600;
                 let targetCamY = 300;
                 let targetZoom = 1.0;
 
                 if (currentRoom) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-                    
                     if (currentRoom.status === 'goal_replay') {
-                        // Gol anında topun kaleye girişini izle
-                        targetCamX = ball.x;
-                        targetCamY = ball.y;
-                        targetZoom = 1.5;
+                        targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
                     } else if (currentRoom.status === 'playing') {
-                        // Eğer top hızlı gidiyorsa (şut veya uzun pas), topu takip et
                         if (ball.owner === null && speed > 15) {
-                            targetCamX = ball.x;
-                            targetCamY = ball.y;
-                            targetZoom = 1.3; 
-                        } else if (myPlayer) {
-                            // Normal zamanlarda oyuncuyu hafifçe takip et (veya merkezde kal)
-                            // İstersen burayı açabilirsin: targetCamX = myPlayer.x;
+                            targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; 
                         }
                     }
                 }
 
-                // Yumuşak kamera geçişi (Lerp)
                 cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
                 cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
                 cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
 
-                // Ekran dışına taşmayı engelle
                 let viewW = 1200 / cameraZoom;
                 let viewH = 600 / cameraZoom;
                 let clampX = Math.max(viewW / 2, Math.min(1200 - viewW / 2, cameraX));
@@ -982,7 +1064,7 @@
                     }
                 }
                 
-                ctx.restore(); // KAMERA BİTİŞİ
+                ctx.restore();
             }
             requestAnimationFrame(gameLoop);
         }
