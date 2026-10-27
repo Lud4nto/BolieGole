@@ -9,8 +9,8 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// Top objesine 'cooldown' eklendi (şut sonrası dokunulmazlık)
-let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, protectionTimer: 0, cooldown: 0 };
+// Top objesine 'possessionTimer' eklendi (2 saniyelik tutma süresi)
+let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0 };
 let score = { red: 0, blue: 0 };
 
 const width = 1200;
@@ -32,7 +32,6 @@ io.on('connection', (socket) => {
 
     socket.on('move', (data) => {
         if (players[socket.id]) {
-            // Oyuncunun baktığı yönü kaydet
             players[socket.id].lastDx = data.x - players[socket.id].x;
             players[socket.id].lastDy = data.y - players[socket.id].y;
             players[socket.id].x = data.x;
@@ -41,17 +40,17 @@ io.on('connection', (socket) => {
     });
 
     socket.on('kick', (data) => {
+        // Sadece topun sahibi şut çekebilir
         if (ball.owner === socket.id) {
             ball.vx = data.vx;
             ball.vy = data.vy;
             ball.vz = data.vz;
-            ball.owner = null; // Top serbest
-            ball.protectionTimer = 0;
-            ball.cooldown = 60; // 1 saniye (60 fps) boyunca kimse alamaz
+            ball.owner = null; 
+            ball.possessionTimer = 0;
             
-            // Topu oyuncunun hemen önüne ışınla ki dibinde kalmasın
-            ball.x += data.vx * 2; 
-            ball.y += data.vy * 2;
+            // Topu hemen önüne fırlat ki ayağına yapışmasın
+            ball.x += data.vx * 1.5; 
+            ball.y += data.vy * 1.5;
         }
     });
 
@@ -65,15 +64,10 @@ io.on('connection', (socket) => {
 });
 
 setInterval(() => {
-    // Cooldown sayacını düşür
-    if (ball.cooldown > 0) {
-        ball.cooldown--;
-    }
-
-    // 1. Top Sahipliği
+    // 1. Top Sahipliği Mantığı
     if (ball.owner !== null) {
-        if (ball.protectionTimer > 0) {
-            ball.protectionTimer -= 1; 
+        if (ball.possessionTimer > 0) {
+            ball.possessionTimer -= 1; 
         }
 
         if (!players[ball.owner]) {
@@ -81,14 +75,22 @@ setInterval(() => {
         } else {
             let owner = players[ball.owner];
             let angle = Math.atan2(owner.lastDy, owner.lastDx);
-            if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0; // Duruyorsa yönü sabitle
+            if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0; 
             
-            // Topu 40 birim öne koy (Dibinden ayrılması için)
-            ball.x = owner.x + Math.cos(angle) * 40;
-            ball.y = owner.y + Math.sin(angle) * 40;
+            // Top oyuncunun önünde durur
+            ball.x = owner.x + Math.cos(angle) * 35;
+            ball.y = owner.y + Math.sin(angle) * 35;
             ball.vx = 0; 
             ball.vy = 0;
             ball.z = 0;
+
+            // SÜRE BİTTİYSE: Top düşsün ve serbest kalsın!
+            if (ball.possessionTimer <= 0) {
+                ball.owner = null;
+                // Topa hafif bir yuvarlanma hızı ver ki ileri doğru düşsün
+                ball.vx = Math.cos(angle) * 2;
+                ball.vy = Math.sin(angle) * 2;
+            }
         }
     }
 
@@ -111,40 +113,36 @@ setInterval(() => {
         if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
         if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-        // Kesin Sınırlar (Top sahadan asla çıkamaz)
+        // Sınırlar
         if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
         if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
         
-        // Gol Kontrolü
         if (ball.x <= 20 && ball.y > 200 && ball.y < 400) {
             score.blue++; resetBall();
         } else if (ball.x >= width - 20 && ball.y > 200 && ball.y < 400) {
             score.red++; resetBall();
         } else {
-            // Sınırlara zorla geri it
             if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
             if (ball.x > width - 20) { ball.x = width - 20; ball.vx *= -0.8; }
         }
     }
 
-    // 3. Top Alma / Çalma
+    // 3. Top Alma / Çalma (Her zaman)
     for (let id in players) {
         let p = players[id];
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
-        // Sadece top serbestse ve cooldown bittiyse alınabilir
-        if (dist < 45 && ball.cooldown <= 0) {
+        if (dist < 45) {
             if (ball.owner === null) {
+                // Boştaki topu al
                 ball.owner = id;
-                ball.protectionTimer = 120; // 2 saniye koruma
+                ball.possessionTimer = 120; // 2 saniye
                 ball.vx = 0; ball.vy = 0; ball.vz = 0;
             } else if (ball.owner !== id) {
-                // Çalma
-                if (ball.protectionTimer <= 0) {
-                    ball.owner = id;
-                    ball.protectionTimer = 120;
-                    ball.vx = 0; ball.vy = 0; ball.vz = 0;
-                }
+                // Başkasının ayağındaki topu ÇAL
+                ball.owner = id;
+                ball.possessionTimer = 120; // Çalan kişiye 2 saniye
+                ball.vx = 0; ball.vy = 0; ball.vz = 0;
             }
         }
     }
@@ -153,7 +151,7 @@ setInterval(() => {
 }, 1000 / 60);
 
 function resetBall() {
-    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, protectionTimer: 0, cooldown: 0 };
+    ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0 };
     for (let id in players) {
         players[id].x = 600 + (players[id].team === 'red' ? -150 : 150);
         players[id].y = 300;
