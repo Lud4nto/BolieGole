@@ -9,7 +9,6 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 let players = {};
-// x,y: konum | z: yükseklik | vx,vy,vz: hızlar
 let ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0 };
 let score = { red: 0, blue: 0 };
 
@@ -38,7 +37,7 @@ io.on('connection', (socket) => {
     socket.on('kick', (data) => {
         ball.vx = data.vx;
         ball.vy = data.vy;
-        ball.vz = data.vz || 0; // Şut çekildiğinde havaya dikilme gücü
+        ball.vz = data.vz;
     });
 
     socket.on('disconnect', () => {
@@ -47,34 +46,27 @@ io.on('connection', (socket) => {
     });
 });
 
-// TOP FİZİĞİ (60 FPS)
 setInterval(() => {
     ball.x += ball.vx;
     ball.y += ball.vy;
     ball.z += ball.vz;
     
-    // Sürtünme (Yatay)
-    ball.vx *= 0.98; 
+    ball.vx *= 0.98;
     ball.vy *= 0.98;
-    
-    // Yerçekimi (Dikey)
-    ball.vz -= 0.8;
+    ball.vz -= 0.8; 
 
-    // Zıplama (Yere çarptığında)
     if (ball.z <= 0) {
         ball.z = 0;
-        ball.vz *= -0.6; // Sekme katsayısı
-        if (Math.abs(ball.vz) < 1) ball.vz = 0; // Sekmesi durdu
+        ball.vz *= -0.6;
+        if (Math.abs(ball.vz) < 1) ball.vz = 0; 
     }
 
     if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
     if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-    // Duvarlar
     if (ball.y < 15) { ball.y = 15; ball.vy *= -0.8; }
     if (ball.y > height - 15) { ball.y = height - 15; ball.vy *= -0.8; }
     
-    // Gol
     if (ball.x <= 15 && ball.y > 200 && ball.y < 400) {
         score.blue++; resetBall();
     } else if (ball.x >= width - 15 && ball.y > 200 && ball.y < 400) {
@@ -84,22 +76,16 @@ setInterval(() => {
         if (ball.x > width - 15) { ball.x = width - 15; ball.vx *= -0.8; }
     }
 
-    // Oyuncu - Top Çarpışması
     for (let id in players) {
         let p = players[id];
         let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
         
         if (dist < 45) {
             let angle = Math.atan2(ball.y - p.y, ball.x - p.x);
-            if (dist < 30) {
-                ball.x = p.x + Math.cos(angle) * 30;
-                ball.y = p.y + Math.sin(angle) * 30;
-                ball.vx += Math.cos(angle) * 0.5;
-                ball.vy += Math.sin(angle) * 0.5;
-            } else {
-                ball.vx += Math.cos(angle) * 0.15;
-                ball.vy += Math.sin(angle) * 0.15;
-            }
+            ball.x = p.x + Math.cos(angle) * 45;
+            ball.y = p.y + Math.sin(angle) * 45;
+            ball.vx += Math.cos(angle) * 1.5;
+            ball.vy += Math.sin(angle) * 1.5;
         }
     }
 
@@ -115,4 +101,4 @@ function resetBall() {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => { console.log('Critiball Sunucusu Aktif'); });
+server.listen(PORT, () => { console.log('Critiball Server Çalışıyor'); });
