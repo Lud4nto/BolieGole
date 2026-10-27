@@ -23,13 +23,17 @@
         .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 24px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 180px; z-index: 10; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 150px; z-index: 10; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
         .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; margin-top: 0; }
         .modal-content input[type="text"], .modal-content input[type="password"] { padding: 12px; border-radius: 6px; border: 3px solid #8b5a2b; background: #fefae0; color: #2b1b0e; font-size: 16px; font-weight: bold; }
+        
         .radio-group { display: flex; gap: 20px; font-weight: bold; font-size: 14px; justify-content: center; }
+        .color-picker-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: bold; }
+        .color-picker-row input[type="color"] { width: 40px; height: 40px; border: 2px solid #8b5a2b; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        
         .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
         .btn-cancel { background: #ef4444; border: 3px solid #991b1b; box-shadow: 3px 3px 0px #7f1d1d; color: white; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; flex: 1; }
         .btn-confirm { background: #22c55e; border: 3px solid #166534; box-shadow: 3px 3px 0px #14532d; color: white; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; flex: 1; }
@@ -46,20 +50,22 @@
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
         #screen-lobby { background-color: transparent; }
-        .lobby-header { text-align: center; margin-bottom: 30px; z-index: 10; }
-        .room-code { font-family: 'Press Start 2P', cursive; font-size: 30px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 10px 20px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 10px; }
+        .lobby-header { text-align: center; margin-bottom: 20px; z-index: 10; }
+        .room-code { font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 10px 20px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 10px; }
         
         .teams-container { display: flex; gap: 20px; z-index: 10; }
-        .team-box { width: 250px; height: 350px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .team-box.red { border-color: #ff4c4c; background: rgba(255, 76, 76, 0.2); }
-        .team-box.blue { border-color: #4c9aff; background: rgba(76, 154, 255, 0.2); }
+        .team-box { width: 250px; height: 320px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .team-box.spectator { border-color: #64748b; background: rgba(100, 116, 139, 0.2); }
         .team-box:hover { transform: scale(1.02); }
-        .team-title { font-family: 'Press Start 2P', cursive; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .team-title { font-family: 'Press Start 2P', cursive; font-size: 16px; font-weight: bold; margin-bottom: 15px; text-align: center; }
         .player-slot { width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 8px; text-align: center; font-weight: bold; color: white; font-size: 14px; }
         
         .start-game-btn { margin-top: 20px; padding: 12px 30px; font-size: 20px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; }
         .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
+        
+        .lobby-actions { display: flex; gap: 15px; margin-top: 15px; z-index: 10; }
+        .add-bot-btn { padding: 10px 20px; font-size: 14px; font-weight: bold; background: #8b5cf6; color: #fff; border: 3px solid #5b21b6; box-shadow: 3px 3px 0px #4c1d95; border-radius: 8px; cursor: pointer; font-family: 'Press Start 2P', cursive; display: none; }
+        .add-bot-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #4c1d95; }
 
         #screen-game { background: #000; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 1000; }
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
@@ -70,12 +76,20 @@
 
         #in-game-menu-btn { position: absolute; top: 15px; left: 15px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%); color: #2b1b0e; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #fff; }
         
-        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; text-align: center; }
+        /* 📢 MUTE BUTONU */
+        #mute-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; pointer-events: auto; border: 2px solid white; backdrop-filter: blur(4px); user-select: none; z-index: 100; }
+        #mute-btn:active { transform: scale(0.9); }
+
+        #scoreboard { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', cursive; font-size: 24px; font-weight: 900; text-shadow: 2px 2px 0px #000; white-space: nowrap; text-align: center; display: flex; align-items: center; gap: 10px; }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
-        #match-timer { font-size: 16px; color: #eab308; display: block; margin-top: 5px; }
+        #match-timer { font-size: 14px; color: #eab308; display: block; text-align: center; margin-top: 5px; font-family: 'Segoe UI', sans-serif; font-weight: bold; letter-spacing: 1px; }
         
-        .ui-bars { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
+        /* ✨ SKOR ANİMASYONU */
+        @keyframes scorePop { 0% { transform: scale(1); color: #fff; text-shadow: 2px 2px 0px #000; } 50% { transform: scale(1.8); color: #eab308; text-shadow: 0px 0px 20px #eab308; } 100% { transform: scale(1); color: #fff; text-shadow: 2px 2px 0px #000; } }
+        .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
+
+        .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
         #stamina-container { width: 250px; height: 18px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
         #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; }
@@ -101,6 +115,11 @@
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
         .wide-key { width: 110px; }
 
+        /* 🎭 EMOTE BAR */
+        #emote-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 100; }
+        .emote-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: transform 0.1s; user-select: none; }
+        .emote-btn:active { transform: scale(1.3); }
+
         #overlay-message { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; color: white; text-align: center; backdrop-filter: blur(10px); }
         #overlay-message h1 { font-family: 'Press Start 2P', cursive; font-size: 48px; margin-bottom: 20px; color: #eab308; }
         #overlay-message p { font-size: 24px; font-weight: bold; }
@@ -108,8 +127,14 @@
         #overlay-replay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 6000; pointer-events: none; }
         #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000; animation: pop 1s infinite alternate; }
         @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
+        #replay-scorer { font-family: 'Press Start 2P', cursive; font-size: 24px; color: #fff; text-shadow: 2px 2px 0 #000; margin-top: 20px; }
 
-        /* --- AYARLAR EKRANI CSS --- */
+        /* 🏆 MAÇ SONUCU EKRANI */
+        #overlay-result { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 7000; backdrop-filter: blur(10px); }
+        #overlay-result h1 { font-family: 'Press Start 2P', cursive; font-size: 40px; margin-bottom: 10px; color: #eab308; text-shadow: 4px 4px 0 #000; }
+        #result-score { font-family: 'Press Start 2P', cursive; font-size: 60px; color: #fff; margin-bottom: 20px; text-shadow: 4px 4px 0 #000; }
+        #result-desc { font-size: 24px; font-weight: bold; margin-bottom: 30px; }
+
         .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
         .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 24px; margin: 0; text-align: center; }
         
@@ -117,53 +142,20 @@
         input[type="range"] { -webkit-appearance: none; width: 150px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #ef4444; border: 2px solid #7f1d1d; border-radius: 50%; cursor: pointer; }
 
-        /* --- YAPIMCILAR EKRANI (KAYDIRMALI) CSS --- */
-        #screen-credits {
-            background: #000;
-            overflow: hidden;
-            justify-content: flex-start;
-        }
-        #credits-wrapper {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-        }
-        #credits-content {
-            text-align: center;
-            color: #fff;
-            font-family: 'Press Start 2P', cursive;
-            width: 80%;
-            max-width: 600px;
-            animation: scrollCredits 22s linear infinite;
-        }
-        #credits-content h2 {
-            color: #eab308;
-            font-size: 28px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 0 #000;
-        }
-        #credits-content p {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #d4a373;
-        }
-        @keyframes scrollCredits {
-            0% { transform: translateY(100vh); }
-            100% { transform: translateY(-100%); }
-        }
+        #screen-credits { background: #000; overflow: hidden; justify-content: flex-start; }
+        #credits-wrapper { width: 100%; height: 100%; display: flex; justify-content: center; position: absolute; top: 0; left: 0; pointer-events: none; }
+        #credits-content { text-align: center; color: #fff; font-family: 'Press Start 2P', cursive; width: 80%; max-width: 600px; animation: scrollCredits 22s linear infinite; }
+        #credits-content h2 { color: #eab308; font-size: 28px; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
+        #credits-content p { font-size: 16px; line-height: 1.6; color: #d4a373; }
+        @keyframes scrollCredits { 0% { transform: translateY(100vh); } 100% { transform: translateY(-100%); } }
 
         @media (pointer: coarse) {
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
             #in-game-menu-btn { font-size: 14px; padding: 6px 12px; }
-            #scoreboard { font-size: 18px; }
+            #scoreboard { font-size: 18px; gap: 5px; }
             #match-timer { font-size: 12px; }
-            .ui-bars { top: 55px; }
+            .ui-bars { top: 65px; }
             .menu-btn { width: 260px; padding: 10px; font-size: 18px; }
             .modal-content { width: 80%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
@@ -171,17 +163,23 @@
             .top-bar { width: 90%; font-size: 16px; flex-direction: column; gap: 10px; }
             .create-btn { font-size: 12px; padding: 8px 15px; }
             .server-item { padding: 10px; }
-            .lobby-header { margin-bottom: 15px; }
-            .room-code { font-size: 20px; padding: 5px 10px; }
+            .lobby-header { margin-bottom: 10px; }
+            .room-code { font-size: 16px; padding: 5px 10px; }
             .teams-container { gap: 10px; }
             .team-box { width: 30%; height: 200px; padding: 10px; }
             .team-title { font-size: 12px; margin-bottom: 5px; }
             .player-slot { padding: 5px; font-size: 11px; margin-bottom: 5px; }
             .start-game-btn { margin-top: 10px; padding: 8px 20px; font-size: 16px; }
+            .add-bot-btn { padding: 8px 15px; font-size: 12px; }
             .info-box { width: 85%; padding: 20px; }
             .info-box h2 { font-size: 18px; }
             #credits-content h2 { font-size: 20px; }
             #credits-content p { font-size: 12px; }
+            #emote-bar { bottom: 120px; padding: 5px; gap: 5px; }
+            .emote-btn { font-size: 20px; }
+            #overlay-result h1 { font-size: 24px; }
+            #result-score { font-size: 40px; }
+            #result-desc { font-size: 16px; }
         }
     </style>
 </head>
@@ -199,40 +197,25 @@
         <div class="bg-image"></div>
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">OYNA</button>
+            <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-options">AYARLAR</button>
             <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
             <button class="menu-btn" id="btn-exit">ÇIKIŞ</button>
         </div>
     </div>
 
-    <!-- AYARLAR EKRANI -->
     <div id="screen-options" class="screen">
         <div class="bg-blur"></div>
         <div class="info-box">
             <h2>AYARLAR</h2>
-            
-            <div class="setting-row">
-                <span>Müzik</span>
-                <input type="range" id="vol-music" min="0" max="100" value="50">
-            </div>
-            <div class="setting-row">
-                <span>Gol Sesi</span>
-                <input type="range" id="vol-goal" min="0" max="100" value="100">
-            </div>
-            <div class="setting-row">
-                <span>Düdük Sesi</span>
-                <input type="range" id="vol-whistle" min="0" max="100" value="100">
-            </div>
-            <div class="setting-row">
-                <span>Tam Ekran</span>
-                <button class="create-btn" id="btn-fullscreen" style="padding: 5px 10px; font-size: 12px;">AÇ / KAPAT</button>
-            </div>
-
+            <div class="setting-row"><span>Müzik</span><input type="range" id="vol-music" min="0" max="100" value="50"></div>
+            <div class="setting-row"><span>Gol Sesi</span><input type="range" id="vol-goal" min="0" max="100" value="100"></div>
+            <div class="setting-row"><span>Düdük Sesi</span><input type="range" id="vol-whistle" min="0" max="100" value="100"></div>
+            <div class="setting-row"><span>Tam Ekran</span><button class="create-btn" id="btn-fullscreen" style="padding: 5px 10px; font-size: 12px;">AÇ / KAPAT</button></div>
             <button class="menu-btn" style="margin-top: 10px; width: 100%; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
         </div>
     </div>
 
-    <!-- KAYDIRMALI YAPIMCILAR EKRANI -->
     <div id="screen-credits" class="screen">
         <div id="credits-wrapper">
             <div id="credits-content">
@@ -252,7 +235,6 @@
                 <br><br><br><br>
             </div>
         </div>
-        <!-- İstenildiği zaman çıkabilmek için altta sabit buton -->
         <button class="menu-btn" style="position: absolute; bottom: 30px; z-index: 100; width: 200px; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
     </div>
 
@@ -281,10 +263,22 @@
             <h2>SUNUCU OLUŞTUR</h2>
             <input type="text" id="input-room-name" placeholder="Sunucu Adı">
             <div class="radio-group">
-                <label><input type="radio" name="room-type" value="private" checked> Özel (Kodlu)</label>
+                <label><input type="radio" name="room-type" value="private" checked> Özel</label>
                 <label><input type="radio" name="room-type" value="community"> Topluluk</label>
             </div>
             <input type="password" id="input-room-pass" placeholder="Şifre (İsteğe Bağlı)" style="display:none;">
+            
+            <div style="border-top: 2px dashed #8b5a2b; padding-top: 10px; margin-top: 5px;">
+                <div class="color-picker-row">
+                    <input type="text" id="input-red-name" placeholder="Kırmızı Takım Adı" value="KIRMIZI" style="flex:1; padding: 5px;">
+                    <input type="color" id="input-red-color" value="#ff4c4c">
+                </div>
+                <div class="color-picker-row" style="margin-top: 10px;">
+                    <input type="text" id="input-blue-name" placeholder="Mavi Takım Adı" value="MAVİ" style="flex:1; padding: 5px;">
+                    <input type="color" id="input-blue-color" value="#4c9aff">
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-cancel" id="btn-cancel-create">İPTAL</button>
                 <button class="btn-confirm" id="btn-confirm-create">OLUŞTUR</button>
@@ -299,12 +293,12 @@
             <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
         </div>
         <div class="teams-container">
-            <div class="team-box red" onclick="selectTeam('red')">
-                <div class="team-title" style="color:#ff4c4c;">KIRMIZI</div>
+            <div class="team-box red" id="box-red" onclick="selectTeam('red')">
+                <div class="team-title" id="title-red" style="color:#ff4c4c;">KIRMIZI</div>
                 <div id="red-players"></div>
             </div>
-            <div class="team-box blue" onclick="selectTeam('blue')">
-                <div class="team-title" style="color:#4c9aff;">MAVİ</div>
+            <div class="team-box blue" id="box-blue" onclick="selectTeam('blue')">
+                <div class="team-title" id="title-blue" style="color:#4c9aff;">MAVİ</div>
                 <div id="blue-players"></div>
             </div>
             <div class="team-box spectator" onclick="selectTeam('spectator')">
@@ -312,8 +306,13 @@
                 <div id="spec-players"></div>
             </div>
         </div>
-        <button class="start-game-btn" id="btn-start-game">MAÇI BAŞLAT</button>
-        <button class="menu-btn" style="margin-top:15px; width:150px; padding:8px; font-size:12px; z-index:10;" onclick="leaveRoom()">ODADAN AYRIL</button>
+        
+        <div class="lobby-actions">
+            <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
+            <button class="menu-btn" style="padding:8px; font-size:12px;" onclick="leaveRoom()">AYRIL</button>
+        </div>
+        
+        <button class="start-game-btn" id="btn-start-game" style="margin-top: 15px;">MAÇI BAŞLAT</button>
     </div>
 
     <div id="screen-game" class="screen">
@@ -323,30 +322,34 @@
         
         <div id="ui-layer">
             <div id="in-game-menu-btn" onclick="goToLobby()">🏠 Lobi</div>
+            <div id="mute-btn">🔊</div>
+            
             <div id="scoreboard">
-                <span class="red-team">KIRMIZI <span id="score-red">0</span></span> 
+                <span class="red-team"><span id="label-red">KIRMIZI</span> <span id="score-red">0</span></span> 
                 <span style="color:#64748b">:</span> 
-                <span class="blue-team"><span id="score-blue">0</span> MAVİ</span>
-                <span id="match-timer">1. Yarı 00:00</span>
+                <span class="blue-team"><span id="score-blue">0</span> <span id="label-blue">MAVİ</span></span>
             </div>
+            <span id="match-timer">1. Yarı 00:00</span>
             
             <div class="ui-bars">
                 <div id="stamina-container"><div id="stamina-bar"></div><div id="stamina-text">DEPAR</div></div>
                 <div id="power-container"><div id="power-bar"></div><div id="power-text">ŞUT GÜCÜ</div></div>
             </div>
             
+            <div id="emote-bar">
+                <button class="emote-btn" onclick="sendEmote('👏')">👏</button>
+                <button class="emote-btn" onclick="sendEmote('😡')">😡</button>
+                <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
+                <button class="emote-btn" onclick="sendEmote('💪')">💪</button>
+                <button class="emote-btn" onclick="sendEmote('🎯')">🎯</button>
+            </div>
+
             <div id="joystick-zone"><div id="joystick-knob"></div></div>
             
             <div id="mobile-controls">
-                <div class="mob-btn" id="btn-tackle">
-                    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" stroke="white" stroke-width="10" fill="none"/></svg>
-                </div>
-                <div class="mob-btn" id="btn-sprint">
-                    <svg viewBox="0 0 100 100"><path d="M30 30 L70 70 M70 30 L30 70" stroke="white" stroke-width="12" stroke-linecap="round"/></svg>
-                </div>
-                <div class="mob-btn" id="btn-action">
-                    <svg viewBox="0 0 100 100"><polygon points="50,25 75,75 25,75" stroke="white" stroke-width="10" fill="none" stroke-linejoin="round"/></svg>
-                </div>
+                <div class="mob-btn" id="btn-tackle"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" stroke="white" stroke-width="10" fill="none"/></svg></div>
+                <div class="mob-btn" id="btn-sprint"><svg viewBox="0 0 100 100"><path d="M30 30 L70 70 M70 30 L30 70" stroke="white" stroke-width="12" stroke-linecap="round"/></svg></div>
+                <div class="mob-btn" id="btn-action"><svg viewBox="0 0 100 100"><polygon points="50,25 75,75 25,75" stroke="white" stroke-width="10" fill="none" stroke-linejoin="round"/></svg></div>
             </div>
 
             <div id="pc-controls">
@@ -363,6 +366,13 @@
 
         <div id="overlay-replay">
             <h1 id="replay-text">GOL!</h1>
+            <div id="replay-scorer">Ahmet attı!</div>
+        </div>
+
+        <div id="overlay-result">
+            <h1 id="result-title">MAÇ SONUCU</h1>
+            <div id="result-score">3 : 2</div>
+            <div id="result-desc">KIRMIZI KAZANDI</div>
         </div>
     </div>
 
@@ -384,7 +394,7 @@
         
         let myPlayer = null;
         let players = {};
-        let ball = { x: 600, y: 300, z: 0, owner: null, possessionTimer: 0 };
+        let ball = { x: 600, y: 300, z: 0, owner: null, possessionTimer: 0, vx: 0, vy: 0, vz: 0 };
         let score = { red: 0, blue: 0 };
         let isSpectator = true;
 
@@ -412,9 +422,21 @@
         let lastRenderTime = performance.now();
         let lastAudioStatus = '';
 
+        let isMuted = false;
+        let audioCtx = null;
+
+        // Replay Variables
+        let replayData = null;
+        let replayIndex = 0;
+        let replayTimer = 0;
+        let currentReplayScorer = "";
+
+        // Antrenman Modu
+        let isPractice = false;
+
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
-        // --- SES AYARLARI (LOCALSTORAGE) ---
+        // --- SES AYARLARI ---
         const musicSlider = document.getElementById('vol-music');
         const goalSlider = document.getElementById('vol-goal');
         const whistleSlider = document.getElementById('vol-whistle');
@@ -422,19 +444,47 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playKickSound(isShot) {
+            if (isMuted) return;
+            initAudio();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (isShot) {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            }
+        }
+
         function loadAudioSettings() {
             let savedMusic = localStorage.getItem('bolie_music_vol');
             let savedGoal = localStorage.getItem('bolie_goal_vol');
             let savedWhistle = localStorage.getItem('bolie_whistle_vol');
+            let savedMute = localStorage.getItem('bolie_mute');
 
             if (savedMusic !== null) { musicSlider.value = savedMusic; bgMusic.volume = savedMusic / 100; }
             else { bgMusic.volume = 0.5; }
-
             if (savedGoal !== null) { goalSlider.value = savedGoal; goalSound.volume = savedGoal / 100; }
-            else { goalSound.volume = 1.0; }
-
             if (savedWhistle !== null) { whistleSlider.value = savedWhistle; whistleSound.volume = savedWhistle / 100; }
-            else { whistleSound.volume = 1.0; }
+            
+            if (savedMute === 'true') { isMuted = true; document.getElementById('mute-btn').innerText = '🔇'; }
         }
 
         musicSlider.addEventListener('input', (e) => { bgMusic.volume = e.target.value / 100; localStorage.setItem('bolie_music_vol', e.target.value); });
@@ -443,12 +493,17 @@
         
         loadAudioSettings();
 
+        document.getElementById('mute-btn').onclick = () => {
+            isMuted = !isMuted;
+            document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
+            localStorage.setItem('bolie_mute', isMuted);
+            if (isMuted) { bgMusic.pause(); } 
+            else if (currentRoom && currentRoom.status === 'playing') { bgMusic.play().catch(()=>{}); }
+        };
+
         document.getElementById('btn-fullscreen').onclick = () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            } else {
-                if (document.exitFullscreen) { document.exitFullscreen(); }
-            }
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.log(err));
+            else if (document.exitFullscreen) document.exitFullscreen();
         };
 
         function escapeHtml(str) {
@@ -463,6 +518,7 @@
         }
 
         document.getElementById('btn-play').onclick = () => { document.getElementById('modal-name').style.display = 'flex'; };
+        document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
         document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
         document.getElementById('btn-credits').onclick = () => switchScreen('screen-credits');
 
@@ -488,7 +544,12 @@
             let name = document.getElementById('input-room-name').value || "Oda";
             let type = document.querySelector('input[name="room-type"]:checked').value;
             let pass = document.getElementById('input-room-pass').value;
-            socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName });
+            let redName = document.getElementById('input-red-name').value || "KIRMIZI";
+            let blueName = document.getElementById('input-blue-name').value || "MAVİ";
+            let redColor = document.getElementById('input-red-color').value;
+            let blueColor = document.getElementById('input-blue-color').value;
+
+            socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor });
             document.getElementById('modal-create').style.display = 'none';
         };
 
@@ -533,10 +594,23 @@
         socket.on('join_error', (msg) => { alert(msg); });
         socket.on('server_created', (room) => { currentRoom = room; myTeam = "spectator"; showLobby(room); });
         socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
+        
+        document.getElementById('btn-add-bot').onclick = () => { socket.emit('add_bot'); };
 
         function showLobby(room) {
             switchScreen('screen-lobby');
             document.getElementById('lobby-room-name').innerText = room.name;
+            
+            document.getElementById('title-red').innerText = room.redName;
+            document.getElementById('title-red').style.color = room.redColor;
+            document.getElementById('box-red').style.borderColor = room.redColor;
+            document.getElementById('box-red').style.background = `rgba(${parseInt(room.redColor.slice(1,3),16)}, ${parseInt(room.redColor.slice(3,5),16)}, ${parseInt(room.redColor.slice(5,7),16)}, 0.2)`;
+            
+            document.getElementById('title-blue').innerText = room.blueName;
+            document.getElementById('title-blue').style.color = room.blueColor;
+            document.getElementById('box-blue').style.borderColor = room.blueColor;
+            document.getElementById('box-blue').style.background = `rgba(${parseInt(room.blueColor.slice(1,3),16)}, ${parseInt(room.blueColor.slice(3,5),16)}, ${parseInt(room.blueColor.slice(5,7),16)}, 0.2)`;
+
             if (room.type === 'private') {
                 let codeEl = document.getElementById('lobby-room-code');
                 codeEl.innerText = "ODA KODU: " + room.id;
@@ -545,11 +619,14 @@
                 document.getElementById('lobby-room-code').style.display = 'none';
             }
             document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
+            document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
         }
 
         socket.on('update_lobby', (room) => {
             currentRoom = room;
             if (room.status === 'lobby') {
+                showLobby(room); // Renk ve isimleri güncelle
+                
                 let redList = document.getElementById('red-players');
                 let blueList = document.getElementById('blue-players');
                 let specList = document.getElementById('spec-players');
@@ -581,31 +658,123 @@
             ballRotation = 0;
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             lastAudioStatus = '';
-            bgMusic.play().catch(e=>console.log("Müzik engellendi"));
+            
+            document.getElementById('label-red').innerText = currentRoom.redName;
+            document.getElementById('label-red').style.color = currentRoom.redColor;
+            document.getElementById('label-blue').innerText = currentRoom.blueName;
+            document.getElementById('label-blue').style.color = currentRoom.blueColor;
+
+            if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
         });
 
         socket.on('game_ended', (room) => {
             currentRoom = room;
-            switchScreen('screen-lobby');
-            ballTrail = [];
-            ballRotation = 0;
             bgMusic.pause();
+            
+            // Maç Sonucu Ekranı
+            let resultTitle = document.getElementById('result-title');
+            let resultScore = document.getElementById('result-score');
+            let resultDesc = document.getElementById('result-desc');
+            let overlay = document.getElementById('overlay-result');
+            
+            resultScore.innerText = `${room.score.red} : ${room.score.blue}`;
+            if (room.score.red > room.score.blue) {
+                resultDesc.innerText = `${room.redName} KAZANDI!`;
+                resultDesc.style.color = room.redColor;
+            } else if (room.score.blue > room.score.red) {
+                resultDesc.innerText = `${room.blueName} KAZANDI!`;
+                resultDesc.style.color = room.blueColor;
+            } else {
+                resultDesc.innerText = "BERABERE!";
+                resultDesc.style.color = "#eab308";
+            }
+            
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                switchScreen('screen-lobby');
+                ballTrail = [];
+                ballRotation = 0;
+            }, 5000);
         });
 
         socket.on('play_whistle', () => {
+            if(isMuted) return;
             whistleSound.currentTime = 0;
             whistleSound.play().catch(e=>console.log("Düdük çalınamadı"));
         });
 
-        socket.on('goal_scored', (room) => {
-            goalSound.play().catch(e=>console.log("Gol sesi çalınamadı"));
+        socket.on('goal_scored', (data) => {
+            if(!isMuted) goalSound.play().catch(e=>console.log("Gol sesi çalınamadı"));
+            
+            // Gol atanın ismi
+            currentReplayScorer = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
+            document.getElementById('replay-scorer').innerText = currentReplayScorer;
+            
+            // Skor Animasyonu
+            let scoreRedEl = document.getElementById('score-red');
+            let scoreBlueEl = document.getElementById('score-blue');
+            scoreRedEl.innerText = data.score.red;
+            scoreBlueEl.innerText = data.score.blue;
+            
+            let scorerTeamColor = data.score.red > score.red ? 'red' : 'blue';
+            // Skor barını titret
+            document.getElementById('scoreboard').classList.add('score-anim');
+            setTimeout(() => document.getElementById('scoreboard').classList.remove('score-anim'), 600);
+
+            score = data.score;
+
+            // Replay verisini al
+            replayData = data.replay;
+            replayIndex = 0;
+            replayTimer = 0;
         });
+
+        // Replay Oynatıcı
+        function updateReplay(now) {
+            if (!replayData || replayData.length === 0) return;
+            
+            replayTimer += 1/60;
+            if (replayTimer > 0.03) { // 30fps oynat
+                replayTimer = 0;
+                replayIndex++;
+            }
+
+            if (replayIndex >= replayData.length) {
+                replayData = null; // Bitti
+                return;
+            }
+
+            let frame = replayData[replayIndex];
+            ball.x = frame.ball.x;
+            ball.y = frame.ball.y;
+            ball.z = frame.ball.z;
+            ball.owner = frame.ball.owner;
+
+            // Oyuncuları güncelle
+            for (let p of frame.players) {
+                if (players[p.id]) {
+                    players[p.id].x = p.x;
+                    players[p.id].y = p.y;
+                    if(p.id !== socket.id) {
+                        players[p.id].renderX = p.x;
+                        players[p.id].renderY = p.y;
+                    }
+                }
+            }
+        }
 
         function leaveRoom() {
             if (confirm("Odadan ayrılmak istiyor musunuz?")) window.location.href = window.location.pathname;
         }
 
         function goToLobby() {
+            if (isPractice) {
+                isPractice = false;
+                switchScreen('screen-main-menu');
+                return;
+            }
             if (currentRoom && currentRoom.status === 'playing') {
                 if (currentRoom.hostId === socket.id) {
                     if (confirm("Maçı sonlandırmak istediğinden emin misin?")) socket.emit('stop_game');
@@ -619,16 +788,12 @@
             for (let sp of serverPlayers) {
                 if (sp.id === socket.id) {
                     if (!myPlayer) myPlayer = sp;
-                    myPlayer.x = sp.x;
-                    myPlayer.y = sp.y;
+                    myPlayer.x = sp.x; myPlayer.y = sp.y;
                 } else {
-                    if (!players[sp.id]) {
-                        players[sp.id] = { ...sp, renderX: sp.x, renderY: sp.y };
-                    } else {
-                        players[sp.id].x = sp.x;
-                        players[sp.id].y = sp.y;
-                        players[sp.id].renderX = sp.x;
-                        players[sp.id].renderY = sp.y;
+                    if (!players[sp.id]) players[sp.id] = { ...sp, renderX: sp.x, renderY: sp.y };
+                    else {
+                        players[sp.id].x = sp.x; players[sp.id].y = sp.y;
+                        players[sp.id].renderX = sp.x; players[sp.id].renderY = sp.y;
                     }
                 }
             }
@@ -636,14 +801,12 @@
 
         socket.on('game_state', (room) => {
             currentRoom = room;
-
+            
             if (room.status === 'playing') {
                 document.getElementById('overlay-message').style.display = 'none';
                 document.getElementById('overlay-replay').style.display = 'none';
             } else if (room.status === 'halftime_break') {
                 document.getElementById('overlay-message').style.display = 'flex';
-                document.getElementById('msg-title').innerText = "DEVRE ARASI";
-                document.getElementById('msg-desc').innerText = "15 saniye mola. Saha değişiyor...";
                 document.getElementById('overlay-replay').style.display = 'none';
             } else if (room.status === 'goal_replay') {
                 document.getElementById('overlay-replay').style.display = 'flex';
@@ -653,7 +816,7 @@
             if (room.status !== lastAudioStatus) {
                 lastAudioStatus = room.status;
                 if (room.status === 'playing') {
-                    if (bgMusic.paused) bgMusic.play().catch(e=>console.log("Müzik devam edemedi"));
+                    if (!isMuted && bgMusic.paused) bgMusic.play().catch(e=>{});
                 } else {
                     bgMusic.pause();
                 }
@@ -664,25 +827,24 @@
                 currentIds.push(p.id);
                 if (p.id === socket.id) {
                     if (!myPlayer) myPlayer = p; 
-                    myPlayer.team = p.team;
-                    myPlayer.name = p.name;
+                    myPlayer.team = p.team; myPlayer.name = p.name;
                     players[socket.id] = myPlayer; 
                 } else {
-                    if (!players[p.id]) {
-                        players[p.id] = { ...p, renderX: p.x, renderY: p.y };
-                    } else {
-                        players[p.id].x = p.x;
-                        players[p.id].y = p.y;
-                        players[p.id].team = p.team;
-                        players[p.id].name = p.name;
+                    if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
+                    else {
+                        players[p.id].x = p.x; players[p.id].y = p.y;
+                        players[p.id].team = p.team; players[p.id].name = p.name;
                     }
                 }
             }
             for (let id in players) { if (!currentIds.includes(id)) delete players[id]; }
-            ball = room.ball; score = room.score;
             
-            document.getElementById('score-red').innerText = score.red;
-            document.getElementById('score-blue').innerText = score.blue;
+            ball = room.ball;
+            if (room.status !== 'goal_replay') { // Replay sırasında sunucu topu ezmesin
+                 document.getElementById('score-red').innerText = room.score.red;
+                 document.getElementById('score-blue').innerText = room.score.blue;
+            }
+            
             document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
 
             let m = Math.floor(room.matchTime / 60);
@@ -691,19 +853,20 @@
             document.getElementById('match-timer').innerText = (room.half === 1 ? "1. Yarı " : "2. Yarı ") + timeStr;
         });
 
+        // --- KLAVYE ---
         window.addEventListener('keydown', (e) => { 
-            if (isSpectator) return;
+            if (isSpectator && !isPractice) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
             if (k === ' ') {
-                if (ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
-                else { socket.emit('tackle'); }
+                if (isPractice || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
+                else if (!isPractice) { socket.emit('tackle'); }
             }
             updateKeyVisual(k, true);
         });
 
         window.addEventListener('keyup', (e) => { 
-            if (isSpectator) return;
+            if (isSpectator && !isPractice) return;
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = false;
             if (k === ' ' && isCharging) {
@@ -734,32 +897,52 @@
         }
 
         function forcePass() {
-            if (ball.owner !== socket.id) return;
+            if (!isPractice && ball.owner !== socket.id) return;
             let angle = getKickAngle();
-            socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 });
+            playKickSound(false);
+            if (isPractice) {
+                ball.vx = Math.cos(angle) * 15; ball.vy = Math.sin(angle) * 15; ball.vz = 0;
+                ball.owner = null;
+            } else {
+                socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 });
+            }
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
 
         function executeKick() {
-            if (ball.owner !== socket.id) return;
+            if (!isPractice && ball.owner !== socket.id) return;
             let angle = getKickAngle();
             let force = shotPower / 100; 
             let speed = 8 + (force * 27);
             let vx = Math.cos(angle) * speed;
             let vy = Math.sin(angle) * speed;
             let vz = 2 + (force * 8);
-            socket.emit('kick', { vx: vx, vy: vy, vz: vz, shotPower: shotPower });
+            
+            playKickSound(true);
+            
+            if (isPractice) {
+                ball.vx = vx; ball.vy = vy; ball.vz = vz;
+                ball.owner = null;
+            } else {
+                socket.emit('kick', { vx: vx, vy: vy, vz: vz, shotPower: shotPower });
+            }
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
 
+        window.sendEmote = (emoji) => {
+            if (isPractice) return;
+            socket.emit('send_emote', emoji);
+        };
+
+        // --- MOBİL KONTROLLER ---
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
 
         function handleTouch(e) {
-            if (isSpectator) return;
+            if (isSpectator && !isPractice) return;
             e.preventDefault();
             const touch = e.touches[0];
             const rect = joystickZone.getBoundingClientRect();
@@ -784,25 +967,25 @@
         joystickZone.addEventListener('touchcancel', resetJoystick);
 
         const btnSprint = document.getElementById('btn-sprint');
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = true; });
-        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); if (!isSpectator) keys['f'] = false; });
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if (!isSpectator || isPractice) keys['f'] = true; });
+        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); keys['f'] = false; });
         btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; });
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
-            if (!isSpectator && ball.owner !== socket.id) socket.emit('tackle'); 
+            if (!isPractice && !isSpectator && ball.owner !== socket.id) socket.emit('tackle'); 
         });
 
         const btnAction = document.getElementById('btn-action');
         btnAction.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (isSpectator) return;
-            if (ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
+            if (isSpectator && !isPractice) return;
+            if (isPractice || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
         });
         btnAction.addEventListener('touchend', (e) => {
             e.preventDefault();
-            if (isSpectator) return;
+            if (isSpectator && !isPractice) return;
             if (isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
@@ -811,7 +994,7 @@
         });
         btnAction.addEventListener('touchcancel', (e) => {
             e.preventDefault();
-            if (isSpectator) return;
+            if (isSpectator && !isPractice) return;
             if (isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
@@ -819,30 +1002,26 @@
             }
         });
 
+        // --- HAREKET DÖNGÜSÜ ---
         function updateMovement(now) {
             now = now || performance.now();
             let dt = Math.min((now - lastFrameTime) / 1000, 0.1);
             lastFrameTime = now;
 
-            if (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing') { 
+            if (!isPractice && (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing')) { 
                 requestAnimationFrame(updateMovement); return; 
             }
 
-            if (isCharging && ball.owner !== socket.id) {
-                isCharging = false;
-                shotPower = 0;
-                document.getElementById('power-container').style.display = 'none';
+            if (isCharging && !isPractice && ball.owner !== socket.id) {
+                isCharging = false; shotPower = 0; document.getElementById('power-container').style.display = 'none';
             }
 
-            let isSprinting = false;
             let currentSpeed = normalSpeed;
-
             if (isExhausted) {
                 stamina += 0.15 * BASE_FRAME * dt;
                 if (stamina >= 30) isExhausted = false;
             } else {
                 if (keys['f']) {
-                    isSprinting = true;
                     currentSpeed = sprintSpeed;
                     stamina -= 1.2 * BASE_FRAME * dt;
                     if (stamina <= 0) { stamina = 0; isExhausted = true; }
@@ -858,7 +1037,7 @@
                 else bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
             }
 
-            if (isCharging && ball.owner === socket.id) {
+            if (isCharging && (isPractice || ball.owner === socket.id)) {
                 document.getElementById('power-container').style.display = 'flex'; 
                 shotPower += 3.5 * BASE_FRAME * dt;
                 if (shotPower > 100) shotPower = 100;
@@ -890,7 +1069,7 @@
             let newX = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
             let newY = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
 
-            if (currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
+            if (!isPractice && currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
                 if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
             }
@@ -898,7 +1077,7 @@
             myPlayer.x = newX;
             myPlayer.y = newY;
 
-            if (now - lastMoveEmit >= MOVE_EMIT_MS) {
+            if (!isPractice && now - lastMoveEmit >= MOVE_EMIT_MS) {
                 socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
                 lastMoveEmit = now;
             }
@@ -906,19 +1085,36 @@
             requestAnimationFrame(updateMovement);
         }
 
+        // --- ANTRENMAN MODU ---
+        function startPracticeMode() {
+            isPractice = true;
+            isSpectator = false;
+            switchScreen('screen-game');
+            
+            myPlayer = { id: "p1", name: "Oyuncu", team: "red", x: 600, y: 300, lastDx: 0, lastDy: 0 };
+            players = { "p1": myPlayer };
+            ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+            
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null };
+            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            
+            document.getElementById('label-red').innerText = "ANTRENMAN";
+            document.getElementById('label-blue').innerText = "";
+            document.getElementById('score-red').innerText = "";
+            document.getElementById('score-blue').innerText = "";
+            document.getElementById('match-timer').innerText = "";
+            document.getElementById('mute-btn').style.display = 'block';
+        }
+
+        // --- ÇİZİM DÖNGÜSÜ ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         function drawStadium() {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(0, 0, 1200, 600);
-            
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 1200, 600);
             let tribuneColor = '#1e293b'; 
             ctx.fillStyle = tribuneColor;
-            ctx.fillRect(0, 0, 1200, 25); 
-            ctx.fillRect(0, 575, 1200, 25); 
-            ctx.fillRect(0, 0, 25, 600); 
-            ctx.fillRect(1175, 0, 25, 600); 
+            ctx.fillRect(0, 0, 1200, 25); ctx.fillRect(0, 575, 1200, 25); ctx.fillRect(0, 0, 25, 600); ctx.fillRect(1175, 0, 25, 600); 
 
             for(let i=0; i<1200; i+=15) {
                 for(let j=0; j<600; j+=15) {
@@ -931,12 +1127,8 @@
                     }
                 }
             }
-
             ctx.fillStyle = '#334155';
-            ctx.fillRect(25, 25, 1150, 15);
-            ctx.fillRect(25, 560, 1150, 15);
-            ctx.fillRect(25, 25, 15, 550);
-            ctx.fillRect(1160, 25, 15, 550);
+            ctx.fillRect(25, 25, 1150, 15); ctx.fillRect(25, 560, 1150, 15); ctx.fillRect(25, 25, 15, 550); ctx.fillRect(1160, 25, 15, 550);
         }
 
         function drawPitch() {
@@ -945,10 +1137,8 @@
                 ctx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c'; 
                 ctx.fillRect(i * stripeWidth, 0, stripeWidth, 600);
             }
-
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             const margin = 40; 
-            
             ctx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
             ctx.beginPath(); ctx.moveTo(600, margin); ctx.lineTo(600, 600 - margin); ctx.stroke();
             ctx.beginPath(); ctx.arc(600, 300, 70, 0, Math.PI * 2); ctx.stroke();
@@ -963,15 +1153,11 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(margin - 10, 200, 10, 200); ctx.fillRect(1200 - margin, 200, 10, 200);
 
-            if (currentRoom && currentRoom.isKickoff) {
+            if (!isPractice && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
                 if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, margin, 8, 600 - (margin * 2)); } 
                 else { ctx.fillRect(592, margin, 8, 600 - (margin * 2)); }
-                
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 20px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText("SANTRA", 600, 60);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.fillText("SANTRA", 600, 60);
             }
         }
 
@@ -1014,15 +1200,61 @@
             lastRenderTime = now;
 
             if (document.getElementById('screen-game').classList.contains('active')) {
+                
+                // Antrenman Fiziği
+                if (isPractice) {
+                    if (ball.owner === null) {
+                        ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
+                        ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
+                        if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
+                        if (Math.abs(ball.vx) < 0.1) ball.vx = 0;
+                        if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
+                        if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
+                        if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
+                        
+                        let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
+                        let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
+                        if (hitLeftGoal || hitRightGoal) {
+                            if (ball.z <= 80) {
+                                if (hitRightGoal) score.red++; else score.blue++;
+                                playKickSound(true);
+                                ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+                            } else {
+                                ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7;
+                            }
+                        } else {
+                            if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
+                            if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
+                        }
+                    }
+
+                    // Topu alma
+                    if (ball.owner === null && myPlayer) {
+                        let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
+                        if (dist < 50 && ball.pickupCooldown <= 0) {
+                            ball.owner = myPlayer.id; ball.vx = 0; ball.vy = 0; ball.z = 0;
+                        }
+                    }
+                    if (ball.pickupCooldown > 0) ball.pickupCooldown--;
+                    if (ball.owner === myPlayer.id) {
+                        let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
+                        ball.x = myPlayer.x + Math.cos(angle) * 35;
+                        ball.y = myPlayer.y + Math.sin(angle) * 35;
+                    }
+                }
+
                 ctx.clearRect(0, 0, 1200, 600);
 
                 let targetCamX = 600;
                 let targetCamY = 300;
                 let targetZoom = 1.0;
 
-                if (currentRoom) {
+                if (isPractice) {
+                     targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2;
+                } else if (currentRoom) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     if (currentRoom.status === 'goal_replay') {
+                        updateReplay(now);
                         targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
                     } else if (currentRoom.status === 'playing') {
                         if (ball.owner === null && speed > 15) {
@@ -1049,68 +1281,42 @@
                 drawPitch();   
                 drawBall();
 
-                if (currentRoom) {
+                if (currentRoom || isPractice) {
                     let lerpFactor = Math.min(1, 15 * dt);
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
                         
-                        if (id !== socket.id) {
+                        if (id !== socket.id && !isPractice) {
                             if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
                             p.renderX += (p.x - p.renderX) * lerpFactor;
                             p.renderY += (p.y - p.renderY) * lerpFactor;
                         }
-                        let px = (id === socket.id) ? p.x : p.renderX;
-                        let py = (id === socket.id) ? p.y : p.renderY;
+                        let px = (id === socket.id || isPractice) ? p.x : p.renderX;
+                        let py = (id === socket.id || isPractice) ? p.y : p.renderY;
 
                         let pSize = 22;
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
                         ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
                         
-                        ctx.fillStyle = p.team === 'red' ? '#ff0000' : '#1e90ff';
-                        ctx.fill(); 
-                        ctx.strokeStyle = p.team === 'red' ? '#000000' : '#cccccc';
-                        ctx.lineWidth = 3; 
-                        ctx.stroke();
+                        let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
+                        if (isPractice) teamColor = '#ff0000';
                         
-                        if (id === ball.owner && ball.possessionTimer > 0) {
+                        ctx.fillStyle = teamColor;
+                        ctx.fill(); 
+                        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
+                        
+                        // Emote çizimi
+                        if (!isPractice && currentRoom.emotes) {
+                            for (let em of currentRoom.emotes) {
+                                if (em.playerId === id) {
+                                    ctx.font = '30px Arial'; ctx.textAlign = 'center';
+                                    ctx.fillText(em.emoji, px, py - pSize - 20);
+                                }
+                            }
+                        }
+
+                        if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; 
                             let radius = pSize + 4 + (pulse * 6); 
                             ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2);
-                            ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4;
-                            ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
-
-                            let secs = (ball.possessionTimer / 60).toFixed(1);
-                            ctx.fillStyle = '#eab308';
-                            ctx.font = 'bold 14px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.fillText(secs + "s", px, py - pSize - 15);
-                        }
-
-                        if (id === socket.id && isCharging && shotPower >= 38) {
-                            let intensity = shotPower / 100; let time = Date.now() / 100;
-                            ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
-                            for (let i = 0; i < 5; i++) {
-                                let angle = time + (i * Math.PI * 2 / 5); let rad1 = pSize; let rad2 = pSize + 20 + (intensity * 10);
-                                ctx.beginPath(); ctx.moveTo(px + Math.cos(angle) * rad1, py + Math.sin(angle) * rad1);
-                                let midAngle = angle + (Math.random() - 0.5) * 0.5;
-                                ctx.lineTo(px + Math.cos(midAngle) * (rad1+rad2)/2, py + Math.sin(midAngle) * (rad1+rad2)/2);
-                                ctx.lineTo(px + Math.cos(angle) * rad2, py + Math.sin(angle) * rad2);
-                                ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; ctx.lineWidth = 2; ctx.stroke();
-                            }
-                        }
-                        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; 
-                        ctx.fillText(p.name, px, py - pSize - 5);
-                    }
-                }
-                
-                ctx.restore();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        requestAnimationFrame(updateMovement);
-        requestAnimationFrame(gameLoop);
-    </script>
-</body>
-</html>
