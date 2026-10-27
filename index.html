@@ -12,7 +12,7 @@
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
-            touch-action: none; /* Mobilde kaydırmayı engeller */
+            touch-action: none;
         }
         #game-container {
             position: relative;
@@ -33,16 +33,14 @@
         .blue-team { color: #4c9aff; }
         
         canvas {
-            background-color: #2e7d32; /* Çim rengi */
+            background-color: #2e7d32;
             border: 4px solid #ffffff;
             border-radius: 8px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            /* Ekran boyutuna göre ayarla */
             max-width: 95vw;
             max-height: 75vh;
         }
 
-        /* Mobil Joystick Stili */
         #joystick-zone {
             position: absolute;
             bottom: 20px;
@@ -52,7 +50,7 @@
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            display: none; /* Sadece mobilde görünür */
+            display: none;
         }
         #joystick-knob {
             position: absolute;
@@ -64,8 +62,6 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
-        
-        /* Joystick sadece dokunmatik cihazlarda görünsün */
         @media (pointer: coarse) {
             #joystick-zone { display: block; }
         }
@@ -82,31 +78,31 @@
         
         <canvas id="gameCanvas" width="800" height="500"></canvas>
 
-        <!-- Mobil Kontrol -->
         <div id="joystick-zone">
             <div id="joystick-knob"></div>
         </div>
     </div>
 
-    <!-- Socket.io Kütüphanesi -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const socket = io();
 
+        // Arka plan resmi yükleniyor
+        const bgImage = new Image();
+        bgImage.src = 'arkaplan.png';
+
         let myPlayer = null;
         let players = {};
         let ball = { x: 400, y: 250 };
         let score = { red: 0, blue: 0 };
 
-        // Klavye Kontrolleri (Bilgisayar)
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
         
         window.addEventListener('keydown', (e) => { if(e.key in keys) keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { if(e.key in keys) keys[e.key] = false; });
 
-        // Mobil Joystick Kontrolleri
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false;
@@ -142,7 +138,6 @@
             joystickVector = { x: 0, y: 0 };
         });
 
-        // Socket Bağlantıları
         socket.on('currentPlayers', (p, b, s) => {
             players = p;
             ball = b;
@@ -150,13 +145,8 @@
             myPlayer = players[socket.id];
         });
 
-        socket.on('newPlayer', (player) => {
-            players[player.id] = player;
-        });
-
-        socket.on('playerDisconnected', (id) => {
-            delete players[id];
-        });
+        socket.on('newPlayer', (player) => { players[player.id] = player; });
+        socket.on('playerDisconnected', (id) => { delete players[id]; });
 
         socket.on('gameState', (p, b, s) => {
             players = p;
@@ -169,7 +159,6 @@
             draw();
         });
 
-        // Oyun Döngüsü (Hareketi Sunucuya Gönder)
         function updateMovement() {
             if (!myPlayer) return;
 
@@ -177,19 +166,16 @@
             let dx = 0;
             let dy = 0;
 
-            // Klavye Hareketi
             if (keys.w || keys.ArrowUp) dy -= speed;
             if (keys.s || keys.ArrowDown) dy += speed;
             if (keys.a || keys.ArrowLeft) dx -= speed;
             if (keys.d || keys.ArrowRight) dx += speed;
 
-            // Joystick Hareketi
             if (joystickActive) {
                 dx += joystickVector.x * speed;
                 dy += joystickVector.y * speed;
             }
 
-            // Sınırları kontrol et
             let newX = Math.max(20, Math.min(780, myPlayer.x + dx));
             let newY = Math.max(20, Math.min(480, myPlayer.y + dy));
 
@@ -198,10 +184,8 @@
                 myPlayer.y = newY;
                 socket.emit('move', { x: newX, y: newY });
 
-                // Topa vurma kontrolü (Mesafe yakınsa)
                 let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
                 if (distToBall < 30) {
-                    // Topu oyuncunun baktığı yöne doğru fırlat
                     socket.emit('kick', { 
                         vx: (ball.x - myPlayer.x) * 1.5, 
                         vy: (ball.y - myPlayer.y) * 1.5 
@@ -212,14 +196,19 @@
             requestAnimationFrame(updateMovement);
         }
 
-        // Çizim Fonksiyonu
         function draw() {
-            // Arka planı temizle
-            ctx.fillStyle = '#2e7d32';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // --- ARKA PLAN RESMİNİ ÇİZ ---
+            if (bgImage.complete && bgImage.naturalWidth !== 0) {
+                // Resim yüklendiyse sahanın her yerine kapla
+                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Resim yüklenene kadar veya hata olursa eski yeşil rengi kullan
+                ctx.fillStyle = '#2e7d32';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
 
             // Saha Çizgileri
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(400, 0);
@@ -231,9 +220,9 @@
             ctx.stroke();
 
             // Kaleler
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fillRect(0, 150, 10, 200); // Sol kale
-            ctx.fillRect(790, 150, 10, 200); // Sağ kale
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillRect(0, 150, 10, 200);
+            ctx.fillRect(790, 150, 10, 200);
 
             // Topu Çiz
             ctx.beginPath();
@@ -255,7 +244,6 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // İsim Yazdır
                 ctx.fillStyle = '#ffffff';
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
@@ -263,7 +251,6 @@
             }
         }
 
-        // Oyunu Başlat
         updateMovement();
         draw();
     </script>
