@@ -5,60 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Critiball</title>
     <style>
-        body {
-            margin: 0; padding: 0; background-color: #1a1a1a; color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; touch-action: none;
-        }
-        #game-container {
-            position: relative; width: 100vw; height: 100vh;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        #scoreboard {
-            font-size: 32px; font-weight: bold; margin-bottom: 15px;
-            text-shadow: 2px 2px 4px #000; z-index: 10;
-        }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #scoreboard { font-size: 32px; font-weight: bold; margin-bottom: 15px; text-shadow: 2px 2px 4px #000; z-index: 10; }
         .red-team { color: #ff4c4c; }
         .blue-team { color: #4c9aff; }
         
-        canvas {
-            width: 90vw; height: 70vh; /* Yatay oran */
-            background-color: #2e7d32; border: 4px solid #ffffff;
-            border-radius: 12px; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-        }
-
-        /* Tuş Görselleri */
-        #pc-controls {
-            position: absolute; bottom: 30px; right: 30px;
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            opacity: 0.8; pointer-events: none;
-        }
+        canvas { width: 90vw; height: 70vh; background-color: #2e7d32; border: 4px solid #ffffff; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        
+        /* PC Kontrolleri */
+        #pc-controls { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8; pointer-events: none; }
         .key-row { display: flex; gap: 8px; }
-        .key {
-            width: 55px; height: 55px; background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 18px; color: #ccc;
-            transition: all 0.1s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .key.active {
-            background: #4c9aff; color: white; border-color: #ffffff;
-            transform: translateY(4px); box-shadow: 0 0 15px #4c9aff;
-        }
+        .key { width: 55px; height: 55px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ccc; transition: 0.1s; }
+        .key.active { background: #4c9aff; color: white; transform: translateY(4px); }
         .wide-key { width: 122px; }
 
         /* Mobil Joystick */
-        #joystick-zone {
-            position: absolute; bottom: 30px; left: 30px;
-            width: 140px; height: 140px; background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
-            display: none; pointer-events: auto;
-        }
-        #joystick-knob {
-            position: absolute; top: 50%; left: 50%;
-            width: 60px; height: 60px; background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%; transform: translate(-50%, -50%);
-        }
+        #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: none; }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); }
         @media (pointer: coarse) {
             #joystick-zone { display: block; }
             #pc-controls { display: none; }
@@ -68,29 +32,18 @@
     </style>
 </head>
 <body>
-
     <div id="game-container">
-        <div id="scoreboard">
-            <span class="red-team">Kırmızı: <span id="score-red">0</span></span> 
-            - 
-            <span class="blue-team">Mavi: <span id="score-blue">0</span></span>
-        </div>
+        <div id="scoreboard"><span class="red-team">Kırmızı: <span id="score-red">0</span></span> - <span class="blue-team">Mavi: <span id="score-blue">0</span></span></div>
         
+        <!-- 1200x600 Yatay Saha -->
         <canvas id="gameCanvas" width="1200" height="600"></canvas>
 
-        <div id="joystick-zone">
-            <div id="joystick-knob"></div>
-        </div>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
 
         <div id="pc-controls">
             <div class="key-row"><div class="key" id="key-w">W</div></div>
-            <div class="key-row">
-                <div class="key" id="key-a">A</div>
-                <div class="key" id="key-s">S</div>
-                <div class="key" id="key-d">D</div>
-            </div>
-            <div class="key-row" style="margin-top: 10px;"><div class="key wide-key" id="key-space">SPACE</div></div>
-            <div class="key-row"><div class="key wide-key" id="key-control">CTRL</div></div>
+            <div class="key-row"><div class="key" id="key-a">A</div><div class="key" id="key-s">S</div><div class="key" id="key-d">D</div></div>
+            <div class="key-row"><div class="key wide-key" id="key-space">SPACE</div></div>
         </div>
     </div>
 
@@ -108,9 +61,8 @@
         let ball = { x: 600, y: 300 };
         let score = { red: 0, blue: 0 };
 
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'Control': false };
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false };
         
-        // Tuş Dinleyicileri
         window.addEventListener('keydown', (e) => { 
             let k = e.key === ' ' ? ' ' : e.key.toLowerCase();
             if (keys[k] !== undefined) keys[k] = true;
@@ -126,7 +78,6 @@
             let id = '';
             if(['w','a','s','d'].includes(key)) id = `key-${key}`;
             if(key === ' ') id = 'key-space';
-            if(key === 'control') id = 'key-control';
             if(id) {
                 const el = document.getElementById(id);
                 if(el) isPressed ? el.classList.add('active') : el.classList.remove('active');
@@ -157,7 +108,7 @@
             joystickActive = false; joystickKnob.style.transform = 'translate(-50%, -50%)'; joystickVector = { x: 0, y: 0 };
         });
 
-        // Socket Bağlantıları
+        // Socket Bağlantısı
         socket.on('currentPlayers', (p, b, s) => {
             players = p; ball = b; score = s; 
             if (players[socket.id]) myPlayer = players[socket.id];
@@ -166,74 +117,47 @@
         socket.on('playerDisconnected', (id) => { delete players[id]; });
         
         socket.on('gameState', (p, b, s) => {
-            // Sadece DİĞER oyuncuları güncelle, kendi karakterini sunucunun ezmesine izin verme (Lag önleyici)
+            // Sadece diğer oyuncuları sunucudan güncelle. Kendi karakterini biz kontrol edeceğiz (Lag önleyici).
             for(let id in p) {
                 if(id !== socket.id) players[id] = p[id];
             }
             ball = b; 
             score = s;
-            
             document.getElementById('score-red').innerText = score.red;
             document.getElementById('score-blue').innerText = score.blue;
-            draw();
         });
-
-        let lastKickTime = 0;
 
         function updateMovement() {
             if (!myPlayer) { requestAnimationFrame(updateMovement); return; }
 
-            let speed = 7;
+            let speed = 6;
             let dx = 0, dy = 0;
 
             if (keys.w || keys.ArrowUp) dy -= speed;
             if (keys.s || keys.ArrowDown) dy += speed;
             if (keys.a || keys.ArrowLeft) dx -= speed;
             if (keys.d || keys.ArrowRight) dx += speed;
-            
-            if (joystickActive) {
-                dx += joystickVector.x * speed;
-                dy += joystickVector.y * speed;
-            }
+            if (joystickActive) { dx += joystickVector.x * speed; dy += joystickVector.y * speed; }
 
-            // Dash (Ctrl)
-            if (keys['control'] && performance.now() - lastKickTime > 2000) {
-                dx *= 2; dy *= 2;
-                lastKickTime = performance.now();
-            }
-
-            // Yeni pozisyonu uygula
-            myPlayer.x = Math.max(20, Math.min(canvas.width - 20, myPlayer.x + dx));
-            myPlayer.y = Math.max(20, Math.min(canvas.height - 20, myPlayer.y + dy));
-            
-            // Sunucuya haber ver
+            // Karakterin kendi hareketi
+            myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
+            myPlayer.y = Math.max(25, Math.min(canvas.height - 25, myPlayer.y + dy));
             socket.emit('move', { x: myPlayer.x, y: myPlayer.y });
 
-            // --- TOP MEKANİĞİ (Dribbling & Şut) ---
+            // Topa Vurma Mantığı
             let distToBall = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-
-            if (distToBall < 45) {
+            if (distToBall < 50) {
                 if (keys[' ']) {
-                    // ŞUT (Space)
-                    socket.emit('kick', { 
-                        vx: (ball.x - myPlayer.x) * 5, 
-                        vy: (ball.y - myPlayer.y) * 5 
-                    });
-                    keys[' '] = false; // Şutu tek seferlik yap
-                    updateKeyVisual(' ', false);
+                    // Şut
+                    socket.emit('kick', { vx: (ball.x - myPlayer.x) * 3, vy: (ball.y - myPlayer.y) * 3 });
+                    keys[' '] = false; updateKeyVisual(' ', false);
                 } else {
-                    // DRIBBLING (Topu ayağının önünde sürükle)
+                    // Sürükleme (Dribbling)
                     let angle = Math.atan2(dy, dx);
-                    if (dx === 0 && dy === 0) angle = Math.random() * Math.PI * 2; // Duruyorsa hafif kaysın
-                    
-                    let targetX = myPlayer.x + Math.cos(angle) * 35;
-                    let targetY = myPlayer.y + Math.sin(angle) * 35;
-                    
-                    // Topu yumuşakça hedefe kaydır
-                    socket.emit('kick', { 
-                        vx: (targetX - ball.x) * 0.5, 
-                        vy: (targetY - ball.y) * 0.5 
-                    });
+                    if (dx === 0 && dy === 0) angle = Math.random() * Math.PI * 2;
+                    let targetX = myPlayer.x + Math.cos(angle) * 40;
+                    let targetY = myPlayer.y + Math.sin(angle) * 40;
+                    socket.emit('kick', { vx: (targetX - ball.x) * 0.4, vy: (targetY - ball.y) * 0.4 });
                 }
             }
 
@@ -241,36 +165,65 @@
         }
 
         function draw() {
-            // Arka planı ZORLA kapla (Esnetme yok, dümdüz tüm alan)
+            // EKRANI TEMİZLE (Hayalet izleri önler)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Arka planı boydan boya kapla (Oranı bozmadan)
             if (bgImage.complete && bgImage.naturalWidth !== 0) {
-                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+                const imgRatio = bgImage.width / bgImage.height;
+                const canvasRatio = canvas.width / canvas.height;
+                let drawWidth, drawHeight, offsetX, offsetY;
+
+                if (canvasRatio > imgRatio) {
+                    drawWidth = canvas.width;
+                    drawHeight = canvas.width / imgRatio;
+                    offsetX = 0; offsetY = (canvas.height - drawHeight) / 2;
+                } else {
+                    drawWidth = canvas.height * imgRatio;
+                    drawHeight = canvas.height;
+                    offsetX = (canvas.width - drawWidth) / 2; offsetY = 0;
+                }
+                ctx.drawImage(bgImage, offsetX, offsetY, drawWidth, drawHeight);
             } else {
+                // Resim yüklenene kadar çim rengi
                 ctx.fillStyle = '#2e7d32'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // Saha çizgilerini resim üstüne çiz
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 4;
+            // Saha Çizgileri
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 90, 0, Math.PI * 2); ctx.stroke();
+
+            // Kaleler
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillRect(0, 200, 15, 200);
+            ctx.fillRect(canvas.width - 15, 200, 15, 200);
 
             // Topu Çiz
-            ctx.beginPath(); ctx.arc(ball.x, ball.y, 16, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, 15, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
 
             // Oyuncuları Çiz
             for (let id in players) {
                 let p = players[id];
-                ctx.beginPath(); ctx.arc(p.x, p.y, 24, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
                 ctx.fillStyle = p.team === 'red' ? '#ff4c4c' : '#4c9aff';
-                ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.stroke();
-
-                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+                ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+                
+                // İsim
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
                 ctx.fillText(p.name, p.x, p.y - 35);
             }
+
+            // Döngü
+            requestAnimationFrame(draw);
         }
 
         updateMovement();
-        draw();
+        // Resim yüklenince çizmeye başla
+        bgImage.onload = () => { draw(); };
+        // Eğer resim zaten yüklüyse direkt başlat
+        if (bgImage.complete) draw();
     </script>
 </body>
 </html>
