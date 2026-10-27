@@ -121,7 +121,7 @@
         let isCharging = false;
         let shotPower = 0;
         let chargeStartTime = 0;
-        let moveX = 0, moveY = 0; // Anlık hareket yönü
+        let moveX = 0, moveY = 0;
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
@@ -145,7 +145,7 @@
             if (k === ' ' && isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
-                if (pressDuration < 150) {
+                if (pressDuration < 200 && shotPower < 30) { 
                     forcePass();
                 } else {
                     executeKick();
@@ -160,14 +160,14 @@
             } else if (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) {
                 return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
             }
-            return 0; // Varsayılan sağ yön
+            return 0;
         }
 
         function forcePass() {
             if (ball.owner !== socket.id) return;
             let angle = getKickAngle();
-            // Pas hızını artırdık ki hareket ederken top geride kalmasın
-            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 7, vy: Math.sin(angle) * 7, vz: 0 });
+            // Pas hızı 15 yapıldı (Çok hızlı, sen koşarken bile top kaçar)
+            if (socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0 });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
         }
@@ -178,16 +178,16 @@
             let angle = getKickAngle();
             let vx = 0, vy = 0, vz = 0;
 
-            if (shotPower < 38) {
-                vx = Math.cos(angle) * 7;
-                vy = Math.sin(angle) * 7;
+            if (shotPower < 30) { 
+                vx = Math.cos(angle) * 15;
+                vy = Math.sin(angle) * 15;
                 vz = 0;
             } else {
                 let force = shotPower / 100; 
-                // Şut hızı çok daha yüksek
-                vx = Math.cos(angle) * (14 + (force * 12)); 
-                vy = Math.sin(angle) * (14 + (force * 12));
-                vz = 2 + (force * 8);
+                // Şut hızı 22 ile 37 arası yapıldı (Füze gibi)
+                vx = Math.cos(angle) * (22 + (force * 15)); 
+                vy = Math.sin(angle) * (22 + (force * 15));
+                vz = 2 + (force * 10);
             }
             
             if (socket) socket.emit('kick', { vx: vx, vy: vy, vz: vz });
@@ -290,7 +290,7 @@
 
             if (isCharging && ball.owner === socket.id) {
                 document.getElementById('power-container').style.display = 'flex'; 
-                shotPower += 2.5; 
+                shotPower += 3.5; // Daha hızlı dolsun
                 if (shotPower > 100) shotPower = 100;
 
                 const pBar = document.getElementById('power-bar');
@@ -320,7 +320,7 @@
                 myPlayer.lastDy = dy;
             }
             
-            // Anlık hareketi kaydet (Pas için)
+            // Anlık hareketi kaydet
             moveX = dx; moveY = dy;
 
             myPlayer.x = Math.max(25, Math.min(canvas.width - 25, myPlayer.x + dx));
@@ -380,7 +380,7 @@
             ctx.fillStyle = '#fff'; ctx.fill();
             ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
 
-            // Oyuncular ve Efektler
+            // Oyuncular
             for (let id in players) {
                 let p = players[id];
                 if (!p) continue;
@@ -405,13 +405,13 @@
                     let intensity = shotPower / 100;
                     let time = Date.now() / 100;
 
-                    // Karadelik (Koyu Mor Halka)
+                    // Karadelik
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, 35 + (intensity * 20), 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`;
                     ctx.fill();
 
-                    // Mor Yıldırımlar (Etrafta dönen çizgiler)
+                    // Yıldırımlar
                     for (let i = 0; i < 5; i++) {
                         let angle = time + (i * Math.PI * 2 / 5);
                         let rad1 = 25;
@@ -419,12 +419,11 @@
                         
                         ctx.beginPath();
                         ctx.moveTo(p.x + Math.cos(angle) * rad1, p.y + Math.sin(angle) * rad1);
-                        // Yıldırım kırılması
                         let midAngle = angle + (Math.random() - 0.5) * 0.5;
                         ctx.lineTo(p.x + Math.cos(midAngle) * (rad1+rad2)/2, p.y + Math.sin(midAngle) * (rad1+rad2)/2);
                         ctx.lineTo(p.x + Math.cos(angle) * rad2, p.y + Math.sin(angle) * rad2);
                         
-                        ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`; // Parlak Mor
+                        ctx.strokeStyle = `rgba(168, 85, 247, ${intensity})`;
                         ctx.lineWidth = 3;
                         ctx.stroke();
                     }
