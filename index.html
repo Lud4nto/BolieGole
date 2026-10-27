@@ -123,6 +123,10 @@
         let chargeStartTime = 0;
         let moveX = 0, moveY = 0;
 
+        // Topun görsel animasyonu için
+        let ballRotation = 0;
+        let ballTrail = [];
+
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
         
         window.addEventListener('keydown', (e) => { 
@@ -155,18 +159,14 @@
         });
 
         function getKickAngle() {
-            if (moveX !== 0 || moveY !== 0) {
-                return Math.atan2(moveY, moveX);
-            } else if (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) {
-                return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
-            }
+            if (moveX !== 0 || moveY !== 0) return Math.atan2(moveY, moveX);
+            else if (myPlayer.lastDx !== 0 || myPlayer.lastDy !== 0) return Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
             return 0;
         }
 
         function forcePass() {
             if (ball.owner !== socket.id) return;
             let angle = getKickAngle();
-            // Pas hızı 15
             if (socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 });
             shotPower = 0;
             document.getElementById('power-container').style.display = 'none';
@@ -177,8 +177,6 @@
             
             let angle = getKickAngle();
             let force = shotPower / 100; 
-            
-            // Min Hız: 8, Max Hız: 35 (Bar doluluğuna göre değişir)
             let speed = 8 + (force * 27);
             
             let vx = Math.cos(angle) * speed;
@@ -361,18 +359,80 @@
             ctx.fillRect(canvas.width - margin, canvas.height / 2 - 100, 10, 200);
         }
 
+        // --- 1000X GÜZEL TOP ÇİZİMİ ---
+        function drawBall() {
+            let drawY = ball.y - (ball.z || 0);
+
+            // 1. Gölge
+            let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
+            ctx.beginPath();
+            ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * shadowScale})`;
+            ctx.fill();
+
+            // 2. İz (Trail)
+            let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
+            if (speed > 5 && ball.z === 0) {
+                ballTrail.push({ x: ball.x, y: drawY, alpha: 0.5 });
+            }
+            if (ballTrail.length > 8) ballTrail.shift();
+            
+            for (let i = 0; i < ballTrail.length; i++) {
+                let t = ballTrail[i];
+                t.alpha -= 0.05;
+                if (t.alpha > 0) {
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${t.alpha})`;
+                    ctx.fill();
+                }
+            }
+
+            // 3. Topun Kendisi (Dönen 3D Efekt)
+            ballRotation += speed * 0.05;
+            
+            ctx.save();
+            ctx.translate(ball.x, drawY);
+            ctx.rotate(ballRotation);
+
+            // Beyaz Gövde
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.stroke();
+
+            // Siyah Beşgenler
+            function drawPentagon(radius, offsetX, offsetY, angle) {
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    let a = angle + i * (Math.PI * 2 / 5);
+                    let x = offsetX + Math.cos(a) * radius;
+                    let y = offsetY + Math.sin(a) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = '#1a1a1a';
+                ctx.fill();
+            }
+            
+            drawPentagon(5.5, 0, 0, 0); // Merkez
+            drawPentagon(4, 10, 0, 0.5); // Sağ
+            drawPentagon(4, -10, 0, 1.5); // Sol
+            drawPentagon(4, 0, 10, 0.8); // Alt
+            drawPentagon(4, 0, -10, 1.2); // Üst
+
+            ctx.restore();
+        }
+
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPitch();
 
-            // Top Çizimi
-            ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15, 8, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-
-            let drawY = ball.y - (ball.z || 0);
-            ctx.beginPath(); ctx.arc(ball.x, drawY, 15, 0, Math.PI * 2); 
-            ctx.fillStyle = '#fff'; ctx.fill();
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+            drawBall();
 
             // Oyuncular
             for (let id in players) {
@@ -399,13 +459,11 @@
                     let intensity = shotPower / 100;
                     let time = Date.now() / 100;
 
-                    // Karadelik
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, 35 + (intensity * 20), 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`;
                     ctx.fill();
 
-                    // Yıldırımlar
                     for (let i = 0; i < 5; i++) {
                         let angle = time + (i * Math.PI * 2 / 5);
                         let rad1 = 25;
