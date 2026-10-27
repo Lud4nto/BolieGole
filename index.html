@@ -300,6 +300,11 @@
         let ballRotation = 0;
         let ballTrail = [];
 
+        // Gol Kamerası Değişkenleri
+        let lastBallX = 600;
+        let lastBallY = 300;
+        let goalCamTime = 0;
+
         let lastMoveEmit = 0;
         let lastFrameTime = performance.now();
         let lastRenderTime = performance.now();
@@ -433,6 +438,7 @@
             if(currentRoom) currentRoom.status = 'playing';
             ballTrail = [];
             ballRotation = 0;
+            goalCamTime = 0;
             lastAudioStatus = '';
             document.getElementById('bgMusic').play().catch(e=>console.log("Müzik engellendi"));
         });
@@ -491,7 +497,6 @@
         socket.on('game_state', (room) => {
             currentRoom = room;
 
-            // 🔧 GOL EKRANI FIX: Overlay'ler her tick kontrol edilsin
             if (room.status === 'playing') {
                 document.getElementById('overlay-message').style.display = 'none';
                 document.getElementById('overlay-replay').style.display = 'none';
@@ -505,7 +510,6 @@
                 document.getElementById('overlay-message').style.display = 'none';
             }
 
-            // Müzik sadece status değişince
             if (room.status !== lastAudioStatus) {
                 lastAudioStatus = room.status;
                 let music = document.getElementById('bgMusic');
@@ -523,10 +527,7 @@
                     if (!myPlayer) myPlayer = p; 
                     myPlayer.team = p.team;
                     myPlayer.name = p.name;
-                    if (room.isKickoff || room.status === 'halftime_break') {
-                        myPlayer.x = p.x;
-                        myPlayer.y = p.y;
-                    }
+                    // 🔧 TİTREŞİM FIX: Sunucu pozisyonu zorla ezilmiyor, client kendi konumunu yönetiyor.
                     players[socket.id] = myPlayer; 
                 } else {
                     if (!players[p.id]) {
@@ -837,6 +838,11 @@
         }
 
         function drawBall() {
+            if (currentRoom && currentRoom.status === 'playing') {
+                lastBallX = ball.x;
+                lastBallY = ball.y;
+            }
+
             let drawY = ball.y - (ball.z || 0);
             let shadowScale = Math.max(0.3, 1 - (ball.z / 150)); 
             ctx.beginPath(); ctx.ellipse(ball.x, ball.y, 15 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
@@ -876,11 +882,27 @@
 
             if (document.getElementById('screen-game').classList.contains('active')) {
                 ctx.clearRect(0, 0, 1200, 600);
+                
+                ctx.save(); // KAMERA BAŞLANGICI
+                if (currentRoom && currentRoom.status === 'goal_replay') {
+                    goalCamTime += dt;
+                    let targetZoom = 1.6;
+                    let currentZoom = 1.0 + Math.min(goalCamTime * 2, 1.0) * (targetZoom - 1.0);
+                    
+                    let panX = Math.max(600 - (600/currentZoom), Math.min(600 + (600/currentZoom), lastBallX));
+                    let panY = Math.max(300 - (300/currentZoom), Math.min(300 + (300/currentZoom), lastBallY));
+                    
+                    ctx.translate(600, 300);
+                    ctx.scale(currentZoom, currentZoom);
+                    ctx.translate(-panX, -panY);
+                } else {
+                    goalCamTime = 0;
+                }
+
                 drawStadium(); 
                 drawPitch();   
                 drawBall();
 
-                // 🔧 GOL EKRANI FIX: goal_replay sırasında da oyuncular çizilsin
                 if (currentRoom) {
                     let lerpFactor = Math.min(1, 15 * dt);
                     for (let id in players) {
@@ -935,6 +957,8 @@
                         ctx.fillText(p.name, px, py - pSize - 5);
                     }
                 }
+                
+                ctx.restore(); // KAMERA BİTİŞİ
             }
             requestAnimationFrame(gameLoop);
         }
