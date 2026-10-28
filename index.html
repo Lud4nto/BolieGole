@@ -821,14 +821,6 @@
 
         menuMusic.loop = true;
         bgMusic.loop = true;
-        menuMusic.addEventListener('ended', () => { if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); } });
-        bgMusic.addEventListener('ended', () => { if (!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); } });
-        menuMusic.addEventListener('timeupdate', () => {
-            if (menuMusic.duration && menuMusic.currentTime >= menuMusic.duration - 0.1) { menuMusic.currentTime = 0; }
-        });
-        bgMusic.addEventListener('timeupdate', () => {
-            if (bgMusic.duration && bgMusic.currentTime >= bgMusic.duration - 0.1) { bgMusic.currentTime = 0; }
-        });
 
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
@@ -1729,20 +1721,76 @@
                         }
                     }
                 } else {
-                    let isAttacking = ball.owner && players[ball.owner] && players[ball.owner].team === p.team;
+                    let ballOwnerObj = ball.owner ? players[ball.owner] : null;
+                    let isOurTeamAttacking = ballOwnerObj && ballOwnerObj.team === p.team;
+                    let isEnemyAttacking = ballOwnerObj && ballOwnerObj.team !== p.team;
+                    let isBallFree = !ballOwnerObj;
+                    
+                    // Topa mesafem
+                    let myDistToBall = Math.hypot(ball.x - p.x, ball.y - p.y);
+                    
+                    // Takımdaki aynı pozisyondaki botlar arasında en yakın olan mı?
+                    let teammatesSamePos = Object.values(players).filter(t => t.isBot && t.team === p.team && t.position === p.position);
+                    let closestToBall = teammatesSamePos.reduce((prev, curr) => {
+                        let dp = Math.hypot(ball.x - prev.x, ball.y - prev.y);
+                        let dc = Math.hypot(ball.x - curr.x, ball.y - curr.y);
+                        return dp < dc ? prev : curr;
+                    }, teammatesSamePos[0]);
+                    let isClosestInPos = closestToBall && closestToBall.id === p.id;
+                    
                     if (p.position === 'DEF') {
-                        if (!isAttacking) {
-                            let enemyFwd = Object.values(players).find(t => t.team !== p.team && t.position === 'FWD');
-                            if (enemyFwd) { targetX = enemyFwd.x; targetY = enemyFwd.y; }
-                            else { targetX = p.team === 'red' ? 300 : 900; targetY = ball.y; }
-                        } else { targetX = p.team === 'red' ? 350 : 850; targetY = 300; }
+                        if (isEnemyAttacking && myDistToBall < 250) {
+                            // Yakındaki rakip top sahibine baskı yap
+                            targetX = ball.x; targetY = ball.y;
+                        } else if (isEnemyAttacking) {
+                            // Rakip top sahibi uzakta → defansif pozisyon al
+                            targetX = p.team === 'red' ? 350 : 850;
+                            targetY = ball.y * 0.5 + 300 * 0.5;
+                        } else if (isBallFree && isClosestInPos) {
+                            // Top sahipsiz + bu DEF en yakın → topa koş
+                            targetX = ball.x; targetY = ball.y;
+                        } else if (isBallFree) {
+                            targetX = p.team === 'red' ? 350 : 850;
+                            targetY = ball.y;
+                        } else {
+                            // Bizim takım topa sahip → ileri çık
+                            targetX = p.team === 'red' ? 450 : 750;
+                            targetY = 300;
+                        }
                     } else if (p.position === 'MID') {
-                        targetX = p.team === 'red' ? 550 : 650;
-                        targetY = ball.y * 0.8 + 300 * 0.2;
-                        if (Math.hypot(ball.x - p.x, ball.y - p.y) < 150) { targetX = ball.x; targetY = ball.y; }
+                        if (isEnemyAttacking && myDistToBall < 300) {
+                            // Rakip top sahibine koş (top çalmaya çalış)
+                            targetX = ball.x; targetY = ball.y;
+                        } else if (isBallFree && isClosestInPos) {
+                            // Top sahipsiz + bu MID en yakın → topa koş
+                            targetX = ball.x; targetY = ball.y;
+                        } else if (isBallFree) {
+                            targetX = p.team === 'red' ? 550 : 650;
+                            targetY = ball.y * 0.6 + 300 * 0.4;
+                        } else if (isOurTeamAttacking) {
+                            // Hücuma destek
+                            targetX = p.team === 'red' ? 700 : 500;
+                            targetY = ball.y * 0.5 + 300 * 0.5;
+                        } else {
+                            targetX = p.team === 'red' ? 550 : 650;
+                            targetY = 300;
+                        }
                     } else if (p.position === 'FWD') {
-                        if (isAttacking) { targetX = p.team === 'red' ? 1200 - 250 : 250; targetY = 200 + Math.random() * 200; }
-                        else { targetX = p.team === 'red' ? 450 : 750; targetY = 300; }
+                        if (isBallFree && isClosestInPos) {
+                            // Top sahipsiz + bu FWD en yakın → topa koş
+                            targetX = ball.x; targetY = ball.y;
+                        } else if (isEnemyAttacking) {
+                            // Rakip topta → orta sahaya yardıma gel
+                            targetX = p.team === 'red' ? 550 : 650;
+                            targetY = ball.y * 0.5 + 300 * 0.5;
+                        } else if (isOurTeamAttacking) {
+                            // Bizim top → boşa kaç, gol pozisyonu al
+                            targetX = p.team === 'red' ? 1200 - 250 : 250;
+                            targetY = 200 + Math.random() * 200;
+                        } else {
+                            targetX = p.team === 'red' ? 650 : 550;
+                            targetY = 300;
+                        }
                     }
                 }
                 let dx = targetX - p.x;
@@ -1774,6 +1822,8 @@
                 let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
                 if (hitLeftGoal || hitRightGoal) {
                     if (ball.z <= 80) {
+                        let scoringTeam = hitRightGoal ? 'red' : 'blue';
+                        let concedingTeam = scoringTeam === 'red' ? 'blue' : 'red';
                         if (hitRightGoal) score.red++; else score.blue++;
                         playKickSound(true);
                         ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
@@ -1783,6 +1833,15 @@
                                 let defaultSlot = FORMATION_SLOTS[p.team].find(sl => sl.name === p.position);
                                 if(defaultSlot) { p.x = defaultSlot.x; p.y = defaultSlot.y; }
                             }
+                        }
+                        // KICKOFF: Gol yiyen takımın en ileri botu topu alıp başlatır
+                        let kickoffBot = Object.values(players).find(p => p.isBot && p.team === concedingTeam && p.position === 'FWD');
+                        if (!kickoffBot) kickoffBot = Object.values(players).find(p => p.isBot && p.team === concedingTeam && p.position === 'MID');
+                        if (kickoffBot) {
+                            kickoffBot.x = 600; kickoffBot.y = 300;
+                            ball.owner = kickoffBot.id;
+                            ball.possessionTimer = 60;
+                            ball.x = 600; ball.y = 300;
                         }
                     } else {
                         ball.x = hitRightGoal ? 1200 - 30 : 30;
