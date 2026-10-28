@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta charset="UTF-8"> <!-- Bu en üstte olmalı -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>BolieGole</title>
     <link rel="manifest" href="manifest.json">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
-        html, body { 
-            margin: 0; padding: 0; 
-            width: 100vw; height: 100vh; height: 100dvh; 
-            overflow: hidden; 
-            background-color: #000; 
-            color: white; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            touch-action: none; 
-            -webkit-user-select: none; 
-            user-select: none; 
-        }
+          html, body {
+            margin: 0;
+            padding: 0;
+             width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            box-sizing: border-box;
+}
+
         
         #orientation-warning { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #0f172a; color: white; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 24px; font-weight: bold; padding: 20px; }
         #orientation-warning svg { width: 100px; height: 100px; margin-bottom: 20px; animation: rotateAnim 2s infinite ease-in-out; }
@@ -586,17 +592,36 @@
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
     <script>
-        // Tam ekran ve yatay zorlama
-        function forceFullscreenAndLandscape() {
-            try {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            } catch(e) { console.log("Tam ekran hatası:", e); }
+       // Tam ekran ve yatay zorlama (Samsung uyumlu)
+function forceFullscreenAndLandscape() {
+    try {
+        // Samsung ve diğer Android cihazlar için önekli metodlar
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(()=>{});
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
         }
+        
+        // Yatay ekran zorla
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+        
+        // Samsung için ekstra: System UI gizle
+        if (navigator.userAgent.includes('Samsung')) {
+            document.body.style.paddingTop = '0';
+            document.body.style.marginTop = '0';
+        }
+    } catch(e) { console.log("Tam ekran hatası:", e); }
+}
+
+// Sadece gerçek bir tıklamada tetikle (touchstart değil, click)
+document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
         
         // İlk tıklamada tetikle (Tarayıcı kuralları gereği tıklama gerekir)
         document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
@@ -832,10 +857,18 @@
             if (!isMuted) {
                 if (screenId === 'screen-game') {
                     menuMusic.pause();
-                    if (!isOffline && !isPractice) bgMusic.play().catch(()=>{});
+                    menuMusic.currentTime = 0; // Menü müziğini sıfırla
+                    if (!isOffline && !isPractice) {
+                        bgMusic.currentTime = 0; // Maç müziğini baştan başlat
+                        bgMusic.play().catch(()=>{});
+                    }
                 } else {
                     bgMusic.pause();
-                    menuMusic.play().catch(()=>{});
+                    bgMusic.currentTime = 0; // Maç müziğini sıfırla
+                    if (menuMusic.paused) {
+                        menuMusic.currentTime = 0;
+                        menuMusic.play().catch(()=>{});
+                    }
                 }
             }
         };
