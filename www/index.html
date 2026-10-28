@@ -792,7 +792,20 @@
         document.addEventListener("DOMContentLoaded", () => {
             renderShop();
             loadSocketIO(); 
-
+                // --- ARKA PLAN MÜZİĞİNİ BAŞLATMA KODU ---
+    function startBGM() {
+        if (!isMuted) {
+            bgMusic.volume = musicSlider.value / 100;
+            bgMusic.play().then(() => {
+                document.removeEventListener('click', startBGM);
+                document.removeEventListener('touchstart', startBGM);
+            }).catch(e => console.log("Müzik başlatılamadı, etkileşim bekleniyor..."));
+        }
+    }
+    document.addEventListener('click', startBGM);
+    document.addEventListener('touchstart', startBGM);
+    // -----------------------------------------
+            
             document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
             document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
