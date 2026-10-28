@@ -9,10 +9,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
-        /* EKRAN KİLİDİ: Sayfanın kaydırılmasını ve büyütülmesini engeller */
+        /* EKRAN KİLİDİ VE MOBİL UYUM */
         html, body { 
             margin: 0; padding: 0; 
-            width: 100vw; height: 100vh; 
+            width: 100vw; height: 100vh; height: 100dvh; /* Mobil adres çubuğu taşmalarını engeller */
             overflow: hidden; 
             background-color: #0f172a; 
             color: white; 
@@ -22,7 +22,7 @@
             user-select: none; 
         }
         
-        #orientation-warning { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 24px; font-weight: bold; padding: 20px; }
+        #orientation-warning { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #0f172a; color: white; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 24px; font-weight: bold; padding: 20px; }
         #orientation-warning svg { width: 100px; height: 100px; margin-bottom: 20px; animation: rotateAnim 2s infinite ease-in-out; }
         @keyframes rotateAnim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
         
@@ -32,32 +32,27 @@
         }
 
         .screen { 
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             display: none; flex-direction: column; align-items: center; justify-content: center; 
             z-index: 1000; 
             overflow: hidden; 
         }
         .active { display: flex; }
         
-        #screen-shop, #screen-lobby, #screen-server-list, #screen-options { overflow-y: auto; }
+        /* Taşmayı önlemek için sadece gerekli ekranlarda kaydırma */
+        #screen-shop, #screen-server-list, #screen-options, .modal-content { overflow-y: auto; }
 
-        /* ARKA PLAN AYARI: Resim tam ortada ve kesilmeden duracak */
+        /* ARKA PLAN AYARI */
         .bg-image { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100vh; 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             background-image: url('menu.png'); 
-            background-size: contain; /* Resmin TAMAMI görünsün diye */
+            background-size: contain; 
             background-repeat: no-repeat;
             background-position: center center; 
             z-index: -2; 
         }
-        
-        /* Arka plandaki bulanık efekt boşlukları güzelce dolduracak */
         .bg-blur { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100vh; 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             background-image: url('menu.png'); 
             background-size: cover; 
             background-position: center; 
@@ -66,19 +61,25 @@
             opacity: 1; 
         }
 
-        .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; touch-action: manipulation; pointer-events: auto; }
+        /* ESNEK BUTONLAR (Mobil taşmasını engeller) */
+        .menu-btn { 
+            width: clamp(250px, 80vw, 320px); 
+            padding: 15px; 
+            background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; 
+            font-family: 'Press Start 2P', cursive; font-size: clamp(14px, 4vw, 20px); 
+            color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; touch-action: manipulation; pointer-events: auto; 
+        }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
         
-        /* Butonlar resmin üzerine binmesin diye aşağı çektik */
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 180px; z-index: 10; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: clamp(100px, 20vh, 180px); z-index: 10; align-items: center; }
 
-        .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-        .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
+        .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
         .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; margin-top: 0; }
         .modal-content input[type="text"], .modal-content input[type="password"] { padding: 12px; border-radius: 6px; border: 3px solid #8b5a2b; background: #fefae0; color: #2b1b0e; font-size: 16px; font-weight: bold; }
         
-        .radio-group { display: flex; gap: 20px; font-weight: bold; font-size: 14px; justify-content: center; }
+        .radio-group { display: flex; gap: 20px; font-weight: bold; font-size: 14px; justify-content: center; flex-wrap: wrap; }
         .color-picker-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: bold; }
         .color-picker-row input[type="color"] { width: 40px; height: 40px; border: 2px solid #8b5a2b; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         
@@ -86,29 +87,29 @@
         .btn-cancel { background: #ef4444; border: 3px solid #991b1b; box-shadow: 3px 3px 0px #7f1d1d; color: white; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; flex: 1; touch-action: manipulation; }
         .btn-confirm { background: #22c55e; border: 3px solid #166534; box-shadow: 3px 3px 0px #14532d; color: white; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; flex: 1; touch-action: manipulation; }
 
-        .list-container { width: 80%; max-width: 800px; height: 55vh; background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; overflow-y: auto; position: relative; color: #2b1b0e; touch-action: pan-y; }
-        .top-bar { width: 80%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #fff; text-shadow: 2px 2px 0px #000; }
+        .list-container { width: 90%; max-width: 800px; height: 55vh; background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; overflow-y: auto; position: relative; color: #2b1b0e; touch-action: pan-y; }
+        .top-bar { width: 90%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #fff; text-shadow: 2px 2px 0px #000; flex-wrap: wrap; gap: 10px; }
         .create-btn { background: #22c55e; border: 4px solid #166534; box-shadow: 4px 4px 0px #14532d; color: white; padding: 12px 20px; font-weight: bold; cursor: pointer; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 14px; transition: 0.1s; touch-action: manipulation; }
         .create-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #14532d; }
         
-        .server-item { background: #fefae0; padding: 15px; margin-bottom: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 3px solid #8b5a2b; }
+        .server-item { background: #fefae0; padding: 15px; margin-bottom: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 3px solid #8b5a2b; flex-wrap: wrap; gap: 10px; }
         .server-item h3 { margin: 0; font-size: 18px; color: #2b1b0e; }
         .server-item span { font-size: 12px; font-weight: bold; color: #8b5a2b; }
         .join-btn { background: #4c9aff; border: 3px solid #2563eb; box-shadow: 3px 3px 0px #1e3a8a; color: white; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 6px; touch-action: manipulation; }
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
-        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 0 10px; box-sizing: border-box; }
-        .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; }
-        .lobby-center { display: flex; flex-direction: column; align-items: center; width: 40%; }
+        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 10px; box-sizing: border-box; flex-wrap: wrap; overflow-y: auto; }
+        .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; min-width: 250px; }
+        .lobby-center { display: flex; flex-direction: column; align-items: center; width: 40%; min-width: 300px; }
         .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
         .room-code { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
         
-        .team-box { width: 100%; height: 320px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; overflow-y: auto; }
+        .team-box { width: 100%; height: clamp(150px, 30vh, 320px); background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; overflow-y: auto; }
         .team-box:hover { transform: scale(1.02); }
         .team-title { font-family: 'Press Start 2P', cursive; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
         .player-slot { width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
         
-        #tactics-board { width: 100%; height: 380px; background-color: #1b5e20; border: 4px solid rgba(255,255,255,0.8); border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.5); touch-action: manipulation; }
+        #tactics-board { width: 100%; height: clamp(200px, 40vh, 380px); background-color: #1b5e20; border: 4px solid rgba(255,255,255,0.8); border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.5); touch-action: manipulation; }
         .pitch-line { position: absolute; background: rgba(255,255,255,0.5); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
         .pitch-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
         .pitch-box { position: absolute; top: 50%; width: 60px; height: 160px; border: 2px solid rgba(255,255,255,0.5); transform: translateY(-50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
@@ -158,29 +159,29 @@
             display: flex; align-items: center; font-family: 'Orbitron', sans-serif;
             overflow: hidden; z-index: 100;
         }
-        .sb-team { width: 160px; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); }
+        .sb-team { width: clamp(100px, 15vw, 160px); padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); }
         .sb-team.red { border-right: 2px solid #333; }
         .sb-team.blue { border-left: 2px solid #333; flex-direction: row-reverse; }
-        .sb-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .sb-score { font-size: 28px; font-weight: 900; }
+        .sb-name { font-size: clamp(10px, 1.5vw, 14px); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .sb-score { font-size: clamp(18px, 3vw, 28px); font-weight: 900; }
         .sb-team.red .sb-name { color: #ff4c4c; text-shadow: 0 0 10px #ff4c4c; }
         .sb-team.red .sb-score { color: #fff; text-shadow: 0 0 10px #ff4c4c; }
         .sb-team.blue .sb-name { color: #4c9aff; text-shadow: 0 0 10px #4c9aff; }
         .sb-team.blue .sb-score { color: #fff; text-shadow: 0 0 10px #4c9aff; }
         .sb-center { padding: 5px 20px; display: flex; flex-direction: column; align-items: center; background: #111; }
-        .sb-timer { font-size: 16px; font-weight: 700; color: #eab308; text-shadow: 0 0 10px #eab308; background: #000; padding: 2px 10px; border-radius: 4px; border: 1px solid #333; }
+        .sb-timer { font-size: clamp(10px, 1.5vw, 16px); font-weight: 700; color: #eab308; text-shadow: 0 0 10px #eab308; background: #000; padding: 2px 10px; border-radius: 4px; border: 1px solid #333; }
         
         @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); color: #fff; text-shadow: 0 0 30px #fff; } 100% { transform: scale(1); } }
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
         .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        #stamina-container { width: 250px; height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
-        #stamina-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
+        #stamina-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
         
-        #power-container { width: 250px; height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
-        #power-text { position: absolute; width: 250px; text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
+        #power-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
         @keyframes powerFull { 0% { box-shadow: 0 0 0px #eab308; } 50% { box-shadow: 0 0 20px #eab308, 0 0 40px #eab308; } 100% { box-shadow: 0 0 0px #eab308; } }
         .power-full { animation: powerFull 0.2s infinite; background: #eab308 !important; }
 
@@ -188,8 +189,10 @@
         .top-ui-btn { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; touch-action: manipulation; }
         .top-ui-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.05); border-color: rgba(255,255,255,0.5); }
         
-        #mute-btn { position: absolute; top: 15px; right: 15px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; pointer-events: auto; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; z-index: 100; touch-action: manipulation; }
-        #mute-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.1); border-color: white; }
+        #mute-btn, #camera-btn { position: absolute; right: 15px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; pointer-events: auto; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; z-index: 100; touch-action: manipulation; }
+        #mute-btn { top: 15px; }
+        #camera-btn { top: 75px; }
+        #mute-btn:hover, #camera-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.1); border-color: white; }
 
         #mobile-controls { position: absolute; bottom: 20px; right: 20px; display: none; gap: 15px; align-items: flex-end; pointer-events: auto; touch-action: none; }
         .mob-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4); transition: transform 0.1s; pointer-events: auto; touch-action: manipulation; }
@@ -213,19 +216,19 @@
         .emote-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: transform 0.1s; user-select: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); touch-action: manipulation; }
         .emote-btn:active { transform: scale(1.3); }
 
-        #overlay-message { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; color: white; text-align: center; backdrop-filter: blur(10px); }
-        #overlay-message h1 { font-family: 'Press Start 2P', cursive; font-size: 48px; margin-bottom: 20px; color: #eab308; text-shadow: 0 0 30px #eab308; }
-        #overlay-message p { font-size: 24px; font-weight: bold; }
+        #overlay-message { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; color: white; text-align: center; backdrop-filter: blur(10px); }
+        #overlay-message h1 { font-family: 'Press Start 2P', cursive; font-size: clamp(24px, 5vw, 48px); margin-bottom: 20px; color: #eab308; text-shadow: 0 0 30px #eab308; }
+        #overlay-message p { font-size: clamp(16px, 3vw, 24px); font-weight: bold; }
 
-        #overlay-replay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 6000; pointer-events: none; }
-        #replay-text { font-family: 'Press Start 2P', cursive; font-size: 80px; color: #ef4444; text-shadow: 4px 4px 0 #000, 0 0 30px #ef4444; animation: pop 1s infinite alternate; }
+        #overlay-replay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 6000; pointer-events: none; }
+        #replay-text { font-family: 'Press Start 2P', cursive; font-size: clamp(40px, 10vw, 80px); color: #ef4444; text-shadow: 4px 4px 0 #000, 0 0 30px #ef4444; animation: pop 1s infinite alternate; }
         @keyframes pop { from { transform: scale(1); } to { transform: scale(1.1); } }
-        #replay-scorer { font-family: 'Press Start 2P', cursive; font-size: 24px; color: #fff; text-shadow: 2px 2px 0 #000; margin-top: 20px; }
+        #replay-scorer { font-family: 'Press Start 2P', cursive; font-size: clamp(16px, 3vw, 24px); color: #fff; text-shadow: 2px 2px 0 #000; margin-top: 20px; }
 
-        #overlay-result { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 7000; backdrop-filter: blur(10px); }
-        #overlay-result h1 { font-family: 'Press Start 2P', cursive; font-size: 40px; margin-bottom: 10px; color: #eab308; text-shadow: 4px 4px 0 #000, 0 0 20px #eab308; }
-        #result-score { font-family: 'Press Start 2P', cursive; font-size: 60px; color: #fff; margin-bottom: 20px; text-shadow: 4px 4px 0 #000; }
-        #result-desc { font-size: 24px; font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000; }
+        #overlay-result { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 7000; backdrop-filter: blur(10px); }
+        #overlay-result h1 { font-family: 'Press Start 2P', cursive; font-size: clamp(24px, 5vw, 40px); margin-bottom: 10px; color: #eab308; text-shadow: 4px 4px 0 #000, 0 0 20px #eab308; }
+        #result-score { font-family: 'Press Start 2P', cursive; font-size: clamp(40px, 8vw, 60px); color: #fff; margin-bottom: 20px; text-shadow: 4px 4px 0 #000; }
+        #result-desc { font-size: clamp(16px, 3vw, 24px); font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000; }
 
         .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
         .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; margin: 0; text-align: center; }
@@ -241,12 +244,12 @@
         #credits-content p { font-size: 16px; line-height: 1.6; color: #d4a373; }
         @keyframes scrollCredits { 0% { transform: translateY(100vh); } 100% { transform: translateY(-100%); } }
 
-        /* --- OYUN EKRANI TAM SIFIRLAMA --- */
+        /* --- OYUN EKRANI TAM SIFIRLAMA VE BLUR ARKA PLAN --- */
         #screen-game { 
-            background: #000; 
+            background: transparent; 
             position: absolute; 
             top: 0; left: 0; 
-            width: 100vw; height: 100vh; 
+            width: 100vw; height: 100dvh; 
             display: none; 
             z-index: 1000; 
             overflow: hidden; 
@@ -257,15 +260,32 @@
             position: absolute; 
             top: 0; left: 0;
             width: 100vw; 
-            height: 100vh; 
+            height: 100dvh; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             overflow: hidden; 
-            background: #111;
+            background-color: #000;
+            background-image: url('menu.png'); /* Siyah çerçeveler yerine blur arka plan */
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Blur katmanı */
+        #game-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('menu.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(15px) brightness(0.3);
+            z-index: 0;
         }
         
         canvas { 
+            position: relative;
+            z-index: 1;
             width: 100%; 
             height: 100%; 
             object-fit: contain; 
@@ -276,12 +296,13 @@
         .vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none; z-index: 50; }
 
         @media (pointer: coarse) {
-            #stadium-scoreboard { transform: translateX(-50%) scale(0.8); top: 5px; }
+            #stadium-scoreboard { transform: translateX(-50%) scale(0.9); top: 5px; }
             #mobile-controls, #joystick-zone { display: flex; }
             #pc-controls { display: none; }
             #top-left-btns { top: 5px; left: 5px; }
             .top-ui-btn { padding: 5px 10px; font-size: 12px; }
             #mute-btn { top: 5px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
+            #camera-btn { top: 55px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
             
             #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 5px; }
             .lobby-side { width: 100%; flex-direction: row; justify-content: space-between; height: auto; margin-bottom: 5px; }
@@ -294,20 +315,13 @@
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
             
-            .menu-buttons {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-top: 100px; /* Mobilde butonları biraz daha yukarı alalım */
-                width: 95%;
-                max-width: 400px;
-            }
-            .menu-btn { width: 100%; padding: 12px 2px; font-size: 12px; }
+            .menu-buttons { margin-top: 60px; gap: 10px; }
+            .menu-btn { padding: 12px 5px; font-size: clamp(12px, 3.5vw, 16px); }
             
-            .modal-content { width: 90%; padding: 15px; gap: 10px; }
+            .modal-content { width: 95%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
             .list-container { width: 95%; height: 60vh; }
-            .top-bar { width: 95%; font-size: 16px; flex-direction: column; gap: 10px; }
+            .top-bar { width: 95%; font-size: 16px; }
             .create-btn { font-size: 12px; padding: 8px 15px; }
             .server-item { padding: 10px; }
             .info-box { width: 90%; padding: 15px; }
@@ -337,8 +351,8 @@
     </div>
 
     <div id="screen-main-menu" class="screen active">
-        <div class="bg-blur"></div> <!-- Bulanık arka plan -->
-        <div class="bg-image"></div> <!-- Net arka plan (Kaleci ve Logo) -->
+        <div class="bg-blur"></div>
+        <div class="bg-image"></div>
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
             <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU</button>
@@ -506,6 +520,7 @@
             </div>
             
             <div id="mute-btn">🔊</div>
+            <div id="camera-btn">📷</div> <!-- YENİ KAMERA BUTONU -->
             
             <div id="stadium-scoreboard">
                 <div class="sb-team red">
@@ -610,6 +625,8 @@
         let score = { red: 0, blue: 0 };
         let isSpectator = true;
         let isOffline = false;
+        
+        let isDynamicCamera = false; // YENİ: Kamera başlangıçta sabit (tüm saha)
 
         let stamina = 100;
         let isExhausted = false; 
@@ -749,6 +766,12 @@
             if (isMuted) { bgMusic.pause(); } else if ((currentRoom && currentRoom.status === 'playing') || isOffline) { bgMusic.play().catch(()=>{}); }
         };
 
+        // YENİ: KAMERA BUTONU MANTIĞI
+        document.getElementById('camera-btn').onclick = () => {
+            isDynamicCamera = !isDynamicCamera;
+            document.getElementById('camera-btn').innerText = isDynamicCamera ? '🎥' : '📷';
+        };
+
         document.getElementById('btn-fullscreen').onclick = () => {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.log(err));
             else if (document.exitFullscreen) document.exitFullscreen();
@@ -792,20 +815,21 @@
         document.addEventListener("DOMContentLoaded", () => {
             renderShop();
             loadSocketIO(); 
-                // --- ARKA PLAN MÜZİĞİNİ BAŞLATMA KODU ---
-    function startBGM() {
-        if (!isMuted) {
-            bgMusic.volume = musicSlider.value / 100;
-            bgMusic.play().then(() => {
-                document.removeEventListener('click', startBGM);
-                document.removeEventListener('touchstart', startBGM);
-            }).catch(e => console.log("Müzik başlatılamadı, etkileşim bekleniyor..."));
-        }
-    }
-    document.addEventListener('click', startBGM);
-    document.addEventListener('touchstart', startBGM);
-    // -----------------------------------------
-            
+
+            // --- ARKA PLAN MÜZİĞİNİ BAŞLATMA KODU ---
+            function startBGM() {
+                if (!isMuted) {
+                    bgMusic.volume = musicSlider.value / 100;
+                    bgMusic.play().then(() => {
+                        document.removeEventListener('click', startBGM);
+                        document.removeEventListener('touchstart', startBGM);
+                    }).catch(e => console.log("Müzik başlatılamadı, etkileşim bekleniyor..."));
+                }
+            }
+            document.addEventListener('click', startBGM);
+            document.addEventListener('touchstart', startBGM);
+            // -----------------------------------------
+
             document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
             document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
@@ -1774,8 +1798,11 @@
 
                 ctx.clearRect(0, 0, 1200, 600);
 
+                // KAMERA MANTIĞI (YENİLENDİ)
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
-                if (currentRoom && !isPractice && !isOffline) {
+                
+                // Eğer "Dinamik Kamera" (Takip/Zoom) aktifse eski mantık çalışır
+                if (isDynamicCamera && currentRoom && !isPractice && !isOffline) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
                     else if (currentRoom.status === 'playing') { if (ball.owner === null && speed > 15) { targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; } }
