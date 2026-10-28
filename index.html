@@ -835,23 +835,15 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        menuMusic.loop = false;
-        bgMusic.loop = false;
+        menuMusic.loop = true;
+        bgMusic.loop = true;
         
-        menuMusic.addEventListener('timeupdate', () => {
-            if (isFinite(menuMusic.duration) && menuMusic.duration > 0 && menuMusic.currentTime >= menuMusic.duration - 0.2) {
-                menuMusic.currentTime = 0;
-                menuMusic.play().catch(()=>{});
-            }
+        menuMusic.addEventListener('ended', () => {
+            if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); }
         });
-        
-        bgMusic.addEventListener('timeupdate', () => {
-            if (isFinite(bgMusic.duration) && bgMusic.duration > 0 && bgMusic.currentTime >= bgMusic.duration - 0.2) {
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(()=>{});
-            }
+        bgMusic.addEventListener('ended', () => {
+            if (!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }
         });
-
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
             if (bar.style.display === 'flex') { bar.style.display = 'none'; }
