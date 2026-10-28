@@ -1073,7 +1073,20 @@
                 myPlayerName = name;
                 localStorage.setItem('bolie_player_name', myPlayerName);
                 document.getElementById('modal-name').style.display = 'none';
+
+                // İlk etkileşimle birlikte müzikleri başlat ve unlock et
+                if (!isMuted) {
+                    menuMusic.volume = musicSlider.value / 100;
+                    menuMusic.play().catch(()=>{});
+                    [bgMusic, goalSound, whistleSound].forEach(a => {
+                        let origVol = a.volume;
+                        a.volume = 0;
+                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                    });
+                }
+
                 switchScreen('screen-server-list');
+
                 if (socket.id !== "p1") socket.emit('get_servers');
                 else if (socket) socket.emit('get_servers');
             };
