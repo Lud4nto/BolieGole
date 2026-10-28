@@ -177,10 +177,10 @@
         .pitch-line { position: absolute; background: rgba(255,255,255,0.5); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
         .pitch-circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
         .pitch-box { position: absolute; top: 50%; width: 50px; height: 120px; border: 2px solid rgba(255,255,255,0.5); transform: translateY(-50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        .slot { position: absolute; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); font-size: 9px; font-family: 'Press Start 2P', cursive; cursor: pointer; border: 2px solid white; z-index: 10; transition: 0.2s; touch-action: manipulation; }
+        .slot { position: absolute; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); font-size: 9px; font-family: 'Press Start 2P', cursive; cursor: pointer; border: 2px solid white; z-index: 10; transition: 0.2s; touch-action: manipulation; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; }
         .slot:hover { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 15px white; }
         .slot.empty { background: rgba(0,0,0,0.6); border-style: dashed; }
-        .slot.filled { color: #fff; font-weight: bold; border-width: 3px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .slot.filled { border-width: 3px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
         .slot.selected-bot { border: 3px solid #eab308; box-shadow: 0 0 20px #eab308; transform: translate(-50%, -50%) scale(1.2); }
         .slot .pos-label { position: absolute; bottom: -12px; font-size: 7px; color: white; font-family: 'Segoe UI', sans-serif; font-weight: bold; text-shadow: 1px 1px 2px black; }
         .lobby-positions {
@@ -302,12 +302,16 @@
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
         .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: none; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        
+        /* SPRINT BAR: VARSAYILAN GİZLİ, sadece .sprint-active class'ı varken görünür */
+        #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: none; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
+        #stamina-container.sprint-active { display: flex; }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
-        #stamina-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
-        #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #stamina-text { position: absolute; width: 100%; text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        
+        #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
-        #power-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
+        #power-text { position: absolute; width: 100%; text-align: center; font-size: 8px; font-weight: 900; color: #fff; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
         @keyframes powerFull { 0% { box-shadow: 0 0 0px #eab308; } 50% { box-shadow: 0 0 20px #eab308, 0 0 40px #eab308; } 100% { box-shadow: 0 0 0px #eab308; } }
         .power-full { animation: powerFull 0.2s infinite; background: #eab308 !important; }
 
@@ -386,7 +390,6 @@
             #emote-toggle { padding: 5px 8px; font-size: 14px; }
             #mute-btn { top: 5px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
             #camera-btn { top: 55px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
-            
             #screen-lobby { padding: 5px; gap: 4px; }
             .lobby-top h2 { font-size: 10px; }
             .room-code { font-size: 11px; padding: 3px 8px; letter-spacing: 2px; }
@@ -401,7 +404,6 @@
             .start-game-btn { padding: 8px 15px; font-size: 11px; }
             .add-bot-btn { padding: 6px 10px; font-size: 9px; }
             .ui-bars { top: 55px; }
-            
             .menu-buttons { margin-top: 32vh; gap: 8px; width: 95%; max-height: 55vh; }
             .menu-btn { padding: 12px 5px; font-size: clamp(10px, 3vw, 14px); }
             .modal-content { width: 95%; padding: 15px; gap: 10px; }
@@ -528,7 +530,6 @@
                 <label><input type="radio" name="room-type" value="community"> Topluluk</label>
             </div>
             <input type="password" id="input-room-pass" placeholder="Şifre (İsteğe Bağlı)" style="display:none;">
-            
             <div style="border-top: 2px dashed #8b5a2b; padding-top: 10px; margin-top: 5px;">
                 <div class="color-picker-row">
                     <input type="text" id="input-red-name" placeholder="Kırmızı Takım Adı" value="KIRMIZI" style="flex:1; padding: 5px;">
@@ -549,7 +550,6 @@
                     </select>
                 </div>
             </div>
-
             <div class="modal-actions">
                 <button class="btn-cancel" id="btn-cancel-create">İPTAL</button>
                 <button class="btn-confirm" id="btn-confirm-create">OLUŞTUR</button>
@@ -557,15 +557,12 @@
         </div>
     </div>
 
-    <!-- YENİ LOBİ TASARIMI -->
     <div id="screen-lobby" class="screen">
         <div class="bg-blur" style="opacity: 0.95;"></div>
-        
         <div class="lobby-top">
             <h2 id="lobby-room-name">Oda Adı</h2>
             <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
         </div>
-        
         <div class="lobby-teams">
             <div class="team-box red" id="box-red" onclick="selectTeam('red')">
                 <div class="team-title" id="title-red" style="color:#ff4c4c;">KIRMIZI</div>
@@ -576,19 +573,16 @@
                 <div id="blue-players" style="width:100%;"></div>
             </div>
         </div>
-        
         <div id="tactics-board">
             <div class="pitch-line" style="top:50%; left:0; width:100%; height:2px;"></div>
             <div class="pitch-circle"></div>
             <div class="pitch-box" style="left:0;"></div>
             <div class="pitch-box" style="right:0;"></div>
         </div>
-        
         <div class="lobby-positions">
             <div class="position-list" id="red-positions"></div>
             <div class="position-list" id="blue-positions"></div>
         </div>
-        
         <div class="lobby-actions">
             <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
             <button class="menu-btn" style="padding:8px 15px; font-size:11px;" onclick="leaveRoom()">AYRIL</button>
@@ -669,11 +663,10 @@
 
     <script>
         function forceFullscreenAndLandscape() {
-    try {
-        // APK'da fullscreen manifest'te hallediliyor. JS'den çağırınca WebView yeniden yüklenip ses kesiyor.
-        if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(() => {}); }
-    } catch(e) { console.log("Orientation hatası:", e); }
-}
+            try {
+                if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(() => {}); }
+            } catch(e) { console.log("Orientation hatası:", e); }
+        }
         document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
         document.body.addEventListener('touchstart', forceFullscreenAndLandscape, { once: true });
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
@@ -709,7 +702,7 @@
 
         const BASE_FRAME = 60;
         const MOVE_EMIT_MS = 33;
-        const NEON_KEEPER_COLORS = ['#FF10F0', '#39FF14']; // Neon pembe, neon yeşil
+        const NEON_KEEPER_COLORS = ['#FF10F0', '#39FF14'];
 
         let myPlayerName = "";
         let currentRoom = null;
@@ -738,7 +731,7 @@
 
         let ballRotation = 0;
         let ballTrail = [];
-        let myEmotes = []; // Emoji offline da çalışsın
+        let myEmotes = [];
 
         let cameraX = 600;
         let cameraY = 300;
@@ -951,7 +944,6 @@
             });
         }
 
-        // YENİ: Offline'da da emoji çalışsın
         window.sendEmote = (emoji) => { 
             if (!isPractice && !isOffline && socket) socket.emit('send_emote', emoji); 
             myEmotes.push({ emoji: emoji, timer: 120 });
@@ -962,23 +954,34 @@
             renderShop();
             loadSocketIO(); 
 
-function startMenuBGM() {
-    if (!isMuted) {
-        menuMusic.volume = musicSlider.value / 100;
-        menuMusic.play().then(() => {
-            // Diğer sesleri de unlock et (mobil için kritik)
-            [bgMusic, goalSound, whistleSound].forEach(a => {
-                let origVol = a.volume;
-                a.volume = 0;
-                a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
-            });
-            document.removeEventListener('click', startMenuBGM);
-            document.removeEventListener('touchstart', startMenuBGM);
-        }).catch(e => console.log("Menü müziği başlatılamadı."));
-    }
-}
-            document.addEventListener('click', startMenuBGM);
-            document.addEventListener('touchstart', startMenuBGM);
+            if (!isMuted) {
+                menuMusic.volume = musicSlider.value / 100;
+                menuMusic.play().then(() => {
+                    console.log("Müzik otomatik başladı");
+                    [bgMusic, goalSound, whistleSound].forEach(a => {
+                        let origVol = a.volume;
+                        a.volume = 0;
+                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                    });
+                }).catch(() => {
+                    console.log("Autoplay engellendi, dokunma bekleniyor");
+                    function startMenuBGM() {
+                        if (!isMuted) {
+                            menuMusic.play().then(() => {
+                                [bgMusic, goalSound, whistleSound].forEach(a => {
+                                    let origVol = a.volume;
+                                    a.volume = 0;
+                                    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                                });
+                                document.removeEventListener('click', startMenuBGM);
+                                document.removeEventListener('touchstart', startMenuBGM);
+                            }).catch(()=>{});
+                        }
+                    }
+                    document.addEventListener('click', startMenuBGM);
+                    document.addEventListener('touchstart', startMenuBGM);
+                });
+            }
 
             document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
@@ -1112,10 +1115,8 @@ function startMenuBGM() {
                             el.innerText = p.name.substring(0, 4);
                             let posStr = p.position || '';
                             if (posStr.includes('GK')) {
-                                // Kaleci: tek renk neon
                                 el.style.background = p.neonColor || '#39FF14';
                             } else {
-                                // Oyuncu: 2 renkli şeritli forma
                                 let c1 = team === 'red' ? room.redColor : room.blueColor;
                                 let c2 = team === 'red' ? (room.redColor2 || c1) : (room.blueColor2 || c1);
                                 el.style.background = `linear-gradient(90deg, ${c1} 50%, ${c2} 50%)`;
@@ -1261,7 +1262,13 @@ function startMenuBGM() {
                 overlay.style.display = 'flex';
             });
 
-            socket.on('play_whistle', () => { if(!isMuted) { whistleSound.currentTime = 0; whistleSound.play().catch(()=>{}); } });
+            socket.on('play_whistle', () => { 
+                if(!isMuted) { 
+                    whistleSound.currentTime = 0; 
+                    whistleSound.play().catch(e => console.log("Düdük hata:", e.name));
+                } 
+            });
+            
             socket.on('goal_scored', (data) => {
                 if(!isMuted) { goalSound.currentTime = 0; goalSound.play().catch(()=>{}); }
                 document.getElementById('replay-scorer').innerText = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
@@ -1323,6 +1330,7 @@ function startMenuBGM() {
                 let s = Math.floor(room.matchTime % 60);
                 let timeStr = (room.half === 1 ? "1. YARI " : "2. YARI ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
                 if (timeStr !== lastTimerText) { elTimer.innerText = timeStr; lastTimerText = timeStr; }
+                // NOT: stamina-container burada set edilmiyor, updateMovement hallediyor
             });
         }
 
@@ -1501,6 +1509,9 @@ function startMenuBGM() {
             lastFrameTime = now;
             let activePlayer = isOffline ? players["p1"] : myPlayer;
             if (!isPractice && !isOffline && (isSpectator || !activePlayer || !currentRoom || currentRoom.status !== 'playing')) { 
+                // Oyunda değilsek stamina barı gizle
+                const se = document.getElementById('stamina-container');
+                if (se) se.classList.remove('sprint-active');
                 requestAnimationFrame(updateMovement); return; 
             }
             if ((isPractice || isOffline) && !activePlayer) { requestAnimationFrame(updateMovement); return; }
@@ -1549,10 +1560,17 @@ function startMenuBGM() {
             if (keys.d || keys.ArrowRight) dx += 1;
             if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
 
-            // Sprint barı sadece depar tuşuna basıp hareket ederken görünsün
-            const isSprintingNow = keys['f'] && (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01);
+            // ==== SPRINT BAR: sadece depar tuşu basılı + hareket var + kaleci değil ====
+            let hasMovementInput = (dx !== 0 || dy !== 0);
+            let isSprintingNow = keys['f'] && hasMovementInput && !isSpectator;
+            if (activePlayer && activePlayer.position && activePlayer.position.includes('GK')) {
+                isSprintingNow = false;
+            }
             const staminaEl = document.getElementById('stamina-container');
-            if (staminaEl) staminaEl.style.display = (isSprintingNow && !isSpectator) ? 'flex' : 'none';
+            if (staminaEl) {
+                if (isSprintingNow) staminaEl.classList.add('sprint-active');
+                else staminaEl.classList.remove('sprint-active');
+            }
 
             if (dx !== 0 || dy !== 0) {
                 let length = Math.hypot(dx, dy);
@@ -1563,13 +1581,13 @@ function startMenuBGM() {
             }
             moveX = dx; moveY = dy;
 
-            // Saha sınırı: 100 → 40 (topa yetişebilsinler)
-            let newX = Math.max(40, Math.min(1200 - 40, activePlayer.x + dx));
-            let newY = Math.max(40, Math.min(600 - 40, activePlayer.y + dy));
+            // Saha sınırı 30 (topa yetişebilsinler)
+            let newX = Math.max(30, Math.min(1200 - 30, activePlayer.x + dx));
+            let newY = Math.max(30, Math.min(600 - 30, activePlayer.y + dy));
 
             if (activePlayer.position && activePlayer.position.includes('GK')) {
-                if (activePlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
-                else newX = Math.max(1000, Math.min(1160, newX));
+                if (activePlayer.team === 'red') newX = Math.max(30, Math.min(200, newX));
+                else newX = Math.max(1000, Math.min(1170, newX));
                 newY = Math.max(200, Math.min(400, newY));
             } else if (!isPractice && !isOffline && currentRoom.isKickoff && activePlayer.team !== currentRoom.concedingTeam) {
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
@@ -1609,7 +1627,7 @@ function startMenuBGM() {
             ];
             redBots.forEach((b, i) => {
                 let id = "r_bot" + i;
-                players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
+                players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true, difficulty: 3 };
             });
             let blueBots = [
                 { pos: 'GK', x: 1140, y: 300 },
@@ -1620,13 +1638,12 @@ function startMenuBGM() {
             ];
             blueBots.forEach((b, i) => {
                 let id = "b_bot" + i;
-                players[id] = { id: id, name: "M. Bot " + (i+1), team: "blue", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
+                players[id] = { id: id, name: "M. Bot " + (i+1), team: "blue", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true, difficulty: 3 };
             });
             assignLocalKeeperColors();
 
             score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            // Offline: çift renk
             currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball, redColor: '#ff0000', redColor2: '#ffd700', blueColor: '#1e90ff', blueColor2: '#ffffff' };
             myEmotes = [];
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
@@ -1735,8 +1752,8 @@ function startMenuBGM() {
                     p.lastDy = Math.sin(angle);
                     p.x += p.lastDx * speed * timeMult;
                     p.y += p.lastDy * speed * timeMult;
-                    p.x = Math.max(40, Math.min(1200 - 40, p.x));
-                    p.y = Math.max(40, Math.min(600 - 40, p.y));
+                    p.x = Math.max(30, Math.min(1200 - 30, p.x));
+                    p.y = Math.max(30, Math.min(600 - 30, p.y));
                 }
             }
             if (ball.owner === null) {
@@ -1909,7 +1926,6 @@ function startMenuBGM() {
             let dt = Math.min((now - lastRenderTime) / 1000, 0.1);
             lastRenderTime = now;
 
-            // Emote timer decrement (her zaman)
             for (let i = myEmotes.length - 1; i >= 0; i--) {
                 myEmotes[i].timer--;
                 if (myEmotes[i].timer <= 0) myEmotes.splice(i, 1);
@@ -1999,7 +2015,6 @@ function startMenuBGM() {
                         }
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
 
-                        // ==== YENİ: Çift renkli forma + Neon kaleci ====
                         let posStr = p.position || '';
                         let isGK = posStr.includes('GK');
                         let c1, c2;
@@ -2019,7 +2034,6 @@ function startMenuBGM() {
                         if (isGK || c1 === c2) {
                             ctx.fillStyle = c1;
                         } else {
-                            // Şeritli forma (sol-sağ 2 renk)
                             let stripeGrad = ctx.createLinearGradient(px - pSize, 0, px + pSize, 0);
                             stripeGrad.addColorStop(0, c1);
                             stripeGrad.addColorStop(0.48, c1);
@@ -2033,13 +2047,11 @@ function startMenuBGM() {
                         ctx.stroke();
                         ctx.shadowBlur = 0;
 
-                        // Kıyafet aksesuarları
                         if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
                         else if (p.equipped && p.equipped.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
                         else if (p.equipped && p.equipped.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
                         
-                        // İz
                         if (p.equipped && p.equipped.trail && p.equipped.trail !== 'none') {
                             let speed = Math.hypot(p.lastDx || 0, p.lastDy || 0);
                             if (speed > 1) {
@@ -2050,8 +2062,6 @@ function startMenuBGM() {
                             }
                         }
 
-                        // ==== YENİ: Emoji render ====
-                        // Başka oyuncuların (online)
                         if (!isPractice && !isOffline && currentRoom.emotes) {
                             for (let em of currentRoom.emotes) {
                                 if (em.playerId === id && id !== socket.id) {
@@ -2060,7 +2070,6 @@ function startMenuBGM() {
                                 }
                             }
                         }
-                        // Kendi emote'larım (her zaman görünsün)
                         let isMyself = (id === socket.id) || (isOffline && id === "p1") || (isPractice && id === "p1");
                         if (isMyself && myEmotes.length > 0) {
                             for (let em of myEmotes) {
