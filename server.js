@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
             id: "bot_" + socket.id + "_" + s.botCounter, 
             name: "Bot (Normal)", 
             team: botTeam, position: emptySlot.id,
-            difficulty: 3, // Varsayılan Normal
+            difficulty: 3,
             equipped: { outfit: 'default', aura: 'none', trail: 'none' }, 
             neonColor: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
             lastDx: 0, lastDy: 0, x: emptySlot.x, y: emptySlot.y, isBot: true, effects: {} 
@@ -141,7 +141,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('change_bot_difficulty', (data) => {
-        if (!socket.roomId) return;
+        if (!socket.roomId || !data) return;
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
         let bot = s.players.find(p => p.id === data.botId);
@@ -153,13 +153,17 @@ io.on('connection', (socket) => {
         }
     });
 
+    // DÜZELTME: Slot doğrulaması eklendi
     socket.on('move_bot', (data) => {
-        if (!socket.roomId) return;
+        if (!socket.roomId || !data) return;
         let s = servers[socket.roomId];
         if (!s || s.hostId !== socket.id) return;
         
         let bot = s.players.find(p => p.id === data.botId);
         if (!bot || !bot.isBot) return;
+        
+        // Geçerli slot kontrolü
+        if (!FORMATION_SLOTS[bot.team].some(sl => sl.id === data.newSlotId)) return;
         
         if (s.formation[bot.team][data.newSlotId]) return;
 
@@ -429,17 +433,20 @@ function updateGame(s) {
             if (s.emotes[i].timer <= 0) s.emotes.splice(i, 1);
         }
 
-        // --- BOT YAPAY ZEKASI (ZORLUK SEVİYELİ) ---
+        // --- BOT YAPAY ZEKASI (ZORLUK SEVİYELİ) — DÜZELTME: Null kontrolleri eklendi ---
         if (s.status === 'playing') {
+            // Top sahibini bir kez bul (null kontrollü)
+            let ballOwnerObj = s.ball.owner ? s.players.find(pl => pl.id === s.ball.owner) : null;
+
             for (let p of s.players) {
                 if (!p.isBot || p.team === 'spectator') continue;
                 
                 let diff = p.difficulty || 3;
-                if (diff === 1) { p.lastDx = 0; p.lastDy = 0; continue; } // 1: AFK
+                if (diff === 1) { p.lastDx = 0; p.lastDy = 0; continue; }
                 
                 let speed = 3.5 * speedMult;
-                if (diff === 2) speed = 2.5 * speedMult; // 2: Kolay
-                else if (diff === 4) speed = 4.8 * speedMult; // 4: Pro
+                if (diff === 2) speed = 2.5 * speedMult;
+                else if (diff === 4) speed = 4.8 * speedMult;
 
                 if (s.ball.owner === p.id) speed = (diff === 4 ? 5.2 : 4.0) * speedMult;
 
@@ -449,7 +456,10 @@ function updateGame(s) {
                 let targetX = p.x;
                 let targetY = p.y;
 
-                if (p.position.includes('GK')) {
+                // DÜZELTME: position null olabilir, güvenli string'e çevir
+                let posStr = p.position || '';
+
+                if (posStr.includes('GK')) {
                     let goalX = p.team === 'red' ? 60 : 1140;
                     let targetGoalY = clamp(s.ball.y, 220, 380);
                     if (s.ball.owner === p.id) {
@@ -475,7 +485,6 @@ function updateGame(s) {
                     let enemyGoalX = p.team === 'red' ? width - 25 : 25;
                     let distToGoal = Math.abs(p.x - enemyGoalX);
                     
-                    // Pro botlar daha uzaktan ve daha isabetli şut çeker
                     let shotRange = diff === 4 ? 450 : 350;
                     if (distToGoal < shotRange) {
                         let accuracy = diff === 4 ? 0.05 : (diff === 2 ? 0.4 : 0.2);
@@ -490,7 +499,10 @@ function updateGame(s) {
                     
                     let isInEnemyHalf = p.team === 'red' ? p.x > 500 : p.x < 700;
                     if (isInEnemyHalf) {
-                        let teammates = s.players.filter(t => t.team === p.team && t.id !== p.id && !t.position.includes('GK'));
+                        // DÜZELTME: t.position null kontrolü eklendi
+                        let teammates = s.players.filter(t => 
+                            t.team === p.team && t.id !== p.id && t.position && !t.position.includes('GK')
+                        );
                         let bestPassTarget = teammates.sort((a,b) => {
                             if (p.team === 'red') return b.x - a.x;
                             else return a.x - b.x;
@@ -513,23 +525,27 @@ function updateGame(s) {
                     targetX = enemyGoalX;
                     targetY = 300 + (Math.random() - 0.5) * 150;
                 } else {
-                    let isOurTeamAttacking = s.ball.owner && s.players.find(pl => pl.id === s.ball.owner).team === p.team;
+                    // DÜZELTME: Null kontrollü top sahibi
+                    let isOurTeamAttacking = ballOwnerObj && ballOwnerObj.team === p.team;
                     
-                    if (p.position.includes('DEF')) {
+                    if (posStr.includes('DEF')) {
                         if (!isOurTeamAttacking) {
-                            let enemyFwd = s.players.find(pl => pl.team !== p.team && pl.position.includes('FWD'));
+                            // DÜZELTME: pl.position null kontrolü
+                            let enemyFwd = s.players.find(pl => 
+                                pl.team !== p.team && pl.position && pl.position.includes('FWD')
+                            );
                             if (enemyFwd && diff > 1) { targetX = enemyFwd.x; targetY = enemyFwd.y; }
                             else { targetX = p.team === 'red' ? 300 : 900; targetY = s.ball.y; }
                         } else { targetX = p.team === 'red' ? 350 : 850; targetY = 300; }
                     } 
-                    else if (p.position.includes('MID')) {
+                    else if (posStr.includes('MID')) {
                         targetX = p.team === 'red' ? 550 : 650;
                         targetY = s.ball.y * 0.8 + 300 * 0.2;
                         let distToBall = Math.hypot(s.ball.x - p.x, s.ball.y - p.y);
                         let tackleRange = diff === 4 ? 200 : 150;
                         if (distToBall < tackleRange) { targetX = s.ball.x; targetY = s.ball.y; }
                     } 
-                    else if (p.position.includes('FWD')) {
+                    else if (posStr.includes('FWD')) {
                         if (isOurTeamAttacking) {
                             targetX = p.team === 'red' ? width - 250 : 250;
                             targetY = 200 + Math.random() * 200;
@@ -635,19 +651,14 @@ function updateGame(s) {
             }
         }
 
-        // --- GOL VE TOP FİZİĞİ (GELİŞMİŞ) ---
         if (ball.owner === null) {
             ball.x += ball.vx * speedMult; ball.y += ball.vy * speedMult; ball.z += ball.vz;
-            
-            // Hava sürtünmesi
             ball.vx *= friction; ball.vy *= friction; ball.vz -= 0.8;
 
-            // Zemin sekmesi
             if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
             if(Math.abs(ball.vx) < 0.1) ball.vx = 0;
             if(Math.abs(ball.vy) < 0.1) ball.vy = 0;
 
-            // Yan duvar sekmesi
             if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
             if (ball.y > height - 20) { ball.y = height - 20; ball.vy *= -0.8; }
             
@@ -659,18 +670,15 @@ function updateGame(s) {
                 let isPost = (ball.y > 190 && ball.y < 210) || (ball.y > 390 && ball.y < 410);
                 
                 if (isTopBar || isPost) {
-                    // Direkten veya üst direkten dönme
                     ball.x = hitRightGoal ? width - 30 : 30; 
                     ball.vx = -ball.vx * 0.6;
                     ball.vy = (Math.random() - 0.5) * 20;
                     ball.vz = isTopBar ? 5 : -Math.abs(ball.vz) * 0.5;
                     ball.shotPower = 0;
                 } else {
-                    // GOL!
                     if (hitRightGoal) { s.score.red++; s.concedingTeam = 'blue'; } 
                     else { s.score.blue++; s.concedingTeam = 'red'; }
                     
-                    // GOL OLDUĞUNDA TOPU KALE İÇİNDE DURDUR
                     ball.vx = 0; ball.vy = 0; ball.vz = 0;
                     ball.x = hitRightGoal ? width - 10 : 10; 
                     ball.y = 300;
@@ -680,13 +688,11 @@ function updateGame(s) {
                     return;
                 }
             } else {
-                // Dış duvarlar
                 if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
                 if (ball.x > width - 20) { ball.x = width - 20; ball.vx *= -0.8; }
             }
         }
 
-        // Kaleci kurtarışı veya oyuncu çarpışması (Top yavaşça kalecinin üstüne gelirse seker)
         if (ball.owner === null) {
             for (let p of s.players) {
                 if (p.team === 'spectator') continue;
