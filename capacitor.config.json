@@ -1,0 +1,6 @@
+{
+  "appId": "com.boliegole.app",
+  "appName": "BolieGole",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
