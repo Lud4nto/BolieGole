@@ -15,8 +15,8 @@ const height = 600;
 const BALL_MAX_SPEED = 35;
 const BALL_MAX_Z_SPEED = 15;
 const GOAL_TOP_Z = 80;
-const PLAYER_MIN_X = 25, PLAYER_MAX_X = width - 25;
-const PLAYER_MIN_Y = 25, PLAYER_MAX_Y = height - 25;
+const PLAYER_MIN_X = 100, PLAYER_MAX_X = width - 100;
+const PLAYER_MIN_Y = 100, PLAYER_MAX_Y = height - 100;
 
 const NEON_COLORS = ['#39FF14', '#FF073A', '#00FFFF', '#FF00FF', '#FFFF00', '#FF5E00', '#00FFAA'];
 
@@ -153,7 +153,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // DÜZELTME: Slot doğrulaması eklendi
     socket.on('move_bot', (data) => {
         if (!socket.roomId || !data) return;
         let s = servers[socket.roomId];
@@ -162,9 +161,7 @@ io.on('connection', (socket) => {
         let bot = s.players.find(p => p.id === data.botId);
         if (!bot || !bot.isBot) return;
         
-        // Geçerli slot kontrolü
         if (!FORMATION_SLOTS[bot.team].some(sl => sl.id === data.newSlotId)) return;
-        
         if (s.formation[bot.team][data.newSlotId]) return;
 
         if (bot.position && s.formation[bot.team][bot.position] === bot.id) {
@@ -433,9 +430,7 @@ function updateGame(s) {
             if (s.emotes[i].timer <= 0) s.emotes.splice(i, 1);
         }
 
-        // --- BOT YAPAY ZEKASI (ZORLUK SEVİYELİ) — DÜZELTME: Null kontrolleri eklendi ---
         if (s.status === 'playing') {
-            // Top sahibini bir kez bul (null kontrollü)
             let ballOwnerObj = s.ball.owner ? s.players.find(pl => pl.id === s.ball.owner) : null;
 
             for (let p of s.players) {
@@ -456,7 +451,6 @@ function updateGame(s) {
                 let targetX = p.x;
                 let targetY = p.y;
 
-                // DÜZELTME: position null olabilir, güvenli string'e çevir
                 let posStr = p.position || '';
 
                 if (posStr.includes('GK')) {
@@ -499,7 +493,6 @@ function updateGame(s) {
                     
                     let isInEnemyHalf = p.team === 'red' ? p.x > 500 : p.x < 700;
                     if (isInEnemyHalf) {
-                        // DÜZELTME: t.position null kontrolü eklendi
                         let teammates = s.players.filter(t => 
                             t.team === p.team && t.id !== p.id && t.position && !t.position.includes('GK')
                         );
@@ -525,12 +518,10 @@ function updateGame(s) {
                     targetX = enemyGoalX;
                     targetY = 300 + (Math.random() - 0.5) * 150;
                 } else {
-                    // DÜZELTME: Null kontrollü top sahibi
                     let isOurTeamAttacking = ballOwnerObj && ballOwnerObj.team === p.team;
                     
                     if (posStr.includes('DEF')) {
                         if (!isOurTeamAttacking) {
-                            // DÜZELTME: pl.position null kontrolü
                             let enemyFwd = s.players.find(pl => 
                                 pl.team !== p.team && pl.position && pl.position.includes('FWD')
                             );
@@ -562,8 +553,8 @@ function updateGame(s) {
                     p.lastDx = Math.cos(moveAngle) * speed;
                     p.lastDy = Math.sin(moveAngle) * speed;
                     p.x += p.lastDx; p.y += p.lastDy;
-                    p.x = Math.max(210, Math.min(width - 210, p.x));
-                    p.y = Math.max(25, Math.min(height - 25, p.y));
+                    p.x = Math.max(100, Math.min(width - 100, p.x));
+                    p.y = Math.max(100, Math.min(height - 100, p.y));
                 }
             }
         }
