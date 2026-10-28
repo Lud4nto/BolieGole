@@ -821,6 +821,8 @@
 
         menuMusic.loop = true;
         bgMusic.loop = true;
+        menuMusic.addEventListener('ended', () => { if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); } });
+        bgMusic.addEventListener('ended', () => { if (!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); } });
 
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
