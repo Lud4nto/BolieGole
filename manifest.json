@@ -3,7 +3,7 @@
   "dir": "ltr",
   "display": "standalone",
   "name": "BolieGole",
-  "orientation": "any",
+  "orientation": "landscape",
   "scope": "/",
   "short_name": "BolieGole",
   "start_url": "/",
