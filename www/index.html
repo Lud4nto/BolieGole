@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -252,7 +251,6 @@
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
             <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU (OFFLINE)</button>
             <button class="menu-btn" id="btn-shop">MAĞAZA</button>
-            <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-options">AYARLAR</button>
             <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
             <button class="menu-btn" id="btn-exit">ÇIKIŞ</button>
@@ -480,14 +478,36 @@
     <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- BURASI ÇOK ÖNEMLİ: SOCKET BAĞLANTISI VE HATA YAKALAMA -->
+    <script src="https://boliegole.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        let socket;
-        try {
-            socket = io();
-        } catch(e) {
-            console.log("Socket.io yüklenemedi, offline modda çalışılıyor.");
-            socket = { emit: () => {}, on: () => {} };
+        // Global hata yakalayıcı (Oyunun donmasını engeller)
+        window.onerror = function(msg, url, line, col, error) {
+            console.log("Oyun Hatası Yakalandı: ", msg);
+            return true; 
+        };
+
+        // Sahte Socket (İnternet yoksa bile kodun çökmesini engeller)
+        let socket = {
+            emit: function() {},
+            on: function() {},
+            id: "p1"
+        };
+
+        // Eğer io fonksiyonu yüklendiyse gerçek sunucuya bağlanmayı dene
+        if (typeof io !== 'undefined') {
+            try {
+                let realSocket = io("https://boliegole.onrender.com", { transports: ["websocket", "polling"] });
+                realSocket.on('connect', () => {
+                    socket = realSocket;
+                    console.log("Sunucuya bağlanıldı.");
+                });
+                realSocket.on('connect_error', () => {
+                    console.log("Sunucuya bağlanılamadı, offline mod aktif.");
+                });
+            } catch(e) {
+                console.log("Socket kurulum hatası:", e);
+            }
         }
 
         const BASE_FRAME = 60;
@@ -691,7 +711,6 @@
         // --- MENÜ OLAYLARI ---
         document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
         document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
-        document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
         document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
         document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
         document.getElementById('btn-credits').onclick = () => switchScreen('screen-credits');
@@ -919,7 +938,7 @@
                         }
                     }
                 }
-                for (let id in players) { if (!currentIds.includes(id) && id !== "p1") delete players[id]; }
+                for (let id in players) { if (!currentIds.includes(id) && id !== "p1" && !id.startsWith("r_bot") && !id.startsWith("b_bot")) delete players[id]; }
                 ball = room.ball;
                 if (room.score.red !== lastScoreRed) { elScoreRed.innerText = room.score.red; lastScoreRed = room.score.red; }
                 if (room.score.blue !== lastScoreBlue) { elScoreBlue.innerText = room.score.blue; lastScoreBlue = room.score.blue; }
@@ -941,7 +960,7 @@
             for (let p of frame.players) {
                 if (players[p.id]) {
                     players[p.id].x = p.x; players[p.id].y = p.y;
-                    if(p.id !== (socket ? socket.id : 'p1')) { players[p.id].renderX = p.x; players[p.id].renderY = p.y; }
+                    if(p.id !== socket.id) { players[p.id].renderX = p.x; players[p.id].renderY = p.y; }
                 }
             }
         }
@@ -958,7 +977,7 @@
         function goToLobby() {
             if (isOffline || isPractice) { isOffline = false; isPractice = false; switchScreen('screen-main-menu'); return; }
             if (currentRoom && currentRoom.status === 'playing') {
-                if (currentRoom.hostId === (socket ? socket.id : '')) {
+                if (currentRoom.hostId === socket.id) {
                     if (confirm("Maçı sonlandırmak istediğinden emin misin?")) { if(socket) socket.emit('stop_game'); }
                 } else alert("Maç devam ederken sadece sunucu sahibi maçı sonlandırabilir.");
             } else switchScreen('screen-lobby');
@@ -977,7 +996,7 @@
 
             if (keys[k] !== undefined) keys[k] = true;
             if (k === ' ') {
-                if (isPractice || isOffline || ball.owner === (socket ? socket.id : 'p1')) { isCharging = true; chargeStartTime = Date.now(); }
+                if (isPractice || isOffline || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
                 else if (!isPractice && !isOffline) { if(socket) socket.emit('tackle'); }
             }
             updateKeyVisual(k, true);
@@ -1012,7 +1031,7 @@
         }
 
         function forcePass() {
-            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            let myId = isOffline ? "p1" : socket.id;
             if (!isPractice && !isOffline && ball.owner !== myId) return;
             let angle = getKickAngle();
             playKickSound(false);
@@ -1023,7 +1042,7 @@
         }
 
         function executeKick() {
-            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            let myId = isOffline ? "p1" : socket.id;
             if (!isPractice && !isOffline && ball.owner !== myId) return;
             let angle = getKickAngle();
             let force = shotPower / 100; 
@@ -1063,21 +1082,21 @@
         joystickZone.addEventListener('touchcancel', resetJoystick);
 
         const btnSprint = document.getElementById('btn-sprint');
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if ((!isSpectator || isPractice || isOffline) && myPlayer.position && !myPlayer.position.includes('GK')) keys['f'] = true; });
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if ((!isSpectator || isPractice || isOffline) && myPlayer && myPlayer.position && !myPlayer.position.includes('GK')) keys['f'] = true; });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); keys['f'] = false; });
         btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; });
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
-            if (!isPractice && !isOffline && !isSpectator && ball.owner !== (socket ? socket.id : '') && myPlayer.position && !myPlayer.position.includes('GK')) { if(socket) socket.emit('tackle'); }
+            if (!isPractice && !isOffline && !isSpectator && ball.owner !== socket.id && myPlayer && myPlayer.position && !myPlayer.position.includes('GK')) { if(socket) socket.emit('tackle'); }
         });
 
         const btnAction = document.getElementById('btn-action');
         btnAction.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (isSpectator && !isPractice && !isOffline) return;
-            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            let myId = isOffline ? "p1" : socket.id;
             if (isPractice || isOffline || ball.owner === myId) { isCharging = true; chargeStartTime = Date.now(); }
         });
         btnAction.addEventListener('touchend', (e) => {
@@ -1104,11 +1123,16 @@
             let dt = Math.min((now - lastFrameTime) / 1000, 0.1);
             lastFrameTime = now;
 
-            if (!isPractice && !isOffline && (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing')) { 
+            let activePlayer = isOffline ? players["p1"] : myPlayer;
+
+            if (!isPractice && !isOffline && (isSpectator || !activePlayer || !currentRoom || currentRoom.status !== 'playing')) { 
                 requestAnimationFrame(updateMovement); return; 
             }
+            if ((isPractice || isOffline) && !activePlayer) {
+                requestAnimationFrame(updateMovement); return;
+            }
 
-            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            let myId = isOffline ? "p1" : socket.id;
 
             if (isCharging && !isPractice && !isOffline && ball.owner !== myId) {
                 isCharging = false; shotPower = 0; document.getElementById('power-container').style.display = 'none';
@@ -1119,7 +1143,7 @@
                 stamina += 0.15 * BASE_FRAME * dt;
                 if (stamina >= 30) isExhausted = false;
             } else {
-                if (keys['f'] && (!myPlayer || !myPlayer.position || !myPlayer.position.includes('GK'))) {
+                if (keys['f'] && (!activePlayer || !activePlayer.position || !activePlayer.position.includes('GK'))) {
                     currentSpeed = sprintSpeed;
                     stamina -= 1.2 * BASE_FRAME * dt;
                     if (stamina <= 0) { stamina = 0; isExhausted = true; }
@@ -1166,23 +1190,24 @@
             }
             moveX = dx; moveY = dy;
 
-            let newX = Math.max(25, Math.min(1200 - 25, myPlayer.x + dx));
-            let newY = Math.max(25, Math.min(600 - 25, myPlayer.y + dy));
+            let newX = Math.max(25, Math.min(1200 - 25, activePlayer.x + dx));
+            let newY = Math.max(25, Math.min(600 - 25, activePlayer.y + dy));
 
-            if (!isPractice && myPlayer.position && myPlayer.position.includes('GK')) {
-                if (myPlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
+            if (activePlayer.position && activePlayer.position.includes('GK')) {
+                if (activePlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
                 else newX = Math.max(1000, Math.min(1160, newX));
                 newY = Math.max(200, Math.min(400, newY));
-            } else if (!isPractice && !isOffline && currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
+            } else if (!isPractice && !isOffline && currentRoom.isKickoff && activePlayer.team !== currentRoom.concedingTeam) {
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
                 if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
             }
 
-            myPlayer.x = newX;
-            myPlayer.y = newY;
+            activePlayer.x = newX;
+            activePlayer.y = newY;
+            if (isOffline && myPlayer) { myPlayer.x = newX; myPlayer.y = newY; }
 
             if (!isPractice && !isOffline && now - lastMoveEmit >= MOVE_EMIT_MS) {
-                if(socket) socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
+                if(socket) socket.emit('move', { x: Math.round(activePlayer.x), y: Math.round(activePlayer.y) });
                 lastMoveEmit = now;
             }
 
@@ -1347,7 +1372,6 @@
                     if (ball.z <= 80) {
                         if (hitRightGoal) score.red++; else score.blue++;
                         playKickSound(true);
-                        // Gol sonrası santra için topu ve oyuncuları resetle
                         ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
                         for (let id in players) {
                             let p = players[id];
@@ -1402,20 +1426,6 @@
             
             if (score.red !== lastScoreRed) { elScoreRed.innerText = score.red; lastScoreRed = score.red; }
             if (score.blue !== lastScoreBlue) { elScoreBlue.innerText = score.blue; lastScoreBlue = score.blue; }
-        }
-
-        function startPracticeMode() {
-            isPractice = true; isOffline = false; isSpectator = false; switchScreen('screen-game');
-            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
-            players = { "p1": myPlayer };
-            ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
-            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
-            const canvas = document.getElementById('gameCanvas');
-            if (canvas) canvas.focus();
-            document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
-            document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
-            document.getElementById('match-timer').innerText = "SERBEST ÇALIŞMA (R: Topu Yenile)";
         }
 
         const canvas = document.getElementById('gameCanvas');
@@ -1514,7 +1524,6 @@
                 if (isOffline) {
                     updateOfflinePhysics(dt);
                 } else if (isPractice) {
-                    // Practice fiziği
                     if (ball.owner === null) {
                         ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
                         ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
@@ -1554,7 +1563,8 @@
 
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
                 if (isPractice || isOffline) { 
-                    targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2; 
+                    let targetP = isOffline ? players["p1"] : myPlayer;
+                    if (targetP) { targetCamX = targetP.x; targetCamY = targetP.y; targetZoom = 1.2; }
                 } else if (currentRoom) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
@@ -1585,12 +1595,12 @@
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
-                        if (id !== (socket ? socket.id : 'p1') && !isPractice && !isOffline) {
+                        if (id !== socket.id && !isPractice && !isOffline) {
                             if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
                             p.renderX += (p.x - p.renderX) * lerpFactor; p.renderY += (p.y - p.renderY) * lerpFactor;
                         }
-                        let px = (id === (socket ? socket.id : 'p1') || isPractice || isOffline) ? p.x : p.renderX;
-                        let py = (id === (socket ? socket.id : 'p1') || isPractice || isOffline) ? p.y : p.renderY;
+                        let px = (id === socket.id || isPractice || isOffline) ? p.x : p.renderX;
+                        let py = (id === socket.id || isPractice || isOffline) ? p.y : p.renderY;
                         let pSize = 22;
                         if (p.equipped && p.equipped.aura && p.equipped.aura !== 'none') {
                             let glowColor = 'white';
@@ -1622,7 +1632,7 @@
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = pSize + 4 + (pulse * 6); 
                             ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4; ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
                         }
-                        if (id === (socket ? socket.id : 'p1') && isCharging && shotPower >= 38) {
+                        if (id === socket.id && isCharging && shotPower >= 38) {
                             let intensity = shotPower / 100; let time = Date.now() / 100;
                             ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
                             for (let i = 0; i < 5; i++) {
