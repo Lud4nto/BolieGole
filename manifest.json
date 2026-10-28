@@ -1,0 +1,11 @@
+{
+  "background_color": "#0f172a",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "BolieGole",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "BolieGole",
+  "start_url": "/",
+  "theme_color": "#0f172a"
+}
