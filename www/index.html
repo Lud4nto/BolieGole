@@ -1549,22 +1549,23 @@ function startMenuBGM() {
             if (keys.d || keys.ArrowRight) dx += 1;
             if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
 
-// ▼▼▼ YENİ EKLENEN 4 SATIR ▼▼▼
-const isSprintingNow = keys['f'] && (dx !== 0 || dy !== 0) && (!activePlayer.position || !activePlayer.position.includes('GK'));
-document.getElementById('stamina-container').style.display = (isSprintingNow && !isSpectator) ? 'flex' : 'none';
-// ▲▲▲ YENİ EKLENEN 4 SATIR ▲▲▲
+            // Sprint barı sadece depar tuşuna basıp hareket ederken görünsün
+            const isSprintingNow = keys['f'] && (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01);
+            const staminaEl = document.getElementById('stamina-container');
+            if (staminaEl) staminaEl.style.display = (isSprintingNow && !isSpectator) ? 'flex' : 'none';
 
-if (dx !== 0 || dy !== 0) {
-    let length = Math.hypot(dx, dy);
-    let speedMultiplier = isCharging ? 0.5 : 1;
-    dx = (dx / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
-    dy = (dy / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
-    localLastDx = dx; localLastDy = dy;
-}
-moveX = dx; moveY = dy;
+            if (dx !== 0 || dy !== 0) {
+                let length = Math.hypot(dx, dy);
+                let speedMultiplier = isCharging ? 0.5 : 1;
+                dx = (dx / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+                dy = (dy / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+                localLastDx = dx; localLastDy = dy;
+            }
+            moveX = dx; moveY = dy;
 
-            let newX = Math.max(100, Math.min(1200 - 100, activePlayer.x + dx));
-            let newY = Math.max(100, Math.min(600 - 100, activePlayer.y + dy));
+            // Saha sınırı: 100 → 40 (topa yetişebilsinler)
+            let newX = Math.max(40, Math.min(1200 - 40, activePlayer.x + dx));
+            let newY = Math.max(40, Math.min(600 - 40, activePlayer.y + dy));
 
             if (activePlayer.position && activePlayer.position.includes('GK')) {
                 if (activePlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
@@ -1734,8 +1735,8 @@ moveX = dx; moveY = dy;
                     p.lastDy = Math.sin(angle);
                     p.x += p.lastDx * speed * timeMult;
                     p.y += p.lastDy * speed * timeMult;
-                    p.x = Math.max(100, Math.min(1200 - 100, p.x));
-                    p.y = Math.max(100, Math.min(600 - 100, p.y));
+                    p.x = Math.max(40, Math.min(1200 - 40, p.x));
+                    p.y = Math.max(40, Math.min(600 - 40, p.y));
                 }
             }
             if (ball.owner === null) {
