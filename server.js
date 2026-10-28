@@ -15,8 +15,8 @@ const height = 600;
 const BALL_MAX_SPEED = 35;
 const BALL_MAX_Z_SPEED = 15;
 const GOAL_TOP_Z = 80;
-const PLAYER_MIN_X = 100, PLAYER_MAX_X = width - 100;
-const PLAYER_MIN_Y = 100, PLAYER_MAX_Y = height - 100;
+const PLAYER_MIN_X = 40, PLAYER_MAX_X = width - 40;
+const PLAYER_MIN_Y = 40, PLAYER_MAX_Y = height - 40;
 
 // YENİ: Kaleci neon renkleri (sadece 2 renk)
 const NEON_KEEPER_COLORS = ['#FF10F0', '#39FF14']; // Neon pembe, neon yeşil
@@ -567,8 +567,8 @@ function updateGame(s) {
                     p.lastDx = Math.cos(moveAngle) * speed;
                     p.lastDy = Math.sin(moveAngle) * speed;
                     p.x += p.lastDx; p.y += p.lastDy;
-                    p.x = Math.max(100, Math.min(width - 100, p.x));
-                    p.y = Math.max(100, Math.min(height - 100, p.y));
+                    p.x = Math.max(40, Math.min(width - 40, p.x));
+                    p.y = Math.max(40, Math.min(height - 40, p.y));
                 }
             }
         }
@@ -742,6 +742,15 @@ function resetBall(s, concededBy = null, isHalftime = false) {
         }
 
         s.players.forEach(p => { if(p.team !== 'spectator') setPos(p); });
+        
+        // AFK bot kickoff: topu al ve hemen oyuncuya at
+        let afkBot = s.players.find(p => p.team === concededBy && p.isBot && p.difficulty === 1);
+        if (afkBot) {
+            afkBot.x = 600; afkBot.y = 300;
+            s.ball.owner = afkBot.id;
+            s.ball.possessionTimer = 30;
+            s.ball.x = 600; s.ball.y = 300;
+        }
     } else {
         s.isKickoff = false; s.concedingTeam = null;
         s.players.forEach(p => { if(p.team !== 'spectator') setPos(p); });
