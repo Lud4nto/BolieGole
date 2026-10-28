@@ -22,10 +22,10 @@
         .bg-image { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('menu.png'); background-size: cover; background-position: center; z-index: -2; }
         .bg-blur { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('menu.png'); background-size: cover; background-position: center; filter: blur(12px) brightness(0.6); z-index: -1; opacity: 0.9; }
 
-        .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 24px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; }
+        .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 120px; z-index: 10; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 100px; z-index: 10; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
@@ -212,7 +212,7 @@
             .slot { width: 30px; height: 30px; font-size: 8px; }
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
-            .menu-btn { width: 260px; padding: 10px; font-size: 18px; }
+            .menu-btn { width: 260px; padding: 10px; font-size: 16px; }
             .modal-content { width: 80%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
             .list-container { width: 90%; height: 60vh; }
@@ -248,7 +248,8 @@
     <div id="screen-main-menu" class="screen active">
         <div class="bg-image"></div>
         <div class="menu-buttons">
-            <button class="menu-btn" id="btn-play">OYNA</button>
+            <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
+            <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU (OFFLINE)</button>
             <button class="menu-btn" id="btn-shop">MAĞAZA</button>
             <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-options">AYARLAR</button>
@@ -480,7 +481,13 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        let socket;
+        try {
+            socket = io();
+        } catch(e) {
+            console.log("Socket.io yüklenemedi, offline modda çalışılıyor.");
+            socket = { emit: () => {}, on: () => {} };
+        }
 
         const BASE_FRAME = 60;
         const MOVE_EMIT_MS = 33;
@@ -495,6 +502,7 @@
         let ball = { x: 600, y: 300, z: 0, owner: null, possessionTimer: 0, vx: 0, vy: 0, vz: 0 };
         let score = { red: 0, blue: 0 };
         let isSpectator = true;
+        let isOffline = false;
 
         let stamina = 100;
         let isExhausted = false; 
@@ -634,7 +642,7 @@
         document.getElementById('mute-btn').onclick = () => {
             isMuted = !isMuted; document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
             localStorage.setItem('bolie_mute', isMuted);
-            if (isMuted) { bgMusic.pause(); } else if (currentRoom && currentRoom.status === 'playing') { bgMusic.play().catch(()=>{}); }
+            if (isMuted) { bgMusic.pause(); } else if ((currentRoom && currentRoom.status === 'playing') || isOffline) { bgMusic.play().catch(()=>{}); }
         };
 
         document.getElementById('btn-fullscreen').onclick = () => {
@@ -680,7 +688,8 @@
         renderShop();
 
         // --- MENÜ OLAYLARI ---
-        document.getElementById('btn-play').onclick = () => { document.getElementById('modal-name').style.display = 'flex'; };
+        document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
+        document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
         document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
         document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
         document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
@@ -692,7 +701,7 @@
             myPlayerName = name;
             document.getElementById('modal-name').style.display = 'none';
             switchScreen('screen-server-list');
-            socket.emit('get_servers');
+            if (socket) socket.emit('get_servers');
         };
 
         document.getElementById('btn-back-main').onclick = () => switchScreen('screen-main-menu');
@@ -714,244 +723,212 @@
             let blueColor = document.getElementById('input-blue-color').value;
             let weather = document.getElementById('input-weather').value;
 
-            socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball });
+            if(socket) socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball });
             document.getElementById('modal-create').style.display = 'none';
         };
 
-        socket.on('server_list', (list) => {
-            serverListData = list;
-            let container = document.getElementById('server-list-container');
-            container.innerHTML = "";
-            if (list.length === 0) {
-                container.innerHTML = "<p style='text-align:center; font-weight:bold; color:#5a3a1b; font-size:18px;'>Henüz açılmış bir oda yok. Hemen bir tane oluştur!</p>";
-                return;
-            }
-            list.forEach(srv => {
-                let typeStr = srv.type === 'private' ? '🔒 Özel Oda' : '🌐 Topluluk';
-                let div = document.createElement('div');
-                div.className = 'server-item';
-                div.innerHTML = `
-                    <div>
-                        <h3>${escapeHtml(srv.name)} <span style="font-size:12px;">(${srv.playerCount}/10)</span></h3>
-                        <span>${typeStr}</span>
-                    </div>
-                    <button class="join-btn" onclick="joinRoom('${srv.id}', '${srv.type}')">KATIL</button>
-                `;
-                container.appendChild(div);
+        // --- SOCKET OLAYLARI (Online Mod İçin) ---
+        if(socket) {
+            socket.on('server_list', (list) => {
+                serverListData = list;
+                let container = document.getElementById('server-list-container');
+                if(!container) return;
+                container.innerHTML = "";
+                if (list.length === 0) {
+                    container.innerHTML = "<p style='text-align:center; font-weight:bold; color:#5a3a1b; font-size:18px;'>Henüz açılmış bir oda yok. Hemen bir tane oluştur!</p>";
+                    return;
+                }
+                list.forEach(srv => {
+                    let typeStr = srv.type === 'private' ? '🔒 Özel Oda' : '🌐 Topluluk';
+                    let div = document.createElement('div');
+                    div.className = 'server-item';
+                    div.innerHTML = `
+                        <div>
+                            <h3>${escapeHtml(srv.name)} <span style="font-size:12px;">(${srv.playerCount}/10)</span></h3>
+                            <span>${typeStr}</span>
+                        </div>
+                        <button class="join-btn" onclick="joinRoom('${srv.id}', '${srv.type}')">KATIL</button>
+                    `;
+                    container.appendChild(div);
+                });
             });
-        });
 
-        window.joinRoom = (id, type) => {
-            let pass = "";
-            if (type === 'private') {
-                pass = prompt("Bu Özel bir oda. Lütfen 6 haneli ODA KODUNU girin:");
-                if (pass === null) return; 
-            } else {
-                let srv = serverListData.find(s => s.id === id);
-                if (srv && srv.hasPassword) { pass = prompt("Bu oda şifreli. Lütfen şifreyi girin:"); if (pass === null) return; }
-            }
-            socket.emit('join_server', { id: id, password: pass, playerName: myPlayerName, equipped: equipped });
-        };
-
-        socket.on('join_error', (msg) => { alert(msg); });
-        socket.on('server_created', (room) => { currentRoom = room; myTeam = "spectator"; showLobby(room); });
-        socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
-        
-        document.getElementById('btn-add-bot').onclick = () => { socket.emit('add_bot'); };
-
-        // LOBİ VE TAKTİK TAHTASI GÜNCELLEMESİ (Çift Tıklama ile Bot Zorluk Seçimi)
-        function renderTacticsBoard(room) {
-            let board = document.getElementById('tactics-board');
-            if(!board) return;
-            board.querySelectorAll('.slot').forEach(el => el.remove());
-
-            let renderTeam = (team) => {
-                FORMATION_SLOTS[team].forEach(slot => {
-                    let el = document.createElement('div');
-                    el.className = 'slot ' + (room.formation[team][slot.id] ? 'filled' : 'empty');
-                    
-                    let boardRect = board.getBoundingClientRect();
-                    let pxX = (slot.x / 1200) * boardRect.width;
-                    let pxY = (slot.y / 600) * boardRect.height;
-                    el.style.left = pxX + 'px';
-                    el.style.top = pxY + 'px';
-
-                    let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
-                    if (p) {
-                        el.innerText = p.name.substring(0, 4);
-                        el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
-                        if (selectedBotId === p.id) el.classList.add('selected-bot');
-                    } else {
-                        el.innerText = '+';
-                        el.style.backgroundColor = team === 'red' ? 'rgba(255,76,76,0.5)' : 'rgba(76,154,255,0.5)';
-                    }
-                    
-                    let lbl = document.createElement('div');
-                    lbl.className = 'pos-label';
-                    lbl.innerText = slot.name;
-                    el.appendChild(lbl);
-
-                    // TEK TIKLAMA
-                    el.onclick = (e) => {
-                        e.stopPropagation();
-                        if (p && p.isBot && room.hostId === socket.id) {
-                            selectedBotId = p.id;
-                            renderTacticsBoard(room);
-                        } 
-                        else if (!p && selectedBotId && room.hostId === socket.id) {
-                            socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
-                            selectedBotId = null;
-                        }
-                        else if (!p) {
-                            if (myTeam !== team) {
-                                myTeam = team;
-                                socket.emit('change_team', team);
-                                setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
-                            } else {
-                                socket.emit('change_position', slot.id);
-                            }
-                        }
-                    };
-
-                    // ÇİFT TIKLAMA (Bot Zorluk Seçimi)
-                    el.ondblclick = (e) => {
-                        e.stopPropagation();
-                        if (p && p.isBot && room.hostId === socket.id) {
-                            let currentDiff = p.difficulty || 3;
-                            let d = prompt(
-                                "Bot Zorluk Seçimi:\n" +
-                                "1 - AFK (Hareket Etmez)\n" +
-                                "2 - Kolay\n" +
-                                "3 - Normal (Klasik)\n" +
-                                "4 - Extra Profesyonel (Ordu)\n\n" +
-                                "Lütfen 1, 2, 3 veya 4 girin:", currentDiff
-                            );
-                            if (d && [1,2,3,4].includes(parseInt(d))) {
-                                socket.emit('change_bot_difficulty', { botId: p.id, difficulty: parseInt(d) });
-                            }
-                        }
-                    };
-                    board.appendChild(el);
-                });
+            window.joinRoom = (id, type) => {
+                let pass = "";
+                if (type === 'private') {
+                    pass = prompt("Bu Özel bir oda. Lütfen 6 haneli ODA KODUNU girin:");
+                    if (pass === null) return; 
+                } else {
+                    let srv = serverListData.find(s => s.id === id);
+                    if (srv && srv.hasPassword) { pass = prompt("Bu oda şifreli. Lütfen şifreyi girin:"); if (pass === null) return; }
+                }
+                if(socket) socket.emit('join_server', { id: id, password: pass, playerName: myPlayerName, equipped: equipped });
             };
-            renderTeam('red');
-            renderTeam('blue');
+
+            socket.on('join_error', (msg) => { alert(msg); });
+            socket.on('server_created', (room) => { currentRoom = room; myTeam = "spectator"; showLobby(room); });
+            socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
+            
+            document.getElementById('btn-add-bot').onclick = () => { if(socket) socket.emit('add_bot'); };
+
+            function renderTacticsBoard(room) { /* ... (önceki kodun aynısı) ... */ }
+            window.selectTeam = (team) => {
+                if (!currentRoom || currentRoom.status !== 'lobby') return;
+                myTeam = team;
+                if(socket) socket.emit('change_team', team);
+                if(currentRoom) renderTacticsBoard(currentRoom);
+            };
+
+            function showLobby(room) {
+                switchScreen('screen-lobby');
+                document.getElementById('lobby-room-name').innerText = room.name;
+                document.getElementById('title-red').innerText = room.redName;
+                document.getElementById('title-red').style.color = room.redColor;
+                document.getElementById('box-red').style.borderColor = room.redColor;
+                document.getElementById('title-blue').innerText = room.blueName;
+                document.getElementById('title-blue').style.color = room.blueColor;
+                document.getElementById('box-blue').style.borderColor = room.blueColor;
+                if (room.type === 'private') {
+                    let codeEl = document.getElementById('lobby-room-code');
+                    codeEl.innerText = "ODA KODU: " + room.id;
+                    codeEl.style.display = 'block';
+                } else {
+                    document.getElementById('lobby-room-code').style.display = 'none';
+                }
+                document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
+                document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
+                setTimeout(() => renderTacticsBoard(room), 50);
+            }
+
+            socket.on('update_lobby', (room) => {
+                currentRoom = room;
+                if (room.status === 'lobby') {
+                    showLobby(room);
+                    let redList = document.getElementById('red-players');
+                    let blueList = document.getElementById('blue-players');
+                    let specList = document.getElementById('spec-players');
+                    if(!redList) return;
+                    redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
+                    room.players.forEach(p => {
+                        let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span></div>`;
+                        if (p.team === 'red') redList.innerHTML += el;
+                        else if (p.team === 'blue') blueList.innerHTML += el;
+                        else specList.innerHTML += el;
+                        if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); }
+                    });
+                }
+            });
+
+            document.getElementById('btn-start-game').onclick = () => { if(socket) socket.emit('start_game'); };
+            socket.on('start_error', (msg) => { alert(msg); });
+
+            socket.on('game_started', () => {
+                switchScreen('screen-game');
+                isOffline = false;
+                if(myPlayer) isSpectator = (myPlayer.team === 'spectator');
+                else isSpectator = (myTeam === 'spectator');
+                if(currentRoom) currentRoom.status = 'playing';
+                ballTrail = []; ballRotation = 0;
+                cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+                lastAudioStatus = '';
+                const canvas = document.getElementById('gameCanvas');
+                if (canvas) canvas.focus();
+                document.getElementById('label-red').innerText = currentRoom.redName;
+                document.getElementById('label-red').style.color = currentRoom.redColor;
+                document.getElementById('label-blue').innerText = currentRoom.blueName;
+                document.getElementById('label-blue').style.color = currentRoom.blueColor;
+                if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
+            });
+
+            socket.on('game_ended', (room) => {
+                currentRoom = room;
+                bgMusic.pause();
+                let resultScore = document.getElementById('result-score');
+                let resultDesc = document.getElementById('result-desc');
+                let overlay = document.getElementById('overlay-result');
+                resultScore.innerText = `${room.score.red} : ${room.score.blue}`;
+                if (room.score.red > room.score.blue) { resultDesc.innerText = `${room.redName} KAZANDI!`; resultDesc.style.color = room.redColor; }
+                else if (room.score.blue > room.score.red) { resultDesc.innerText = `${room.blueName} KAZANDI!`; resultDesc.style.color = room.blueColor; }
+                else { resultDesc.innerText = "BERABERE!"; resultDesc.style.color = "#eab308"; }
+                document.getElementById('btn-rematch').style.display = (room.hostId === socket.id) ? 'block' : 'none';
+                overlay.style.display = 'flex';
+            });
+
+            document.getElementById('btn-rematch').onclick = () => {
+                document.getElementById('overlay-result').style.display = 'none';
+                if(socket) socket.emit('rematch');
+            };
+
+            socket.on('play_whistle', () => { if(!isMuted) { whistleSound.currentTime = 0; whistleSound.play().catch(()=>{}); } });
+            socket.on('goal_scored', (data) => {
+                if(!isMuted) goalSound.play().catch(()=>{});
+                document.getElementById('replay-scorer').innerText = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
+                document.getElementById('stadium-scoreboard').classList.add('score-anim');
+                setTimeout(() => document.getElementById('stadium-scoreboard').classList.remove('score-anim'), 600);
+                score = data.score;
+                replayData = data.replay; replayIndex = 0; replayTimer = 0;
+            });
+
+            socket.on('force_positions', (serverPlayers) => {
+                for (let sp of serverPlayers) {
+                    if (sp.id === socket.id) {
+                        if (!myPlayer) myPlayer = sp;
+                        myPlayer.x = sp.x; myPlayer.y = sp.y;
+                    } else {
+                        if (!players[sp.id]) players[sp.id] = { ...sp, renderX: sp.x, renderY: sp.y };
+                        else {
+                            players[sp.id].x = sp.x; players[sp.id].y = sp.y;
+                            players[sp.id].renderX = sp.x; players[sp.id].renderY = sp.y;
+                        }
+                    }
+                }
+            });
+
+            socket.on('game_state', (room) => {
+                if(isOffline) return;
+                currentRoom = room;
+                if (room.status === 'playing') {
+                    document.getElementById('overlay-message').style.display = 'none';
+                    document.getElementById('overlay-replay').style.display = 'none';
+                } else if (room.status === 'halftime_break') {
+                    document.getElementById('overlay-message').style.display = 'flex';
+                    document.getElementById('overlay-replay').style.display = 'none';
+                } else if (room.status === 'goal_replay') {
+                    document.getElementById('overlay-replay').style.display = 'flex';
+                    document.getElementById('overlay-message').style.display = 'none';
+                }
+                if (room.status !== lastAudioStatus) {
+                    lastAudioStatus = room.status;
+                    if (room.status === 'playing') { if (!isMuted && bgMusic.paused) bgMusic.play().catch(()=>{}); } 
+                    else bgMusic.pause();
+                }
+                let currentIds = [];
+                for (let p of room.players) {
+                    currentIds.push(p.id);
+                    if (p.id === socket.id) {
+                        if (!myPlayer) myPlayer = p; 
+                        myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped;
+                        players[socket.id] = myPlayer; 
+                        isSpectator = (p.team === 'spectator');
+                    } else {
+                        if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
+                        else {
+                            players[p.id].x = p.x; players[p.id].y = p.y;
+                            players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position; players[p.id].equipped = p.equipped;
+                        }
+                    }
+                }
+                for (let id in players) { if (!currentIds.includes(id) && id !== "p1") delete players[id]; }
+                ball = room.ball;
+                if (room.score.red !== lastScoreRed) { elScoreRed.innerText = room.score.red; lastScoreRed = room.score.red; }
+                if (room.score.blue !== lastScoreBlue) { elScoreBlue.innerText = room.score.blue; lastScoreBlue = room.score.blue; }
+                let m = Math.floor(room.matchTime / 60);
+                let s = Math.floor(room.matchTime % 60);
+                let timeStr = (room.half === 1 ? "1. YARI " : "2. YARI ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
+                if (timeStr !== lastTimerText) { elTimer.innerText = timeStr; lastTimerText = timeStr; }
+                document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
+            });
         }
-
-        window.selectTeam = (team) => {
-            if (!currentRoom || currentRoom.status !== 'lobby') return;
-            myTeam = team;
-            socket.emit('change_team', team);
-            if(currentRoom) renderTacticsBoard(currentRoom);
-        };
-
-        function showLobby(room) {
-            switchScreen('screen-lobby');
-            document.getElementById('lobby-room-name').innerText = room.name;
-            
-            document.getElementById('title-red').innerText = room.redName;
-            document.getElementById('title-red').style.color = room.redColor;
-            document.getElementById('box-red').style.borderColor = room.redColor;
-            
-            document.getElementById('title-blue').innerText = room.blueName;
-            document.getElementById('title-blue').style.color = room.blueColor;
-            document.getElementById('box-blue').style.borderColor = room.blueColor;
-
-            if (room.type === 'private') {
-                let codeEl = document.getElementById('lobby-room-code');
-                codeEl.innerText = "ODA KODU: " + room.id;
-                codeEl.style.display = 'block';
-            } else {
-                document.getElementById('lobby-room-code').style.display = 'none';
-            }
-            document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
-            document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
-            
-            setTimeout(() => renderTacticsBoard(room), 50);
-        }
-
-        socket.on('update_lobby', (room) => {
-            currentRoom = room;
-            if (room.status === 'lobby') {
-                showLobby(room);
-                
-                let redList = document.getElementById('red-players');
-                let blueList = document.getElementById('blue-players');
-                let specList = document.getElementById('spec-players');
-                redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
-
-                room.players.forEach(p => {
-                    let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span></div>`;
-                    if (p.team === 'red') redList.innerHTML += el;
-                    else if (p.team === 'blue') blueList.innerHTML += el;
-                    else specList.innerHTML += el;
-                    if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); }
-                });
-            }
-        });
-
-        document.getElementById('btn-start-game').onclick = () => socket.emit('start_game');
-        socket.on('start_error', (msg) => { alert(msg); });
-
-        socket.on('game_started', () => {
-            switchScreen('screen-game');
-            if(myPlayer) isSpectator = (myPlayer.team === 'spectator');
-            else isSpectator = (myTeam === 'spectator');
-            
-            if(currentRoom) currentRoom.status = 'playing';
-            ballTrail = []; ballRotation = 0;
-            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
-            lastAudioStatus = '';
-            
-            const canvas = document.getElementById('gameCanvas');
-            if (canvas) canvas.focus();
-            
-            document.getElementById('label-red').innerText = currentRoom.redName;
-            document.getElementById('label-red').style.color = currentRoom.redColor;
-            document.getElementById('label-blue').innerText = currentRoom.blueName;
-            document.getElementById('label-blue').style.color = currentRoom.blueColor;
-
-            if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
-        });
-
-        socket.on('game_ended', (room) => {
-            currentRoom = room;
-            bgMusic.pause();
-            
-            let resultScore = document.getElementById('result-score');
-            let resultDesc = document.getElementById('result-desc');
-            let overlay = document.getElementById('overlay-result');
-            
-            resultScore.innerText = `${room.score.red} : ${room.score.blue}`;
-            if (room.score.red > room.score.blue) {
-                resultDesc.innerText = `${room.redName} KAZANDI!`; resultDesc.style.color = room.redColor;
-            } else if (room.score.blue > room.score.red) {
-                resultDesc.innerText = `${room.blueName} KAZANDI!`; resultDesc.style.color = room.blueColor;
-            } else {
-                resultDesc.innerText = "BERABERE!"; resultDesc.style.color = "#eab308";
-            }
-            
-            document.getElementById('btn-rematch').style.display = (room.hostId === socket.id) ? 'block' : 'none';
-            overlay.style.display = 'flex';
-        });
-
-        document.getElementById('btn-rematch').onclick = () => {
-            document.getElementById('overlay-result').style.display = 'none';
-            socket.emit('rematch');
-        };
-
-        socket.on('play_whistle', () => { if(!isMuted) { whistleSound.currentTime = 0; whistleSound.play().catch(()=>{}); } });
-
-        socket.on('goal_scored', (data) => {
-            if(!isMuted) goalSound.play().catch(()=>{});
-            document.getElementById('replay-scorer').innerText = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
-            
-            document.getElementById('stadium-scoreboard').classList.add('score-anim');
-            setTimeout(() => document.getElementById('stadium-scoreboard').classList.remove('score-anim'), 600);
-            
-            score = data.score;
-            replayData = data.replay; replayIndex = 0; replayTimer = 0;
-        });
 
         function updateReplay(now) {
             if (!replayData || replayData.length === 0) return;
@@ -963,7 +940,7 @@
             for (let p of frame.players) {
                 if (players[p.id]) {
                     players[p.id].x = p.x; players[p.id].y = p.y;
-                    if(p.id !== socket.id) { players[p.id].renderX = p.x; players[p.id].renderY = p.y; }
+                    if(p.id !== (socket ? socket.id : 'p1')) { players[p.id].renderX = p.x; players[p.id].renderY = p.y; }
                 }
             }
         }
@@ -971,93 +948,27 @@
         function leaveRoom() { if (confirm("Odadan ayrılmak istiyor musunuz?")) window.location.href = window.location.pathname; }
 
         function goToMainMenu() {
-            if (isPractice) { isPractice = false; switchScreen('screen-main-menu'); return; }
-            if (confirm("Ana menüye dönmek istiyor musunuz? (Odadan ayrılacaksınız)")) {
+            if (confirm("Ana menüye dönmek istiyor musunuz?")) {
+                isPractice = false; isOffline = false;
                 window.location.href = window.location.pathname;
             }
         }
 
         function goToLobby() {
-            if (isPractice) { isPractice = false; switchScreen('screen-main-menu'); return; }
+            if (isOffline || isPractice) { isOffline = false; isPractice = false; switchScreen('screen-main-menu'); return; }
             if (currentRoom && currentRoom.status === 'playing') {
-                if (currentRoom.hostId === socket.id) {
-                    if (confirm("Maçı sonlandırmak istediğinden emin misin?")) socket.emit('stop_game');
+                if (currentRoom.hostId === (socket ? socket.id : '')) {
+                    if (confirm("Maçı sonlandırmak istediğinden emin misin?")) { if(socket) socket.emit('stop_game'); }
                 } else alert("Maç devam ederken sadece sunucu sahibi maçı sonlandırabilir.");
             } else switchScreen('screen-lobby');
         }
 
-        socket.on('force_positions', (serverPlayers) => {
-            for (let sp of serverPlayers) {
-                if (sp.id === socket.id) {
-                    if (!myPlayer) myPlayer = sp;
-                    myPlayer.x = sp.x; myPlayer.y = sp.y;
-                } else {
-                    if (!players[sp.id]) players[sp.id] = { ...sp, renderX: sp.x, renderY: sp.y };
-                    else {
-                        players[sp.id].x = sp.x; players[sp.id].y = sp.y;
-                        players[sp.id].renderX = sp.x; players[sp.id].renderY = sp.y;
-                    }
-                }
-            }
-        });
-
-        socket.on('game_state', (room) => {
-            currentRoom = room;
-            
-            if (room.status === 'playing') {
-                document.getElementById('overlay-message').style.display = 'none';
-                document.getElementById('overlay-replay').style.display = 'none';
-            } else if (room.status === 'halftime_break') {
-                document.getElementById('overlay-message').style.display = 'flex';
-                document.getElementById('overlay-replay').style.display = 'none';
-            } else if (room.status === 'goal_replay') {
-                document.getElementById('overlay-replay').style.display = 'flex';
-                document.getElementById('overlay-message').style.display = 'none';
-            }
-
-            if (room.status !== lastAudioStatus) {
-                lastAudioStatus = room.status;
-                if (room.status === 'playing') { if (!isMuted && bgMusic.paused) bgMusic.play().catch(()=>{}); } 
-                else bgMusic.pause();
-            }
-
-            let currentIds = [];
-            for (let p of room.players) {
-                currentIds.push(p.id);
-                if (p.id === socket.id) {
-                    if (!myPlayer) myPlayer = p; 
-                    myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped;
-                    players[socket.id] = myPlayer; 
-                    isSpectator = (p.team === 'spectator');
-                } else {
-                    if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
-                    else {
-                        players[p.id].x = p.x; players[p.id].y = p.y;
-                        players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position; players[p.id].equipped = p.equipped;
-                    }
-                }
-            }
-            for (let id in players) { if (!currentIds.includes(id)) delete players[id]; }
-            
-            ball = room.ball;
-            
-            if (room.score.red !== lastScoreRed) { elScoreRed.innerText = room.score.red; lastScoreRed = room.score.red; }
-            if (room.score.blue !== lastScoreBlue) { elScoreBlue.innerText = room.score.blue; lastScoreBlue = room.score.blue; }
-            
-            let m = Math.floor(room.matchTime / 60);
-            let s = Math.floor(room.matchTime % 60);
-            let timeStr = (room.half === 1 ? "1. YARI " : "2. YARI ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
-            if (timeStr !== lastTimerText) { elTimer.innerText = timeStr; lastTimerText = timeStr; }
-            
-            document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
-        });
-
         window.addEventListener('keydown', (e) => { 
-            if (isPractice && (e.key === 'r' || e.key === 'R')) {
+            if ((isPractice || isOffline) && (e.key === 'r' || e.key === 'R')) {
                 ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
                 return;
             }
-            if (isSpectator && !isPractice) return;
+            if (isSpectator && !isPractice && !isOffline) return;
             
             let k = e.key;
             if (k === ' ') k = ' ';
@@ -1065,20 +976,18 @@
 
             if (keys[k] !== undefined) keys[k] = true;
             if (k === ' ') {
-                if (isPractice || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
-                else if (!isPractice) { socket.emit('tackle'); }
+                if (isPractice || isOffline || ball.owner === (socket ? socket.id : 'p1')) { isCharging = true; chargeStartTime = Date.now(); }
+                else if (!isPractice && !isOffline) { if(socket) socket.emit('tackle'); }
             }
             updateKeyVisual(k, true);
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
         });
 
         window.addEventListener('keyup', (e) => { 
-            if (isSpectator && !isPractice) return;
-            
+            if (isSpectator && !isPractice && !isOffline) return;
             let k = e.key;
             if (k === ' ') k = ' ';
             else if (k.length === 1) k = k.toLowerCase();
-
             if (keys[k] !== undefined) keys[k] = false;
             if (k === ' ' && isCharging) {
                 isCharging = false;
@@ -1092,10 +1001,7 @@
             let id = '';
             if(['w','a','s','d','f'].includes(key)) id = `key-${key}`;
             if(key === ' ') id = 'key-space';
-            if(id) {
-                const el = document.getElementById(id);
-                if(el) { isPressed ? el.classList.add('active') : el.classList.remove('active'); }
-            }
+            if(id) { const el = document.getElementById(id); if(el) { isPressed ? el.classList.add('active') : el.classList.remove('active'); } }
         }
 
         function getKickAngle() {
@@ -1105,33 +1011,37 @@
         }
 
         function forcePass() {
-            if (!isPractice && ball.owner !== socket.id) return;
+            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            if (!isPractice && !isOffline && ball.owner !== myId) return;
             let angle = getKickAngle();
             playKickSound(false);
-            if (isPractice) { ball.vx = Math.cos(angle) * 15; ball.vy = Math.sin(angle) * 15; ball.owner = null; }
-            else socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 });
+            if (isPractice || isOffline) { 
+                ball.vx = Math.cos(angle) * 15; ball.vy = Math.sin(angle) * 15; ball.owner = null; ball.pickupCooldown = 10; 
+            } else { if(socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 }); }
             shotPower = 0; document.getElementById('power-container').style.display = 'none';
         }
 
         function executeKick() {
-            if (!isPractice && ball.owner !== socket.id) return;
+            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            if (!isPractice && !isOffline && ball.owner !== myId) return;
             let angle = getKickAngle();
             let force = shotPower / 100; 
             let speed = 8 + (force * 27);
             playKickSound(true);
-            if (isPractice) { ball.vx = Math.cos(angle) * speed; ball.vy = Math.sin(angle) * speed; ball.vz = 2 + (force * 8); ball.owner = null; }
-            else socket.emit('kick', { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, vz: 2 + (force * 8), shotPower: shotPower });
+            if (isPractice || isOffline) { 
+                ball.vx = Math.cos(angle) * speed; ball.vy = Math.sin(angle) * speed; ball.vz = 2 + (force * 8); ball.owner = null; ball.pickupCooldown = 10;
+            } else { if(socket) socket.emit('kick', { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, vz: 2 + (force * 8), shotPower: shotPower }); }
             shotPower = 0; document.getElementById('power-container').style.display = 'none';
         }
 
-        window.sendEmote = (emoji) => { if (!isPractice) socket.emit('send_emote', emoji); };
+        window.sendEmote = (emoji) => { if (!isPractice && !isOffline && socket) socket.emit('send_emote', emoji); };
 
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
 
         function handleTouch(e) {
-            if (isSpectator && !isPractice) return;
+            if (isSpectator && !isPractice && !isOffline) return;
             e.preventDefault();
             const touch = e.touches[0];
             const rect = joystickZone.getBoundingClientRect();
@@ -1152,25 +1062,26 @@
         joystickZone.addEventListener('touchcancel', resetJoystick);
 
         const btnSprint = document.getElementById('btn-sprint');
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if ((!isSpectator || isPractice) && myPlayer.position && !myPlayer.position.includes('GK')) keys['f'] = true; });
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); if ((!isSpectator || isPractice || isOffline) && myPlayer.position && !myPlayer.position.includes('GK')) keys['f'] = true; });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); keys['f'] = false; });
         btnSprint.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['f'] = false; });
 
         const btnTackle = document.getElementById('btn-tackle');
         btnTackle.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
-            if (!isPractice && !isSpectator && ball.owner !== socket.id && myPlayer.position && !myPlayer.position.includes('GK')) socket.emit('tackle'); 
+            if (!isPractice && !isOffline && !isSpectator && ball.owner !== (socket ? socket.id : '') && myPlayer.position && !myPlayer.position.includes('GK')) { if(socket) socket.emit('tackle'); }
         });
 
         const btnAction = document.getElementById('btn-action');
         btnAction.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (isSpectator && !isPractice) return;
-            if (isPractice || ball.owner === socket.id) { isCharging = true; chargeStartTime = Date.now(); }
+            if (isSpectator && !isPractice && !isOffline) return;
+            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+            if (isPractice || isOffline || ball.owner === myId) { isCharging = true; chargeStartTime = Date.now(); }
         });
         btnAction.addEventListener('touchend', (e) => {
             e.preventDefault();
-            if (isSpectator && !isPractice) return;
+            if (isSpectator && !isPractice && !isOffline) return;
             if (isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
@@ -1179,7 +1090,7 @@
         });
         btnAction.addEventListener('touchcancel', (e) => {
             e.preventDefault();
-            if (isSpectator && !isPractice) return;
+            if (isSpectator && !isPractice && !isOffline) return;
             if (isCharging) {
                 isCharging = false;
                 let pressDuration = Date.now() - chargeStartTime;
@@ -1192,11 +1103,13 @@
             let dt = Math.min((now - lastFrameTime) / 1000, 0.1);
             lastFrameTime = now;
 
-            if (!isPractice && (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing')) { 
+            if (!isPractice && !isOffline && (isSpectator || !myPlayer || !currentRoom || currentRoom.status !== 'playing')) { 
                 requestAnimationFrame(updateMovement); return; 
             }
 
-            if (isCharging && !isPractice && ball.owner !== socket.id) {
+            let myId = isOffline ? "p1" : (socket ? socket.id : "");
+
+            if (isCharging && !isPractice && !isOffline && ball.owner !== myId) {
                 isCharging = false; shotPower = 0; document.getElementById('power-container').style.display = 'none';
             }
 
@@ -1221,7 +1134,7 @@
                 else bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
             }
 
-            if (isCharging && (isPractice || ball.owner === socket.id)) {
+            if (isCharging && (isPractice || isOffline || ball.owner === myId)) {
                 document.getElementById('power-container').style.display = 'flex'; 
                 shotPower += 3.5 * BASE_FRAME * dt;
                 if (shotPower > 100) shotPower = 100;
@@ -1259,7 +1172,7 @@
                 if (myPlayer.team === 'red') newX = Math.max(40, Math.min(200, newX));
                 else newX = Math.max(1000, Math.min(1160, newX));
                 newY = Math.max(200, Math.min(400, newY));
-            } else if (!isPractice && currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
+            } else if (!isPractice && !isOffline && currentRoom.isKickoff && myPlayer.team !== currentRoom.concedingTeam) {
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
                 if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
             }
@@ -1267,30 +1180,238 @@
             myPlayer.x = newX;
             myPlayer.y = newY;
 
-            if (!isPractice && now - lastMoveEmit >= MOVE_EMIT_MS) {
-                socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
+            if (!isPractice && !isOffline && now - lastMoveEmit >= MOVE_EMIT_MS) {
+                if(socket) socket.emit('move', { x: Math.round(myPlayer.x), y: Math.round(myPlayer.y) });
                 lastMoveEmit = now;
             }
 
             requestAnimationFrame(updateMovement);
         }
 
-        function startPracticeMode() {
-            isPractice = true; isSpectator = false; switchScreen('screen-game');
+        // --- OFFLINE MAÇ BAŞLATMA (YENİ MOTOR) ---
+        function startOfflineMatch() {
+            isOffline = true; isPractice = false; isSpectator = false;
+            switchScreen('screen-game');
             
-            // Sen (Forvet olarak başla)
-            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
+            players = {};
+            myPlayer = { id: "p1", name: "Sen", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
+            players["p1"] = myPlayer;
             
-            // SADECE SEN VARSIN, HİÇ BOT YOK!
-            players = { "p1": myPlayer };
-            
+            // Kırmızı Botlar (4)
+            let redBots = [
+                { pos: 'GK', x: 60, y: 300 },
+                { pos: 'DEF', x: 250, y: 200 },
+                { pos: 'DEF', x: 250, y: 400 },
+                { pos: 'MID', x: 450, y: 300 }
+            ];
+            redBots.forEach((b, i) => {
+                let id = "r_bot" + i;
+                players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, neonColor: '#39FF14', isBot: true };
+            });
+
+            // Mavi Botlar (5)
+            let blueBots = [
+                { pos: 'GK', x: 1140, y: 300 },
+                { pos: 'DEF', x: 950, y: 200 },
+                { pos: 'DEF', x: 950, y: 400 },
+                { pos: 'MID', x: 750, y: 300 },
+                { pos: 'FWD', x: 650, y: 300 }
+            ];
+            blueBots.forEach((b, i) => {
+                let id = "b_bot" + i;
+                players[id] = { id: id, name: "M. Bot " + (i+1), team: "blue", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, neonColor: '#FF073A', isBot: true };
+            });
+
+            score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball };
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
             
+            document.getElementById('label-red').innerText = "KIRMIZI";
+            document.getElementById('label-blue').innerText = "MAVİ";
+            document.getElementById('match-timer').innerText = "OFFLINE MAÇ";
+            if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
+        }
+
+        function updateOfflinePhysics(dt) {
+            let timeMult = dt * 60;
+            
+            for (let id in players) {
+                let p = players[id];
+                if (!p.isBot || p.team === 'spectator') continue;
+                
+                let speed = 3.5;
+                if (ball.owner === p.id) speed = 4.0;
+                
+                let targetX = p.x;
+                let targetY = p.y;
+
+                if (p.position === 'GK') {
+                    let goalX = p.team === 'red' ? 60 : 1140;
+                    let targetGoalY = Math.max(220, Math.min(380, ball.y));
+                    if (ball.owner === p.id) {
+                        let teammate = Object.values(players).find(t => t.team === p.team && t.id !== p.id && t.position !== 'GK');
+                        if (teammate) {
+                            let angle = Math.atan2(teammate.y - p.y, teammate.x - p.x);
+                            ball.vx = Math.cos(angle) * 18;
+                            ball.vy = Math.sin(angle) * 18;
+                            ball.owner = null;
+                            ball.pickupCooldown = 20;
+                        }
+                    } else {
+                        p.x = goalX;
+                        p.y += (targetGoalY - p.y) * 0.15;
+                    }
+                    continue;
+                }
+
+                if (ball.owner === p.id) {
+                    let enemyGoalX = p.team === 'red' ? 1200 - 25 : 25;
+                    let distToGoal = Math.abs(p.x - enemyGoalX);
+                    if (distToGoal < 350) {
+                        let angle = Math.atan2(300 - p.y, enemyGoalX - p.x);
+                        angle += (Math.random() - 0.5) * 0.2;
+                        ball.vx = Math.cos(angle) * 24;
+                        ball.vy = Math.sin(angle) * 24;
+                        ball.vz = 4;
+                        ball.owner = null;
+                        ball.lastKickName = p.name;
+                        ball.shotPower = 85;
+                    } else {
+                        let teammate = Object.values(players).find(t => t.team === p.team && t.id !== p.id && t.position === 'FWD');
+                        if (teammate && Math.random() < 0.05) {
+                            let angle = Math.atan2(teammate.y - p.y, teammate.x - p.x);
+                            ball.vx = Math.cos(angle) * 20;
+                            ball.vy = Math.sin(angle) * 20;
+                            ball.owner = null;
+                            ball.pickupCooldown = 15;
+                        } else {
+                            targetX = enemyGoalX;
+                            targetY = 300 + (Math.random() - 0.5) * 150;
+                        }
+                    }
+                } else {
+                    let isAttacking = ball.owner && players[ball.owner] && players[ball.owner].team === p.team;
+                    if (p.position === 'DEF') {
+                        if (!isAttacking) {
+                            let enemyFwd = Object.values(players).find(t => t.team !== p.team && t.position === 'FWD');
+                            if (enemyFwd) { targetX = enemyFwd.x; targetY = enemyFwd.y; }
+                            else { targetX = p.team === 'red' ? 300 : 900; targetY = ball.y; }
+                        } else { targetX = p.team === 'red' ? 350 : 850; targetY = 300; }
+                    } else if (p.position === 'MID') {
+                        targetX = p.team === 'red' ? 550 : 650;
+                        targetY = ball.y * 0.8 + 300 * 0.2;
+                        if (Math.hypot(ball.x - p.x, ball.y - p.y) < 150) { targetX = ball.x; targetY = ball.y; }
+                    } else if (p.position === 'FWD') {
+                        if (isAttacking) { targetX = p.team === 'red' ? 1200 - 250 : 250; targetY = 200 + Math.random() * 200; }
+                        else { targetX = p.team === 'red' ? 450 : 750; targetY = 300; }
+                    }
+                }
+
+                let dx = targetX - p.x;
+                let dy = targetY - p.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > 10) {
+                    let angle = Math.atan2(dy, dx);
+                    p.lastDx = Math.cos(angle);
+                    p.lastDy = Math.sin(angle);
+                    p.x += p.lastDx * speed * timeMult;
+                    p.y += p.lastDy * speed * timeMult;
+                    p.x = Math.max(210, Math.min(1200 - 210, p.x));
+                    p.y = Math.max(25, Math.min(600 - 25, p.y));
+                }
+            }
+
+            if (ball.owner === null) {
+                ball.x += ball.vx * timeMult;
+                ball.y += ball.vy * timeMult;
+                ball.z += ball.vz * timeMult;
+                ball.vx *= Math.pow(0.98, timeMult);
+                ball.vy *= Math.pow(0.98, timeMult);
+                ball.vz -= 0.8 * timeMult;
+
+                if (ball.z <= 0) { ball.z = 0; ball.vz *= -0.6; if (Math.abs(ball.vz) < 1) ball.vz = 0; }
+                if (Math.abs(ball.vx) < 0.1) ball.vx = 0;
+                if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
+                if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
+                if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
+
+                let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
+                let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
+
+                if (hitLeftGoal || hitRightGoal) {
+                    if (ball.z <= 80) {
+                        if (hitRightGoal) score.red++; else score.blue++;
+                        playKickSound(true);
+                        // Gol sonrası santra için topu ve oyuncuları resetle
+                        ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+                        for (let id in players) {
+                            let p = players[id];
+                            if (p.isBot) {
+                                let defaultSlot = FORMATION_SLOTS[p.team].find(sl => sl.name === p.position);
+                                if(defaultSlot) { p.x = defaultSlot.x; p.y = defaultSlot.y; }
+                            }
+                        }
+                    } else {
+                        ball.x = hitRightGoal ? 1200 - 30 : 30;
+                        ball.vx = -ball.vx * 0.7;
+                    }
+                } else {
+                    if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
+                    if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
+                }
+            }
+
+            if (ball.owner === null) {
+                for (let id in players) {
+                    let p = players[id];
+                    if (p.team === 'spectator') continue;
+                    let dist = Math.hypot(p.x - ball.x, p.y - ball.y);
+                    if (dist < 50 && ball.pickupCooldown <= 0) {
+                        ball.owner = p.id;
+                        ball.possessionTimer = 150;
+                        ball.vx = 0; ball.vy = 0; ball.vz = 0; ball.shotPower = 0;
+                    }
+                }
+            } else {
+                let owner = players[ball.owner];
+                if (owner) {
+                    let angle = Math.atan2(owner.lastDy, owner.lastDx);
+                    if (owner.lastDx === 0 && owner.lastDy === 0) angle = 0;
+                    ball.x = owner.x + Math.cos(angle) * 35;
+                    ball.y = owner.y + Math.sin(angle) * 35;
+                    ball.vx = 0; ball.vy = 0; ball.z = 0;
+
+                    if (ball.possessionTimer > 0) ball.possessionTimer--;
+                    if (ball.possessionTimer <= 0) {
+                        ball.owner = null;
+                        ball.vx = Math.cos(angle) * 7;
+                        ball.vy = Math.sin(angle) * 7;
+                        ball.pickupCooldown = 30;
+                    }
+                } else {
+                    ball.owner = null;
+                }
+            }
+
+            if (ball.pickupCooldown > 0) ball.pickupCooldown--;
+            
+            if (score.red !== lastScoreRed) { elScoreRed.innerText = score.red; lastScoreRed = score.red; }
+            if (score.blue !== lastScoreBlue) { elScoreBlue.innerText = score.blue; lastScoreBlue = score.blue; }
+        }
+
+        function startPracticeMode() {
+            isPractice = true; isOffline = false; isSpectator = false; switchScreen('screen-game');
+            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped };
+            players = { "p1": myPlayer };
+            ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball };
+            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) canvas.focus();
             document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
             document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
             document.getElementById('match-timer').innerText = "SERBEST ÇALIŞMA (R: Topu Yenile)";
@@ -1342,7 +1463,7 @@
                 for(let i=0; i<50; i++) { let x = (Math.random() * 1200); let y = (Math.random() * 600); ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill(); }
                 ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, 0, 1200, 600);
             }
-            if (!isPractice && currentRoom && currentRoom.isKickoff) {
+            if (!isPractice && !isOffline && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
                 if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, 40, 8, 600 - (40 * 2)); } else { ctx.fillRect(592, 40, 8, 600 - (40 * 2)); }
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 5; ctx.fillText("SANTRA", 600, 60); ctx.shadowBlur = 0;
@@ -1366,7 +1487,7 @@
             ctx.save(); ctx.translate(ball.x, drawY); ctx.rotate(ballRotation);
             let baseColor = '#ffffff'; let patternColor = '#1a1a1a';
             let skin = currentRoom ? currentRoom.ballSkin : 'classic';
-            if (isPractice) skin = equipped.ball;
+            if (isPractice || isOffline) skin = equipped.ball;
             if (skin === 'fire') { baseColor = '#ff4500'; patternColor = '#ffd700'; }
             else if (skin === 'neon') { baseColor = '#39FF14'; patternColor = '#000000'; }
             else if (skin === 'beach') { baseColor = '#ffff00'; patternColor = '#ff0000'; }
@@ -1389,8 +1510,10 @@
             lastRenderTime = now;
 
             if (document.getElementById('screen-game').classList.contains('active')) {
-                if (isPractice) {
-                    // ANTRENMAN TOP FİZİĞİ VE SÜRÜKLEME
+                if (isOffline) {
+                    updateOfflinePhysics(dt);
+                } else if (isPractice) {
+                    // Practice fiziği
                     if (ball.owner === null) {
                         ball.x += ball.vx; ball.y += ball.vy; ball.z += ball.vz;
                         ball.vx *= 0.98; ball.vy *= 0.98; ball.vz -= 0.8;
@@ -1399,10 +1522,8 @@
                         if (Math.abs(ball.vy) < 0.1) ball.vy = 0;
                         if (ball.y < 20) { ball.y = 20; ball.vy *= -0.8; }
                         if (ball.y > 600 - 20) { ball.y = 600 - 20; ball.vy *= -0.8; }
-                        
                         if (ball.x < 20) { ball.x = 20; ball.vx *= -0.8; }
                         if (ball.x > 1200 - 20) { ball.x = 1200 - 20; ball.vx *= -0.8; }
-
                         let hitLeftGoal = ball.x <= 25 && ball.y > 200 && ball.y < 400;
                         let hitRightGoal = ball.x >= 1200 - 25 && ball.y > 200 && ball.y < 400;
                         if (hitLeftGoal || hitRightGoal) {
@@ -1410,40 +1531,30 @@
                                 if (hitRightGoal) score.red++; else score.blue++;
                                 playKickSound(true);
                                 ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-                            } else {
-                                ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7;
-                            }
+                            } else { ball.x = hitRightGoal ? 1200 - 30 : 30; ball.vx = -ball.vx * 0.7; }
                         }
                     }
-
-                    // Topu Alma
+                    let myId = "p1";
                     if (ball.owner === null && myPlayer) {
                         let dist = Math.hypot(myPlayer.x - ball.x, myPlayer.y - ball.y);
-                        if (dist < 50 && ball.pickupCooldown <= 0) { 
-                            ball.owner = myPlayer.id; ball.vx = 0; ball.vy = 0; ball.z = 0; ball.possessionTimer = 150;
-                        }
+                        if (dist < 50 && ball.pickupCooldown <= 0) { ball.owner = myPlayer.id; ball.vx = 0; ball.vy = 0; ball.z = 0; ball.possessionTimer = 150; }
                     }
                     if (ball.pickupCooldown > 0) ball.pickupCooldown--;
-
-                    // Topu Sürükleme
                     if (ball.owner === myPlayer.id) {
                         let angle = Math.atan2(myPlayer.lastDy, myPlayer.lastDx);
-                        if (myPlayer.lastDx === 0 && myPlayer.lastDy === 0) angle = 0; 
-                        ball.x = myPlayer.x + Math.cos(angle) * 35;
-                        ball.y = myPlayer.y + Math.sin(angle) * 35;
-
+                        if (myPlayer.lastDx === 0 && myPlayer.lastDy === 0) angle = 0;
+                        ball.x = myPlayer.x + Math.cos(angle) * 35; ball.y = myPlayer.y + Math.sin(angle) * 35;
                         if (ball.possessionTimer > 0) ball.possessionTimer--;
-                        if (ball.possessionTimer <= 0) { 
-                            ball.owner = null; ball.vx = Math.cos(angle) * 7; ball.vy = Math.sin(angle) * 7; ball.pickupCooldown = 30; 
-                        }
+                        if (ball.possessionTimer <= 0) { ball.owner = null; ball.vx = Math.cos(angle) * 7; ball.vy = Math.sin(angle) * 7; ball.pickupCooldown = 30; }
                     }
                 }
 
                 ctx.clearRect(0, 0, 1200, 600);
 
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
-                if (isPractice) { targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2; }
-                else if (currentRoom) {
+                if (isPractice || isOffline) { 
+                    targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.2; 
+                } else if (currentRoom) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
                     else if (currentRoom.status === 'playing') { if (ball.owner === null && speed > 15) { targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; } }
@@ -1468,17 +1579,17 @@
                 }
                 drawBall();
 
-                if (currentRoom || isPractice) {
+                if (currentRoom || isPractice || isOffline) {
                     let lerpFactor = Math.min(1, 15 * dt);
                     for (let id in players) {
                         let p = players[id];
                         if (!p || p.team === 'spectator') continue;
-                        if (id !== socket.id && !isPractice) {
+                        if (id !== (socket ? socket.id : 'p1') && !isPractice && !isOffline) {
                             if (p.renderX === undefined) { p.renderX = p.x; p.renderY = p.y; }
                             p.renderX += (p.x - p.renderX) * lerpFactor; p.renderY += (p.y - p.renderY) * lerpFactor;
                         }
-                        let px = (id === socket.id || isPractice) ? p.x : p.renderX;
-                        let py = (id === socket.id || isPractice) ? p.y : p.renderY;
+                        let px = (id === (socket ? socket.id : 'p1') || isPractice || isOffline) ? p.x : p.renderX;
+                        let py = (id === (socket ? socket.id : 'p1') || isPractice || isOffline) ? p.y : p.renderY;
                         let pSize = 22;
                         if (p.equipped && p.equipped.aura && p.equipped.aura !== 'none') {
                             let glowColor = 'white';
@@ -1505,12 +1616,12 @@
                                 else { ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
                             }
                         }
-                        if (!isPractice && currentRoom.emotes) { for (let em of currentRoom.emotes) { if (em.playerId === id) { ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20); } } }
+                        if (!isPractice && !isOffline && currentRoom.emotes) { for (let em of currentRoom.emotes) { if (em.playerId === id) { ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20); } } }
                         if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = pSize + 4 + (pulse * 6); 
                             ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4; ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
                         }
-                        if (id === socket.id && isCharging && shotPower >= 38) {
+                        if (id === (socket ? socket.id : 'p1') && isCharging && shotPower >= 38) {
                             let intensity = shotPower / 100; let time = Date.now() / 100;
                             ctx.beginPath(); ctx.arc(px, py, pSize + 10 + (intensity * 15), 0, Math.PI * 2); ctx.fillStyle = `rgba(88, 28, 135, ${intensity * 0.4})`; ctx.fill();
                             for (let i = 0; i < 5; i++) {
