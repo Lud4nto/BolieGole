@@ -36,6 +36,14 @@ jobs:
         run: |
           npx capacitor-assets generate --android
 
+      # YENİ EKLENEN KISIM: TAM EKRAN VE YATAY EKRAN ZORLAMA
+      - name: Force Fullscreen and Landscape
+        run: |
+          # Durum çubuğunu gizle (Tam Ekran)
+          sed -i 's|<item name="windowNoTitle">true</item>|<item name="windowNoTitle">true</item><item name="android:windowFullscreen">true</item>|' android/app/src/main/res/values/styles.xml
+          # Ekranı yatay moda zorla
+          sed -i 's|android:screenOrientation="portrait"|android:screenOrientation="sensorLandscape"|' android/app/src/main/AndroidManifest.xml
+
       - name: Build APK
         run: |
           cd android
