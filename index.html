@@ -851,29 +851,27 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
         }
 
         window.switchScreen = function(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
-    
-    if (!isMuted) {
-        if (screenId === 'screen-game') {
-            // Oyuna girince menü müziğini durdur, maç müziğini başlat
-            menuMusic.pause();
-            menuMusic.currentTime = 0;
-            if (!isOffline && !isPractice) {
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(()=>{});
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if (!isMuted) {
+                if (screenId === 'screen-game') {
+                    menuMusic.pause();
+                    menuMusic.currentTime = 0; // Menü müziğini sıfırla
+                    if (!isOffline && !isPractice) {
+                        bgMusic.currentTime = 0; // Maç müziğini baştan başlat
+                        bgMusic.play().catch(()=>{});
+                    }
+                } else {
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0; // Maç müziğini sıfırla
+                    if (menuMusic.paused) {
+                        menuMusic.currentTime = 0;
+                        menuMusic.play().catch(()=>{});
+                    }
+                }
             }
-        } else {
-            // Menüye dönünce maç müziğini durdur, menü müziğini başlat
-            bgMusic.pause();
-            bgMusic.currentTime = 0;
-            if (menuMusic.paused) {
-                menuMusic.currentTime = 0;
-                menuMusic.play().catch(()=>{});
-            }
-        }
-    }
-};
+        };
 
         let currentShopTab = 'outfit';
         window.switchShopTab = (tab, btn) => {
