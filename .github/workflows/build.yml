@@ -16,7 +16,9 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install @capacitor/assets
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -29,6 +31,10 @@ jobs:
           rm -rf android
           npx cap add android
           npx cap sync android
+
+      - name: Generate App Icons
+        run: |
+          npx capacitor-assets generate --android
 
       - name: Build APK
         run: |
