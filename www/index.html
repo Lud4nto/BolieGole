@@ -744,6 +744,10 @@
 
         let isMuted = false;
         let audioCtx = null;
+        // WEB AUDIO API DEĞİŞKENLERİ
+        let menuSource = null, bgSource = null;
+        let menuGainNode = null, bgGainNode = null;
+        let audioFetchPromises = {};
 
         let replayData = null;
         let replayIndex = 0;
@@ -835,15 +839,6 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        menuMusic.loop = true;
-        bgMusic.loop = true;
-        
-        menuMusic.addEventListener('ended', () => {
-            if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); }
-        });
-        bgMusic.addEventListener('ended', () => {
-            if (!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }
-        });
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
             if (bar.style.display === 'flex') { bar.style.display = 'none'; }
@@ -851,6 +846,40 @@
         };
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                async function loadAndPlayLoop(url, type) {
+            initAudio();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            try {
+                if (!audioFetchPromises[url]) {
+                    audioFetchPromises[url] = fetch(url).then(res => res.arrayBuffer()).then(buf => audioCtx.decodeAudioData(buf));
+                }
+                let buffer = await audioFetchPromises[url];
+                let currentVol = isMuted ? 0 : musicSlider.value / 100;
+                
+                if (type === 'menu') {
+                    if (menuSource) { try { menuSource.stop(); } catch(e){} }
+                    menuSource = audioCtx.createBufferSource();
+                    menuSource.buffer = buffer;
+                    menuSource.loop = true; 
+                    menuGainNode = audioCtx.createGain();
+                    menuGainNode.gain.value = currentVol;
+                    menuSource.connect(menuGainNode);
+                    menuGainNode.connect(audioCtx.destination);
+                    menuSource.start(0);
+                } else if (type === 'game') {
+                    if (bgSource) { try { bgSource.stop(); } catch(e){} }
+                    bgSource = audioCtx.createBufferSource();
+                    bgSource.buffer = buffer;
+                    bgSource.loop = true;
+                    bgGainNode = audioCtx.createGain();
+                    bgGainNode.gain.value = currentVol;
+                    bgSource.connect(bgGainNode);
+                    bgGainNode.connect(audioCtx.destination);
+                    bgSource.start(0);
+                }
+            } catch(e) { console.log("Müzik yükleme hatası:", e); }
+        }
+
         function playKickSound(isShot) {
             if (isMuted) return; initAudio();
             let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
@@ -885,9 +914,11 @@
 
         musicSlider.addEventListener('input', (e) => { 
             let v = e.target.value / 100; 
-            menuMusic.volume = v; bgMusic.volume = v;
+            if (menuGainNode) menuGainNode.gain.value = isMuted ? 0 : v;
+            if (bgGainNode) bgGainNode.gain.value = isMuted ? 0 : v;
             localStorage.setItem('bolie_music_vol', e.target.value); 
         });
+        
         goalSlider.addEventListener('input', (e) => { goalSound.volume = e.target.value / 100; localStorage.setItem('bolie_goal_vol', e.target.value); });
         whistleSlider.addEventListener('input', (e) => { whistleSound.volume = e.target.value / 100; localStorage.setItem('bolie_whistle_vol', e.target.value); });
         loadAudioSettings();
@@ -895,13 +926,9 @@
         document.getElementById('mute-btn').onclick = () => {
             isMuted = !isMuted; document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
             localStorage.setItem('bolie_mute', isMuted);
-            if (isMuted) { menuMusic.pause(); bgMusic.pause(); } 
-            else { 
-                if (currentRoom && currentRoom.status === 'playing') { bgMusic.play().catch(()=>{}); }
-                else if (!isOffline && !isPractice && document.getElementById('screen-game').classList.contains('active') === false) {
-                    menuMusic.play().catch(()=>{});
-                }
-            }
+            let v = isMuted ? 0 : (musicSlider.value / 100);
+            if (menuGainNode) menuGainNode.gain.value = v;
+            if (bgGainNode) bgGainNode.gain.value = v;
         };
 
         document.getElementById('camera-btn').onclick = () => {
@@ -923,18 +950,16 @@
         window.switchScreen = function(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            if (!isMuted) {
-                if (screenId === 'screen-game') {
-                    menuMusic.pause();
-                    if (!isOffline && !isPractice) { bgMusic.play().catch(()=>{}); }
-                } else {
-                    bgMusic.pause();
-                    if (menuMusic.paused) { menuMusic.play().catch(()=>{}); }
-                }
+            
+            if (screenId === 'screen-game') {
+                if (menuGainNode) menuGainNode.gain.value = 0; // Menü müziğini sustur
+                if (!isOffline && !isPractice) { loadAndPlayLoop('bg_music.mp3', 'game'); }
+            } else {
+                if (bgGainNode) bgGainNode.gain.value = 0; // Maç müziğini sustur
+                loadAndPlayLoop('main.mp3', 'menu');
             }
-            if (screenId === 'screen-profile') {
-                updateProfileUI();
-            }
+            
+            if (screenId === 'screen-profile') { updateProfileUI(); }
         };
 
         // ==== PROFİL & İSİM DEĞİŞTİRME MANTIĞI ====
@@ -1032,32 +1057,17 @@
                 document.getElementById('modal-name').style.display = 'flex';
             }
 
-            // İSİM VARSA MÜZİĞİ BAŞLAT
+            // İSİM VARSA MÜZİĞİ BAŞLAT (VEYA İLK TIKLAMADA TETİKLE)
             if (!isMuted && myPlayerName) {
-                menuMusic.volume = musicSlider.value / 100;
-                menuMusic.play().then(() => {
-                    [bgMusic, goalSound, whistleSound].forEach(a => {
-                        let origVol = a.volume;
-                        a.volume = 0;
-                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
-                    });
-                }).catch(() => {
-                    function startMenuBGM() {
-                        if (!isMuted) {
-                            menuMusic.play().then(() => {
-                                [bgMusic, goalSound, whistleSound].forEach(a => {
-                                    let origVol = a.volume;
-                                    a.volume = 0;
-                                    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
-                                });
-                                document.removeEventListener('click', startMenuBGM);
-                                document.removeEventListener('touchstart', startMenuBGM);
-                            }).catch(()=>{});
-                        }
-                    }
-                    document.addEventListener('click', startMenuBGM);
-                    document.addEventListener('touchstart', startMenuBGM);
-                });
+                loadAndPlayLoop('main.mp3', 'menu');
+            } else {
+                function startMenuBGM() {
+                    if (!isMuted && myPlayerName) loadAndPlayLoop('main.mp3', 'menu');
+                    document.removeEventListener('click', startMenuBGM);
+                    document.removeEventListener('touchstart', startMenuBGM);
+                }
+                document.addEventListener('click', startMenuBGM);
+                document.addEventListener('touchstart', startMenuBGM);
             }
 
             document.getElementById('btn-play').onclick = () => { 
