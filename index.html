@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8"> <!-- Bu en üstte olmalı -->
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,10 +12,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
-          html, body {
+        html, body {
             margin: 0;
             padding: 0;
-             width: 100vw;
+            width: 100vw;
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
@@ -24,9 +24,8 @@
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             box-sizing: border-box;
-}
+        }
 
-        
         #orientation-warning { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #0f172a; color: white; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 24px; font-weight: bold; padding: 20px; }
         #orientation-warning svg { width: 100px; height: 100px; margin-bottom: 20px; animation: rotateAnim 2s infinite ease-in-out; }
         @keyframes rotateAnim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
@@ -46,7 +45,6 @@
         
         #screen-shop, #screen-server-list, #screen-options, .modal-content { overflow-y: auto; }
 
-        /* ANA MENÜ ARKA PLAN AYARI */
         .bg-image { 
             position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             background-image: url('menu.png'); 
@@ -64,14 +62,18 @@
             opacity: 1; 
         }
 
-        /* MENÜ BUTONLARI */
+        /* DÜZELTME: menü butonları taşmasın diye max-height + overflow ve margin-top düşürüldü */
         .menu-buttons { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             gap: 15px; 
-            margin-top: 45vh; 
+            margin-top: 40vh; 
             width: clamp(300px, 80vw, 700px); 
+            max-height: 50vh;
+            overflow-y: auto;
             z-index: 10; 
+            padding: 5px;
+            box-sizing: border-box;
         }
         .menu-btn { 
             width: 100%; 
@@ -83,7 +85,6 @@
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
 
-        /* DİĞER EKRANLAR */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
         .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; margin-top: 0; }
@@ -138,7 +139,6 @@
         .add-bot-btn { padding: 10px 15px; font-size: 12px; font-weight: bold; background: #8b5cf6; color: #fff; border: 3px solid #5b21b6; box-shadow: 3px 3px 0px #4c1d95; border-radius: 8px; cursor: pointer; font-family: 'Press Start 2P', cursive; display: none; touch-action: manipulation; }
         .add-bot-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #4c1d95; }
 
-        /* MAĞAZA */
         #screen-shop { background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .shop-container { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; width: 90%; max-width: 850px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
         .shop-container h2 { font-family: 'Press Start 2P', cursive; font-size: 28px; margin: 0; color: #eab308; text-shadow: 0 0 20px rgba(234,179,8,0.5); }
@@ -159,7 +159,6 @@
         .shop-icon { font-size: 36px; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transition: transform 0.3s; }
         .shop-item:hover .shop-icon { transform: scale(1.2) rotate(5deg); }
 
-        /* SKOR TABELASI */
         #stadium-scoreboard {
             position: absolute;
             top: 10px; left: 50%; transform: translateX(-50%);
@@ -195,7 +194,6 @@
         @keyframes powerFull { 0% { box-shadow: 0 0 0px #eab308; } 50% { box-shadow: 0 0 20px #eab308, 0 0 40px #eab308; } 100% { box-shadow: 0 0 0px #eab308; } }
         .power-full { animation: powerFull 0.2s infinite; background: #eab308 !important; }
 
-        /* SOL ÜST BUTONLAR (MENÜ, LOBİ, EMOJİ) */
         #top-left-btns { position: absolute; top: 15px; left: 15px; display: flex; flex-direction: row; gap: 10px; pointer-events: auto; z-index: 100; align-items: center; }
         .top-ui-btn { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 30px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; touch-action: manipulation; }
         .top-ui-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.05); border-color: rgba(255,255,255,0.5); }
@@ -206,7 +204,6 @@
         #camera-btn { top: 75px; }
         #mute-btn:hover, #camera-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.1); border-color: white; }
 
-        /* MOBİL KONTROLLER */
         #mobile-controls { position: absolute; bottom: 10px; right: 10px; display: none; gap: 15px; align-items: flex-end; pointer-events: auto; touch-action: none; z-index: 100; }
         .mob-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4); transition: transform 0.1s; pointer-events: auto; touch-action: manipulation; }
         .mob-btn:active { transform: scale(0.9); }
@@ -225,7 +222,6 @@
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
         .wide-key { width: 110px; }
 
-        /* EMOJİ BAR (AÇILIR KAPANIR) */
         #emote-bar { position: absolute; top: 60px; left: 15px; display: none; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 100; border: 1px solid rgba(255,255,255,0.2); touch-action: manipulation; flex-direction: row; }
         .emote-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: transform 0.1s; user-select: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); touch-action: manipulation; }
         .emote-btn:active { transform: scale(1.3); }
@@ -242,7 +238,7 @@
         #overlay-result { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 7000; backdrop-filter: blur(10px); }
         #overlay-result h1 { font-family: 'Press Start 2P', cursive; font-size: clamp(24px, 5vw, 40px); margin-bottom: 10px; color: #eab308; text-shadow: 4px 4px 0 #000, 0 0 20px #eab308; }
         #result-score { font-family: 'Press Start 2P', cursive; font-size: clamp(40px, 8vw, 60px); color: #fff; margin-bottom: 20px; text-shadow: 4px 4px 0 #000; }
-        #result-desc { font-size: clamp(16px, 3vw, 24px); font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000; }
+        #result-desc { font-size: clamp(16px, 3vw, 24px); font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
 
         .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
         .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; margin: 0; text-align: center; }
@@ -258,7 +254,6 @@
         #credits-content p { font-size: 16px; line-height: 1.6; color: #d4a373; }
         @keyframes scrollCredits { 0% { transform: translateY(100vh); } 100% { transform: translateY(-100%); } }
 
-        /* --- OYUN EKRANI TAM SIFIRLAMA --- */
         #screen-game { 
             background: transparent; 
             position: absolute; top: 0; left: 0; 
@@ -274,7 +269,7 @@
             display: flex; justify-content: center; align-items: center; 
             overflow: hidden; 
             background-color: #0f172a;
-            background-image: url('menu.png'); /* Blur arka plan */
+            background-image: url('menu.png');
             background-size: cover;
             background-position: center;
         }
@@ -284,7 +279,6 @@
             filter: blur(15px) brightness(0.3); z-index: 0;
         }
         
-        /* CONTAIN KULLANDIK: Kare bozulmasın, orantı kalsın */
         canvas { 
             position: relative; z-index: 1;
             max-width: 100%; max-height: 100%; width: 100%; height: 100%;
@@ -315,7 +309,8 @@
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
             
-            .menu-buttons { margin-top: 45vh; gap: 10px; width: 95%; }
+            /* DÜZELTME: mobilde menü taşmasın */
+            .menu-buttons { margin-top: 32vh; gap: 8px; width: 95%; max-height: 55vh; }
             .menu-btn { padding: 12px 5px; font-size: clamp(10px, 3vw, 14px); }
             
             .modal-content { width: 95%; padding: 15px; gap: 10px; }
@@ -329,7 +324,6 @@
             #credits-content h2 { font-size: 20px; }
             #credits-content p { font-size: 12px; }
             
-            /* Emoji bar mobilde daha küçük */
             #emote-bar { top: 50px; left: 5px; padding: 5px; gap: 5px; }
             .emote-btn { font-size: 20px; }
 
@@ -353,7 +347,6 @@
         <p>En iyi deneyim için lütfen telefonunuzu yatay çevirin.</p>
     </div>
 
-    <!-- ANA MENÜ -->
     <div id="screen-main-menu" class="screen active">
         <div class="bg-blur"></div>
         <div class="bg-image"></div>
@@ -520,13 +513,13 @@
             <div id="top-left-btns">
                 <div class="top-ui-btn" onclick="goToMainMenu()">🏠 ANA MENÜ</div>
                 <div class="top-ui-btn" onclick="goToLobby()">👥 LOBİ</div>
-                <div class="top-ui-btn" id="emote-toggle">😀</div> <!-- EMOJİ BUTONU BURAYA EKLENDİ -->
+                <div class="top-ui-btn" id="emote-toggle">😀</div>
             </div>
             
             <div id="mute-btn">🔊</div>
             <div id="camera-btn">📷</div>
             
-            <div id="emote-bar"> <!-- EMOJİ BAR BAŞLANGIÇTA KAPALI -->
+            <div id="emote-bar">
                 <button class="emote-btn" onclick="sendEmote('👏')">👏</button>
                 <button class="emote-btn" onclick="sendEmote('😡')">😡</button>
                 <button class="emote-btn" onclick="sendEmote('🔥')">🔥</button>
@@ -583,6 +576,8 @@
             <div id="result-score">3 : 2</div>
             <div id="result-desc">KIRMIZI KAZANDI</div>
             <button class="menu-btn" id="btn-rematch" style="background:#22c55e; color:white; border-color:#166534; box-shadow:4px 4px 0 #14532d; margin-top:20px; font-size:18px; padding:10px 30px; display:none;">RÖVANŞ</button>
+            <!-- DÜZELTME: Host olmayanlar da çıkabilsin -->
+            <button class="menu-btn" id="btn-result-lobby" style="background:#4c9aff; color:white; border-color:#2563eb; box-shadow:4px 4px 0 #1e3a8a; margin-top:15px; font-size:16px; padding:10px 30px;">LOBİYE DÖN</button>
         </div>
     </div>
 
@@ -592,38 +587,31 @@
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
     <script>
-       // Tam ekran ve yatay zorlama (Samsung uyumlu)
-function forceFullscreenAndLandscape() {
-    try {
-        // Samsung ve diğer Android cihazlar için önekli metodlar
-        let elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(()=>{});
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
+        // DÜZELTME: Çift fullscreen listener kaldırıldı
+        function forceFullscreenAndLandscape() {
+            try {
+                let elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(()=>{});
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+                
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+                
+                if (navigator.userAgent.includes('Samsung')) {
+                    document.body.style.paddingTop = '0';
+                    document.body.style.marginTop = '0';
+                }
+            } catch(e) { console.log("Tam ekran hatası:", e); }
         }
-        
-        // Yatay ekran zorla
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-        }
-        
-        // Samsung için ekstra: System UI gizle
-        if (navigator.userAgent.includes('Samsung')) {
-            document.body.style.paddingTop = '0';
-            document.body.style.marginTop = '0';
-        }
-    } catch(e) { console.log("Tam ekran hatası:", e); }
-}
 
-// Sadece gerçek bir tıklamada tetikle (touchstart değil, click)
-document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
-        
-        // İlk tıklamada tetikle (Tarayıcı kuralları gereği tıklama gerekir)
         document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
         document.body.addEventListener('touchstart', forceFullscreenAndLandscape, { once: true });
 
@@ -637,7 +625,8 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
         };
 
         let socket = { emit: function() {}, on: function() {}, id: "p1" };
-        
+        let pendingCreate = null; // DÜZELTME: Socket beklerken oda oluşturma kuyruğu
+
         function loadSocketIO() {
             if (!navigator.onLine) return; 
             let script = document.createElement('script');
@@ -647,9 +636,18 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                     let realSocket = io("https://boliegole.onrender.com", { transports: ["websocket", "polling"] });
                     realSocket.on('connect', () => { 
                         socket = realSocket; 
-                        console.log("Socket Bağlandı!"); 
-                        if (currentRoom === null) {
-                            // Socket bağlandığında ekranda bekleyen varsa uyar
+                        console.log("Socket Bağlandı!");
+                        // DÜZELTME: Listener'ları gerçek socket'e burada bağla
+                        setupSocketListeners();
+                        // DÜZELTME: Bekleyen oda kurma isteği varsa şimdi gönder
+                        if (pendingCreate) {
+                            socket.emit('create_server', pendingCreate);
+                            pendingCreate = null;
+                            document.getElementById('modal-create').style.display = 'none';
+                        }
+                        // DÜZELTME: İsim girildiyse sunucu listesini tekrar iste
+                        if (currentRoom === null && myPlayerName) {
+                            socket.emit('get_servers');
                         }
                     });
                 } catch(e) { console.log("Socket hatası:", e); }
@@ -712,7 +710,13 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
         const elTimer = document.getElementById('match-timer');
         let lastScoreRed = -1, lastScoreBlue = -1, lastTimerText = '';
 
-        let equipped = JSON.parse(localStorage.getItem('bolie_equipped')) || { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
+        // DÜZELTME: localStorage JSON.parse korumalı
+        let equipped;
+        try {
+            equipped = JSON.parse(localStorage.getItem('bolie_equipped')) || { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
+        } catch(e) {
+            equipped = { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
+        }
         
         const SHOP_ITEMS = {
             outfit: [
@@ -769,7 +773,10 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        // EMOJİ AÇMA KAPAMA
+        // DÜZELTME: Müzik döngüsü garantisi
+        menuMusic.addEventListener('ended', () => { if (!isMuted && !document.getElementById('screen-game').classList.contains('active')) menuMusic.play().catch(()=>{}); });
+        bgMusic.addEventListener('ended', () => { if (!isMuted && document.getElementById('screen-game').classList.contains('active')) bgMusic.play().catch(()=>{}); });
+
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
             if (bar.style.display === 'flex') { bar.style.display = 'none'; }
@@ -850,6 +857,7 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             });
         }
 
+        // DÜZELTME: currentTime=0 kaldırıldı (müzik 3 sn'de kesilmesin)
         window.switchScreen = function(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -857,16 +865,12 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             if (!isMuted) {
                 if (screenId === 'screen-game') {
                     menuMusic.pause();
-                    menuMusic.currentTime = 0; // Menü müziğini sıfırla
                     if (!isOffline && !isPractice) {
-                        bgMusic.currentTime = 0; // Maç müziğini baştan başlat
                         bgMusic.play().catch(()=>{});
                     }
                 } else {
                     bgMusic.pause();
-                    bgMusic.currentTime = 0; // Maç müziğini sıfırla
                     if (menuMusic.paused) {
-                        menuMusic.currentTime = 0;
                         menuMusic.play().catch(()=>{});
                     }
                 }
@@ -926,11 +930,12 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 myPlayerName = name;
                 document.getElementById('modal-name').style.display = 'none';
                 switchScreen('screen-server-list');
-                if (socket) socket.emit('get_servers');
+                if (socket.id !== "p1") socket.emit('get_servers');
+                else if (socket) socket.emit('get_servers');
             };
 
             document.getElementById('btn-back-main').onclick = () => switchScreen('screen-main-menu');
-            document.getElementById('btn-exit').onclick = () => { window.location.href = "about:blank"; };
+            // DÜZELTME: var olmayan #btn-exit satırı SİLİNDİ
             document.getElementById('btn-show-create').onclick = () => document.getElementById('modal-create').style.display = 'flex';
             document.getElementById('btn-cancel-create').onclick = () => document.getElementById('modal-create').style.display = 'none';
 
@@ -938,13 +943,8 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 radio.onchange = (e) => { document.getElementById('input-room-pass').style.display = (e.target.value === 'community') ? 'block' : 'none'; };
             });
 
-            // SUNUCU OLUŞTURMA (SOCKET BEKLEME EKLENDİ)
+            // DÜZELTME: Socket bekleme kuyruğu
             document.getElementById('btn-confirm-create').onclick = () => {
-                if (socket.id === "p1") {
-                    alert("Sunucuya bağlanılıyor. Render.com ücretsiz sunucusu uyanıyor, lütfen 30-50 saniye bekleyip tekrar deneyin.");
-                    return; // Eğer socket bağlı değilse sunucu oluşturmayı engelle
-                }
-
                 let name = document.getElementById('input-room-name').value || "Oda";
                 let type = document.querySelector('input[name="room-type"]:checked').value;
                 let pass = document.getElementById('input-room-pass').value;
@@ -954,7 +954,15 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 let blueColor = document.getElementById('input-blue-color').value;
                 let weather = document.getElementById('input-weather').value;
 
-                if(socket) socket.emit('create_server', { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball });
+                let payload = { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball };
+
+                if (socket.id === "p1") {
+                    pendingCreate = payload;
+                    alert("Sunucuya bağlanılıyor... Render.com ücretsiz sunucusu uyanıyor, lütfen 30-50 saniye bekleyin. Bağlanınca oda otomatik kurulacak.");
+                    return;
+                }
+
+                socket.emit('create_server', payload);
                 document.getElementById('modal-create').style.display = 'none';
             };
             
@@ -962,6 +970,19 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             document.getElementById('btn-rematch').onclick = () => {
                 document.getElementById('overlay-result').style.display = 'none';
                 if(socket) socket.emit('rematch');
+            };
+            // DÜZELTME: Maç sonu lobiye dönüş butonu
+            document.getElementById('btn-result-lobby').onclick = () => {
+                document.getElementById('overlay-result').style.display = 'none';
+                if (isOffline || isPractice) { 
+                    isOffline = false; isPractice = false; 
+                    switchScreen('screen-main-menu'); 
+                    return; 
+                }
+                if (currentRoom && currentRoom.hostId === socket.id) {
+                    socket.emit('stop_game');
+                }
+                switchScreen('screen-lobby');
             };
             document.getElementById('btn-add-bot').onclick = () => { if(socket) socket.emit('add_bot'); };
         });
@@ -1010,21 +1031,23 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             window.selectTeam = (team) => {
                 if (!currentRoom || currentRoom.status !== 'lobby') return;
                 myTeam = team;
+                selectedBotId = null; // DÜZELTME: bot seçimini sıfırla
                 if(socket) socket.emit('change_team', team);
                 if(currentRoom) renderTacticsBoard(currentRoom);
             };
 
+            // DÜZELTME: layout thrash düzeltildi (boardRect döngü dışında)
             function renderTacticsBoard(room) {
                 let board = document.getElementById('tactics-board');
                 if(!board) return;
                 board.querySelectorAll('.slot').forEach(el => el.remove());
+                let boardRect = board.getBoundingClientRect();
 
                 let renderTeam = (team) => {
                     FORMATION_SLOTS[team].forEach(slot => {
                         let el = document.createElement('div');
                         el.className = 'slot ' + (room.formation[team][slot.id] ? 'filled' : 'empty');
                         
-                        let boardRect = board.getBoundingClientRect();
                         let pxX = (slot.x / 1200) * boardRect.width;
                         let pxY = (slot.y / 600) * boardRect.height;
                         el.style.left = pxX + 'px';
@@ -1090,6 +1113,8 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 renderTeam('blue');
             }
 
+            // DÜZELTME: setTimeout birikmesi engellendi
+            let lobbyRenderRAF = null;
             function showLobby(room) {
                 switchScreen('screen-lobby');
                 document.getElementById('lobby-room-name').innerText = room.name;
@@ -1108,23 +1133,23 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 }
                 document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
                 document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
-                setTimeout(() => renderTacticsBoard(room), 50);
+                if (lobbyRenderRAF) cancelAnimationFrame(lobbyRenderRAF);
+                lobbyRenderRAF = requestAnimationFrame(() => renderTacticsBoard(room));
             }
 
+            // DÜZELTME: var olmayan spec-players kaldırıldı
             socket.on('update_lobby', (room) => {
                 currentRoom = room;
                 if (room.status === 'lobby') {
                     showLobby(room);
                     let redList = document.getElementById('red-players');
                     let blueList = document.getElementById('blue-players');
-                    let specList = document.getElementById('spec-players');
-                    if(!redList) return;
-                    redList.innerHTML = ""; blueList.innerHTML = ""; specList.innerHTML = "";
+                    if(!redList || !blueList) return;
+                    redList.innerHTML = ""; blueList.innerHTML = "";
                     room.players.forEach(p => {
                         let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span></div>`;
                         if (p.team === 'red') redList.innerHTML += el;
                         else if (p.team === 'blue') blueList.innerHTML += el;
-                        else specList.innerHTML += el;
                         if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); }
                     });
                 }
@@ -1229,28 +1254,13 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             });
         }
 
-        let oldSocketConnect = socket.on;
-        Object.defineProperty(socket, 'on', {
-            set: function(val) { oldSocketConnect = val; },
-            get: function() {
-                return function(event, callback) {
-                    oldSocketConnect.call(this, event, callback);
-                };
-            }
-        });
+        // DÜZELTME: Socket on hack'i ve setInterval KALDIRILDI
+        // setupSocketListeners() artık realSocket.on('connect') içinde çağrılıyor
 
-        setupSocketListeners();
-        
-        setInterval(() => {
-            if (socket.id !== "p1" && !socket._listenersMoved) {
-                socket._listenersMoved = true;
-                setupSocketListeners();
-            }
-        }, 1000);
-
-        function updateReplay(now) {
+        // DÜZELTME: dt parametresi eklendi
+        function updateReplay(dt) {
             if (!replayData || replayData.length === 0) return;
-            replayTimer += 1/60;
+            replayTimer += dt;
             if (replayTimer > 0.03) { replayTimer = 0; replayIndex++; }
             if (replayIndex >= replayData.length) { replayData = null; return; }
             let frame = replayData[replayIndex];
@@ -1263,10 +1273,14 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             }
         }
 
-        function leaveRoom() { if (confirm("Odadan ayrılmak istiyor musunuz?")) window.location.href = window.location.pathname; }
+        // DÜZELTME: selectedBotId temizliği
+        function leaveRoom() { 
+            if (confirm("Odadan ayrılmak istiyor musunuz?")) { selectedBotId = null; window.location.href = window.location.pathname; }
+        }
 
         window.goToMainMenu = function() {
             if (confirm("Ana menüye dönmek istiyor musunuz?")) {
+                selectedBotId = null;
                 isPractice = false; isOffline = false;
                 switchScreen('screen-main-menu'); 
                 window.location.href = window.location.pathname;
@@ -1274,6 +1288,7 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
         };
 
         window.goToLobby = function() {
+            selectedBotId = null;
             if (isOffline || isPractice) { isOffline = false; isPractice = false; switchScreen('screen-main-menu'); return; }
             if (currentRoom && currentRoom.status === 'playing') {
                 if (currentRoom.hostId === socket.id) {
@@ -1355,7 +1370,7 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
 
         window.sendEmote = (emoji) => { 
             if (!isPractice && !isOffline && socket) socket.emit('send_emote', emoji); 
-            document.getElementById('emote-bar').style.display = 'none'; // Emoji gönderince kapan
+            document.getElementById('emote-bar').style.display = 'none';
         };
 
         const joystickZone = document.getElementById('joystick-zone');
@@ -1584,6 +1599,8 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
             document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
             document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
             document.getElementById('match-timer').innerText = "SERBEST ÇALIŞMA (R: Topu Yenile)";
+            // DÜZELTME: Antrenman modunda da müzik
+            if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
         }
 
         function updateOfflinePhysics(dt) {
@@ -1814,9 +1831,10 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, 0, 1200, 600);
             }
 
+            // DÜZELTME: gereksiz if kaldırıldı
             if (!isPractice && !isOffline && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(596, 100, 8, 400); } else { ctx.fillRect(596, 100, 8, 400); }
+                ctx.fillRect(596, 100, 8, 400);
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 5; ctx.fillText("SANTRA", 600, 80); ctx.shadowBlur = 0;
             }
         }
@@ -1902,10 +1920,15 @@ document.body.addEventListener('click', forceFullscreenAndLandscape, { once: tru
                 ctx.clearRect(0, 0, 1200, 600);
 
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
-                if (isDynamicCamera && currentRoom && !isPractice && !isOffline) {
+                // DÜZELTME: updateReplay isDynamicCamera dışına alındı
+                if (currentRoom && currentRoom.status === 'goal_replay') {
+                    updateReplay(dt);
+                    if (isDynamicCamera && !isPractice && !isOffline) {
+                        targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
+                    }
+                } else if (isDynamicCamera && currentRoom && !isPractice && !isOffline && currentRoom.status === 'playing') {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
-                    if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
-                    else if (currentRoom.status === 'playing') { if (ball.owner === null && speed > 15) { targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; } }
+                    if (ball.owner === null && speed > 15) { targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.3; }
                 }
                 
                 cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
