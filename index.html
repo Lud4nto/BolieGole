@@ -58,6 +58,51 @@
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
 
+                /* ==== ÜST SOL KÖŞE İKONLARI ==== */
+        .top-menu-icons {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+        .icon-btn {
+            width: 55px;
+            height: 55px;
+            background: #1e293b;
+            border: 4px solid #475569;
+            box-shadow: 4px 4px 0px #0f172a, inset 0 0 10px rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+        }
+        .icon-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #0f172a, inset 0 0 15px rgba(255,255,255,0.3);
+            background: #334155;
+        }
+        .icon-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #0f172a;
+        }
+        /* Kırmızı, Pembe, Yeşil temalar */
+        #btn-credits-icon { border-color: #ef4444; box-shadow: 4px 4px 0px #7f1d1d, inset 0 0 10px rgba(239,68,68,0.2); }
+        #btn-options-icon { border-color: #ec4899; box-shadow: 4px 4px 0px #831843, inset 0 0 10px rgba(236,72,153,0.2); }
+        #btn-profile-icon { border-color: #22c55e; box-shadow: 4px 4px 0px #14532d, inset 0 0 10px rgba(34,197,94,0.2); }
+        
+        @media (pointer: coarse) {
+            .top-menu-icons { top: 10px; left: 10px; gap: 10px; }
+            .icon-btn { width: 45px; height: 45px; font-size: 20px; border-width: 3px; box-shadow: 3px 3px 0px #0f172a; }
+            .icon-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #0f172a; }
+        }
+
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; color: #2b1b0e; }
         .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 18px; text-align: center; margin-top: 0; }
@@ -441,13 +486,19 @@
     <div id="screen-main-menu" class="screen active">
         <div class="bg-blur"></div>
         <div class="bg-image"></div>
+        
+        <!-- YENİ ÜST SOL İKONLAR -->
+        <div class="top-menu-icons">
+            <div class="icon-btn" id="btn-credits-icon" title="Yapımcılar">📜</div>
+            <div class="icon-btn" id="btn-options-icon" title="Ayarlar">⚙️</div>
+            <div class="icon-btn" id="btn-profile-icon" title="Profil">👤</div>
+        </div>
+
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
             <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU</button>
             <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
-            <button class="menu-btn" id="btn-shop">MAĞAZA</button>
-            <button class="menu-btn" id="btn-options">AYARLAR</button>
-            <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
+            <button class="menu-btn" id="btn-shop" style="grid-column: span 2;">MAĞAZA</button>
         </div>
     </div>
 
@@ -981,8 +1032,9 @@
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
             document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
             document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
-            document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
-            document.getElementById('btn-credits').onclick = () => switchScreen('screen-credits');
+            document.getElementById('btn-options-icon').onclick = () => switchScreen('screen-options');
+            document.getElementById('btn-credits-icon').onclick = () => switchScreen('screen-credits');
+            document.getElementById('btn-profile-icon').onclick = () => { alert("Kariyersiz"); };
 
             document.getElementById('btn-confirm-name').onclick = () => {
                 let name = document.getElementById('input-player-name').value.trim();
