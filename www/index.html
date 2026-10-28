@@ -1032,9 +1032,19 @@
                 document.getElementById('modal-name').style.display = 'flex';
             }
 
+            // İSİM VARSA MÜZİĞİ BAŞLAT
             if (!isMuted && myPlayerName) {
                 menuMusic.volume = musicSlider.value / 100;
                 menuMusic.play().then(() => {
+                    [bgMusic, goalSound, whistleSound].forEach(a => {
+                        let origVol = a.volume;
+                        a.volume = 0;
+                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                    });
+                }).catch(() => {
+                    function startMenuBGM() {
+                        if (!isMuted) {
+                            menuMusic.play().then(() => {
                                 [bgMusic, goalSound, whistleSound].forEach(a => {
                                     let origVol = a.volume;
                                     a.volume = 0;
@@ -1059,6 +1069,37 @@
                     if (socket.id !== "p1") socket.emit('get_servers');
                 }
             };
+            document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
+            document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
+            document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
+            
+            document.getElementById('btn-options-icon').onclick = () => switchScreen('screen-options');
+            document.getElementById('btn-credits-icon').onclick = () => switchScreen('screen-credits');
+            document.getElementById('btn-profile-icon').onclick = () => switchScreen('screen-profile');
+
+            document.getElementById('btn-confirm-name').onclick = () => {
+                let name = document.getElementById('input-player-name').value.trim();
+                if (name === "") { alert("Lütfen bir isim girin!"); return; }
+                myPlayerName = name;
+                localStorage.setItem('bolie_player_name', myPlayerName);
+                document.getElementById('modal-name').style.display = 'none';
+                
+                // Müzikleri başlat
+                if (!isMuted) {
+                    menuMusic.volume = musicSlider.value / 100;
+                    menuMusic.play().catch(()=>{});
+                    [bgMusic, goalSound, whistleSound].forEach(a => {
+                        let origVol = a.volume;
+                        a.volume = 0;
+                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                    });
+                }
+                
+                switchScreen('screen-server-list');
+                if (socket.id !== "p1") socket.emit('get_servers');
+                else if (socket) socket.emit('get_servers');
+            };
+            
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
             document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
             document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
