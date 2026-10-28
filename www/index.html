@@ -348,7 +348,7 @@
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
             <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU</button>
-            <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
+            <button class="menu-btn" id="btn-practice" style="grid-column: span 2; background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-shop" style="grid-column: span 2;">MAĞAZA</button>
         </div>
     </div>
@@ -721,8 +721,22 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        menuMusic.loop = true;
-        bgMusic.loop = true;
+        menuMusic.loop = false;
+        bgMusic.loop = false;
+        
+        menuMusic.addEventListener('timeupdate', () => {
+            if (isFinite(menuMusic.duration) && menuMusic.duration > 0 && menuMusic.currentTime >= menuMusic.duration - 0.2) {
+                menuMusic.currentTime = 0;
+                menuMusic.play().catch(()=>{});
+            }
+        });
+        
+        bgMusic.addEventListener('timeupdate', () => {
+            if (isFinite(bgMusic.duration) && bgMusic.duration > 0 && bgMusic.currentTime >= bgMusic.duration - 0.2) {
+                bgMusic.currentTime = 0;
+                bgMusic.play().catch(()=>{});
+            }
+        });
 
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
