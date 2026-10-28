@@ -29,7 +29,7 @@
         
         @media (orientation: portrait) and (pointer: coarse) { 
             #orientation-warning { display: flex; } 
-            .screen, #modal-name, #modal-create { display: none !important; } 
+            .screen, #modal-name, #modal-create, #modal-edit-name { display: none !important; } 
         }
 
         .screen { 
@@ -39,7 +39,7 @@
         }
         .active { display: flex; }
         
-        #screen-shop, #screen-server-list, #screen-options, .modal-content { overflow-y: auto; }
+        #screen-shop, #screen-server-list, #screen-options, #screen-profile, .modal-content { overflow-y: auto; }
 
         .bg-image { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background-image: url('menu.png'); background-size: cover; background-position: center 30%; z-index: -2; }
         .bg-blur { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background-image: url('menu.png'); background-size: cover; background-position: center 30%; filter: blur(15px) brightness(0.3); z-index: -3; opacity: 1; }
@@ -59,42 +59,87 @@
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
 
         /* ==== ÜST SOL KÖŞE İKONLARI ==== */
-        .top-menu-icons {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            display: flex;
-            gap: 15px;
-            z-index: 100;
-        }
-        .icon-btn {
-            width: 55px;
-            height: 55px;
-            background: #1e293b;
-            border: 4px solid #475569;
-            box-shadow: 4px 4px 0px #0f172a, inset 0 0 10px rgba(255,255,255,0.1);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 26px;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            touch-action: manipulation;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
-        }
-        .icon-btn:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px #0f172a, inset 0 0 15px rgba(255,255,255,0.3);
-            background: #334155;
-        }
-        .icon-btn:active {
-            transform: translate(4px, 4px);
-            box-shadow: 0px 0px 0px #0f172a;
-        }
+        .top-menu-icons { position: absolute; top: 15px; left: 15px; display: flex; gap: 15px; z-index: 100; }
+        .icon-btn { width: 55px; height: 55px; background: #1e293b; border: 4px solid #475569; box-shadow: 4px 4px 0px #0f172a, inset 0 0 10px rgba(255,255,255,0.1); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 26px; cursor: pointer; transition: all 0.1s ease; touch-action: manipulation; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .icon-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #0f172a, inset 0 0 15px rgba(255,255,255,0.3); background: #334155; }
+        .icon-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #0f172a; }
         #btn-credits-icon { border-color: #ef4444; box-shadow: 4px 4px 0px #7f1d1d, inset 0 0 10px rgba(239,68,68,0.2); }
         #btn-options-icon { border-color: #ec4899; box-shadow: 4px 4px 0px #831843, inset 0 0 10px rgba(236,72,153,0.2); }
         #btn-profile-icon { border-color: #22c55e; box-shadow: 4px 4px 0px #14532d, inset 0 0 10px rgba(34,197,94,0.2); }
+
+        /* ==== KARİYER PROFİL EKRANI ==== */
+        #screen-profile { background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .profile-card { 
+            background-color: #d4a373; 
+            border: 8px solid #8b5a2b; 
+            box-shadow: 12px 12px 0px #5a3a1b, inset 0 0 30px rgba(139, 90, 43, 0.6); 
+            border-radius: 16px; 
+            padding: 25px; 
+            width: 90%; 
+            max-width: 600px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+            position: relative;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 4px);
+        }
+        .profile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .profile-name { font-family: 'Press Start 2P', cursive; font-size: 24px; color: #2b1b0e; text-shadow: 1px 1px 0px #fefae0; }
+        .edit-icon { font-size: 22px; cursor: pointer; transition: 0.2s; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); }
+        .edit-icon:active { transform: scale(0.9); }
+        .edit-icon.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); }
+        
+        .profile-stats-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            width: 100%; 
+            margin: 10px 0; 
+        }
+        .stat-box { 
+            background: #fefae0; 
+            border: 4px solid #a67c52; 
+            border-radius: 8px; 
+            padding: 15px 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: inset 0 0 15px rgba(166, 124, 82, 0.3), 3px 3px 0px #8b5a2b; 
+            position: relative;
+        }
+        /* Çiviler */
+        .stat-box::before, .stat-box::after { 
+            content: ''; 
+            position: absolute; 
+            width: 10px; 
+            height: 10px; 
+            background: radial-gradient(circle at 30% 30%, #999, #333); 
+            border-radius: 50%; 
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        .stat-box::before { top: 4px; left: 4px; }
+        .stat-box::after { top: 4px; right: 4px; }
+        .stat-box:nth-child(3)::before { top: auto; bottom: 4px; left: 4px; }
+        .stat-box:nth-child(3)::after { top: auto; bottom: 4px; right: 4px; }
+        
+        .stat-label { font-family: 'Press Start 2P', cursive; font-size: 10px; color: #8b5a2b; margin-bottom: 8px; text-align: center; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; color: #2b1b0e; }
+        
+        .profile-quote { 
+            margin-top: 15px; 
+            text-align: center; 
+            font-style: italic; 
+            color: #4a3b2c; 
+            font-size: 13px; 
+            font-weight: bold; 
+            line-height: 1.5; 
+            border-top: 2px dashed #a67c52; 
+            padding-top: 15px; 
+            width: 100%;
+        }
+        .profile-quote span { font-size: 11px; font-weight: normal; display: block; margin-top: 5px; color: #6b5a48; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; color: #2b1b0e; }
@@ -191,13 +236,10 @@
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
         .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        
-        /* SPRINT BAR */
         #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: none; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
         #stamina-container.sprint-active { display: flex; }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
         #stamina-text { position: absolute; width: 100%; text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-        
         #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
         #power-text { position: absolute; width: 100%; text-align: center; font-size: 8px; font-weight: 900; color: #fff; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
@@ -320,6 +362,13 @@
             .tab-btn { font-size: 10px; padding: 8px 10px; }
             .shop-container { padding: 15px; }
             .shop-container h2 { font-size: 20px; }
+
+            .profile-card { padding: 15px; gap: 10px; width: 95%; }
+            .profile-name { font-size: 18px; }
+            .edit-icon { font-size: 18px; }
+            .stat-label { font-size: 8px; }
+            .stat-value { font-size: 16px; }
+            .profile-quote { font-size: 11px; }
         }
     </style>
 </head>
@@ -338,7 +387,6 @@
         <div class="bg-blur"></div>
         <div class="bg-image"></div>
         
-        <!-- SOL ÜST İKONLAR -->
         <div class="top-menu-icons">
             <div class="icon-btn" id="btn-credits-icon" title="Yapımcılar">📜</div>
             <div class="icon-btn" id="btn-options-icon" title="Ayarlar">⚙️</div>
@@ -351,6 +399,42 @@
             <button class="menu-btn" id="btn-practice" style="grid-column: span 2; background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-shop" style="grid-column: span 2;">MAĞAZA</button>
         </div>
+    </div>
+
+    <!-- KARİYER PROFİL EKRANI -->
+    <div id="screen-profile" class="screen">
+        <div class="bg-blur"></div>
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-name" id="profile-name-display">Oyuncu Adı</div>
+                <div class="edit-icon" id="edit-name-btn">✏️</div>
+            </div>
+            
+            <div class="profile-stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">PAS</div>
+                    <div class="stat-value" id="stat-pas">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ŞUT</div>
+                    <div class="stat-value" id="stat-sut">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">SÜRE (DK)</div>
+                    <div class="stat-value" id="stat-sure">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">POZİSYON</div>
+                    <div class="stat-value" id="stat-pos">-</div>
+                </div>
+            </div>
+            
+            <div class="profile-quote">
+                "Futbol sadece şampiyonluklara sevinmek değildir. Bunu belli değerlere sahip çıkarak yaşamaktır. Biz, 'şerefli ikincilikler' de yaşadık."
+                <span>~ Süleyman Seba</span>
+            </div>
+        </div>
+        <button class="menu-btn" style="margin-top: 15px; width: 200px; font-size: 14px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
     </div>
 
     <div id="screen-shop" class="screen">
@@ -403,12 +487,25 @@
         <button class="menu-btn" style="position: absolute; bottom: 30px; z-index: 100; width: 200px; font-size: 16px; padding: 10px;" onclick="switchScreen('screen-main-menu')">GERİ DÖN</button>
     </div>
 
+    <!-- İSİM SORMA MODALI (İLK GİRİŞ) -->
     <div id="modal-name" class="modal-overlay">
         <div class="modal-content">
             <h2>OYUNCU ADI</h2>
             <input type="text" id="input-player-name" placeholder="İsmini yaz..." maxlength="15">
             <div class="modal-actions">
                 <button class="btn-confirm" id="btn-confirm-name" style="width: 100%;">DEVAM ET</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- İSİM DÜZENLEME MODALI (PROFİLDEN) -->
+    <div id="modal-edit-name" class="modal-overlay">
+        <div class="modal-content">
+            <h2>İSMİ DEĞİŞTİR</h2>
+            <input type="text" id="input-new-name" placeholder="Yeni ismin..." maxlength="15">
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btn-cancel-edit-name">İPTAL</button>
+                <button class="btn-confirm" id="btn-confirm-edit-name">KAYDET</button>
             </div>
         </div>
     </div>
@@ -643,6 +740,7 @@
         let lastFrameTime = performance.now();
         let lastRenderTime = performance.now();
         let lastAudioStatus = '';
+        let matchPlayTimeCounter = 0;
 
         let isMuted = false;
         let audioCtx = null;
@@ -658,6 +756,22 @@
         const elScoreBlue = document.getElementById('score-blue');
         const elTimer = document.getElementById('match-timer');
         let lastScoreRed = -1, lastScoreBlue = -1, lastTimerText = '';
+
+        // === KARİYER İSTATİSTİKLERİ ===
+        let stats;
+        try {
+            stats = JSON.parse(localStorage.getItem('bolie_stats')) || { pas: 0, sut: 0, sure: 0, positions: {} };
+        } catch(e) {
+            stats = { pas: 0, sut: 0, sure: 0, positions: {} };
+        }
+        function saveStats() { localStorage.setItem('bolie_stats', JSON.stringify(stats)); }
+        
+        function trackPosition(pos) {
+            if (!pos) return;
+            if (!stats.positions[pos]) stats.positions[pos] = 0;
+            stats.positions[pos]++;
+            saveStats();
+        }
 
         let equipped;
         try {
@@ -826,7 +940,65 @@
                     if (menuMusic.paused) { menuMusic.play().catch(()=>{}); }
                 }
             }
+            if (screenId === 'screen-profile') {
+                updateProfileUI();
+            }
         };
+
+        // ==== PROFİL & İSİM DEĞİŞTİRME MANTIĞI ====
+        function updateProfileUI() {
+            document.getElementById('profile-name-display').innerText = myPlayerName || "Oyuncu";
+            document.getElementById('stat-pas').innerText = stats.pas || 0;
+            document.getElementById('stat-sut').innerText = stats.sut || 0;
+            document.getElementById('stat-sure').innerText = stats.sure || 0;
+            
+            // En çok oynanan pozisyonu bul
+            let favPos = "-";
+            let maxCount = 0;
+            for (let pos in stats.positions) {
+                if (stats.positions[pos] > maxCount) {
+                    maxCount = stats.positions[pos];
+                    favPos = pos;
+                }
+            }
+            document.getElementById('stat-pos').innerText = favPos;
+
+            // İsim değiştirme kontrolü
+            const lastChange = localStorage.getItem('bolie_name_change_date');
+            const today = new Date().toDateString();
+            const editBtn = document.getElementById('edit-name-btn');
+            if (lastChange === today) {
+                editBtn.classList.add('disabled');
+            } else {
+                editBtn.classList.remove('disabled');
+            }
+        }
+
+        document.getElementById('edit-name-btn').onclick = () => {
+            const lastChange = localStorage.getItem('bolie_name_change_date');
+            const today = new Date().toDateString();
+            if (lastChange === today) {
+                alert("1 gün sonra isminizi değişebilirsiniz.");
+                return;
+            }
+            document.getElementById('input-new-name').value = myPlayerName;
+            document.getElementById('modal-edit-name').style.display = 'flex';
+        };
+
+        document.getElementById('btn-cancel-edit-name').onclick = () => {
+            document.getElementById('modal-edit-name').style.display = 'none';
+        };
+
+        document.getElementById('btn-confirm-edit-name').onclick = () => {
+            let newName = document.getElementById('input-new-name').value.trim();
+            if (newName === "") { alert("İsim boş olamaz!"); return; }
+            myPlayerName = newName;
+            localStorage.setItem('bolie_player_name', myPlayerName);
+            localStorage.setItem('bolie_name_change_date', new Date().toDateString());
+            document.getElementById('modal-edit-name').style.display = 'none';
+            updateProfileUI();
+        };
+
 
         let currentShopTab = 'outfit';
         window.switchShopTab = (tab, btn) => {
@@ -862,6 +1034,12 @@
             renderShop();
             loadSocketIO(); 
 
+            // İSİM KONTROLÜ (İlk defa giriyorsa)
+            myPlayerName = localStorage.getItem('bolie_player_name');
+            if (!myPlayerName) {
+                document.getElementById('modal-name').style.display = 'flex';
+            }
+
             if (!isMuted) {
                 menuMusic.volume = musicSlider.value / 100;
                 menuMusic.play().then(() => {
@@ -889,20 +1067,28 @@
                 });
             }
 
-            document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
+            document.getElementById('btn-play').onclick = () => { 
+                isOffline = false; 
+                if (!myPlayerName) {
+                    document.getElementById('modal-name').style.display = 'flex';
+                } else {
+                    switchScreen('screen-server-list');
+                    if (socket.id !== "p1") socket.emit('get_servers');
+                }
+            };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
             document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
             document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
             
-            // SOL ÜST İKONLAR
             document.getElementById('btn-options-icon').onclick = () => switchScreen('screen-options');
             document.getElementById('btn-credits-icon').onclick = () => switchScreen('screen-credits');
-            document.getElementById('btn-profile-icon').onclick = () => { alert("Kariyersiz"); };
+            document.getElementById('btn-profile-icon').onclick = () => switchScreen('screen-profile');
 
             document.getElementById('btn-confirm-name').onclick = () => {
                 let name = document.getElementById('input-player-name').value.trim();
                 if (name === "") { alert("Lütfen bir isim girin!"); return; }
                 myPlayerName = name;
+                localStorage.setItem('bolie_player_name', myPlayerName);
                 document.getElementById('modal-name').style.display = 'none';
                 switchScreen('screen-server-list');
                 if (socket.id !== "p1") socket.emit('get_servers');
@@ -1134,7 +1320,7 @@
                         let el = `<div class="player-slot"><span>${escapeHtml(p.name)}</span></div>`;
                         if (p.team === 'red') redList.innerHTML += el;
                         else if (p.team === 'blue') blueList.innerHTML += el;
-                        if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); }
+                        if (p.id === socket.id) { myTeam = p.team; isSpectator = (p.team === 'spectator'); trackPosition(p.position); }
                     });
                 }
             });
@@ -1150,6 +1336,7 @@
                 ballTrail = []; ballRotation = 0; myEmotes = [];
                 cameraX = 600; cameraY = 300; cameraZoom = 1.0;
                 lastAudioStatus = '';
+                matchPlayTimeCounter = 0;
                 const canvas = document.getElementById('gameCanvas');
                 if (canvas) canvas.focus();
                 document.getElementById('label-red').innerText = currentRoom.redName;
@@ -1342,6 +1529,7 @@
             if (!isPractice && !isOffline && ball.owner !== myId) return;
             let angle = getKickAngle();
             playKickSound(false);
+            stats.pas++; saveStats(); // İSTATİSTİK EKLENDİ
             if (isPractice || isOffline) { 
                 ball.vx = Math.cos(angle) * 15; ball.vy = Math.sin(angle) * 15; ball.owner = null; ball.pickupCooldown = 10; 
             } else { if(socket) socket.emit('kick', { vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, vz: 0, shotPower: 0 }); }
@@ -1355,6 +1543,7 @@
             let force = shotPower / 100; 
             let speed = 8 + (force * 27);
             playKickSound(true);
+            stats.sut++; saveStats(); // İSTATİSTİK EKLENDİ
             if (isPractice || isOffline) { 
                 ball.vx = Math.cos(angle) * speed; ball.vy = Math.sin(angle) * speed; ball.vz = 2 + (force * 8); ball.owner = null; ball.pickupCooldown = 10;
             } else { if(socket) socket.emit('kick', { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, vz: 2 + (force * 8), shotPower: shotPower }); }
@@ -1432,6 +1621,14 @@
                 requestAnimationFrame(updateMovement); return; 
             }
             if ((isPractice || isOffline) && !activePlayer) { requestAnimationFrame(updateMovement); return; }
+
+            // Süre istatistiği için saniye sayacı
+            matchPlayTimeCounter += dt;
+            if (matchPlayTimeCounter >= 60) {
+                matchPlayTimeCounter -= 60;
+                stats.sure++;
+                saveStats();
+            }
 
             let myId = isOffline ? "p1" : socket.id;
             if (isCharging && !isPractice && !isOffline && ball.owner !== myId) {
@@ -1521,8 +1718,9 @@
             isOffline = true; isPractice = false; isSpectator = false;
             switchScreen('screen-game');
             players = {};
-            myPlayer = { id: "p1", name: "Sen", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
+            myPlayer = { id: "p1", name: myPlayerName || "Sen", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
             players["p1"] = myPlayer;
+            trackPosition("FWD"); // İstatistik
             let redBots = [
                 { pos: 'GK', x: 60, y: 300 },
                 { pos: 'DEF', x: 250, y: 200 },
@@ -1551,6 +1749,7 @@
             currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball, redColor: '#ff0000', redColor2: '#ffd700', blueColor: '#1e90ff', blueColor2: '#ffffff' };
             myEmotes = [];
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            matchPlayTimeCounter = 0;
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
             document.getElementById('label-red').innerText = "KIRMIZI";
@@ -1563,13 +1762,15 @@
             isPractice = true; isOffline = false; isSpectator = false;
             switchScreen('screen-game');
             players = {};
-            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
+            myPlayer = { id: "p1", name: myPlayerName || "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
             players["p1"] = myPlayer;
+            trackPosition("FWD"); // İstatistik
             score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
             currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball, redColor: '#ff0000', redColor2: '#ffd700', blueColor: '#1e90ff', blueColor2: '#ffffff' };
             myEmotes = [];
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            matchPlayTimeCounter = 0;
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
             document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
