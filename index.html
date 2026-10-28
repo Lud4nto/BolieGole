@@ -59,13 +59,13 @@
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
-        .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
-        .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; margin-top: 0; }
-        .modal-content input[type="text"], .modal-content input[type="password"] { padding: 12px; border-radius: 6px; border: 3px solid #8b5a2b; background: #fefae0; color: #2b1b0e; font-size: 16px; font-weight: bold; }
+        .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; color: #2b1b0e; }
+        .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 18px; text-align: center; margin-top: 0; }
+        .modal-content input[type="text"], .modal-content input[type="password"] { padding: 10px; border-radius: 6px; border: 3px solid #8b5a2b; background: #fefae0; color: #2b1b0e; font-size: 14px; font-weight: bold; }
         
         .radio-group { display: flex; gap: 20px; font-weight: bold; font-size: 14px; justify-content: center; flex-wrap: wrap; }
-        .color-picker-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: bold; }
-        .color-picker-row input[type="color"] { width: 40px; height: 40px; border: 2px solid #8b5a2b; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .color-picker-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: bold; }
+        .color-picker-row input[type="color"] { width: 36px; height: 36px; border: 2px solid #8b5a2b; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         
         .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
         .btn-cancel { background: #ef4444; border: 3px solid #991b1b; box-shadow: 3px 3px 0px #7f1d1d; color: white; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; flex: 1; touch-action: manipulation; }
@@ -82,51 +82,196 @@
         .join-btn { background: #4c9aff; border: 3px solid #2563eb; box-shadow: 3px 3px 0px #1e3a8a; color: white; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 6px; touch-action: manipulation; }
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
-        /* DÜZELTME: Lobi ortalı + taktik tahtası büyük */
-        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: center; align-items: center; gap: 15px; padding: 10px; box-sizing: border-box; overflow: hidden; }
-        .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; max-width: 380px; min-width: 200px; flex-shrink: 0; }
-        .lobby-center { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 900px; min-width: 300px; height: 100%; justify-content: center; padding: 5px; box-sizing: border-box; }
-
-        .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
-        .room-code { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
-        
-        .team-box { width: 100%; height: clamp(150px, 30vh, 320px); background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; overflow-y: auto; }
-        .team-box:hover { transform: scale(1.02); }
-        .team-title { font-family: 'Press Start 2P', cursive; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
-        .player-slot { width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
-        
-        #tactics-board { width: 100%; height: clamp(200px, 40vh, 380px); background-color: #1b5e20; border: 4px solid rgba(255,255,255,0.8); border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.5); touch-action: manipulation; }
+        /* ==== YENİ LOBİ TASARIMI ==== */
+        #screen-lobby { 
+            background-color: transparent; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: stretch; 
+            padding: 8px; 
+            box-sizing: border-box; 
+            gap: 6px;
+            overflow-y: auto;
+        }
+        .lobby-top { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 15px; 
+            z-index: 10; 
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            padding: 4px;
+        }
+        .lobby-top h2 { 
+            font-family: 'Press Start 2P', cursive; 
+            font-size: 13px; 
+            color: white; 
+            text-shadow: 2px 2px 0 #000;
+            margin: 0;
+        }
+        .room-code { 
+            font-family: 'Press Start 2P', cursive; 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #eab308; 
+            letter-spacing: 3px; 
+            text-shadow: 0 0 10px #eab308; 
+            background: #000; 
+            padding: 4px 12px; 
+            border-radius: 8px; 
+            border: 3px solid #eab308; 
+        }
+        .lobby-teams { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: center; 
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .team-box { 
+            flex: 1; 
+            max-width: 500px; 
+            min-height: 70px; 
+            max-height: 100px;
+            background: rgba(15, 23, 42, 0.9); 
+            border-radius: 10px; 
+            padding: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            border: 3px solid transparent; 
+            cursor: pointer; 
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        .team-title { 
+            font-family: 'Press Start 2P', cursive; 
+            font-size: 11px; 
+            margin-bottom: 4px; 
+        }
+        .player-slot { 
+            width: 100%; 
+            padding: 3px 6px; 
+            background: rgba(0,0,0,0.5); 
+            border-radius: 4px; 
+            margin-bottom: 3px; 
+            font-weight: bold; 
+            color: white; 
+            font-size: 11px; 
+            box-sizing: border-box;
+        }
+        #tactics-board { 
+            width: 100%;
+            flex: 1;
+            min-height: 140px;
+            max-height: 280px;
+            background-color: #1b5e20; 
+            border: 3px solid rgba(255,255,255,0.8); 
+            border-radius: 8px; 
+            position: relative; 
+            overflow: hidden; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.5); 
+            flex-shrink: 0;
+        }
         .pitch-line { position: absolute; background: rgba(255,255,255,0.5); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        .pitch-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        .pitch-box { position: absolute; top: 50%; width: 60px; height: 160px; border: 2px solid rgba(255,255,255,0.5); transform: translateY(-50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        
-        .slot { position: absolute; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); font-size: 10px; font-family: 'Press Start 2P', cursive; cursor: pointer; border: 2px solid white; z-index: 10; transition: 0.2s; touch-action: manipulation; }
+        .pitch-circle { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .pitch-box { position: absolute; top: 50%; width: 50px; height: 120px; border: 2px solid rgba(255,255,255,0.5); transform: translateY(-50%); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .slot { position: absolute; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); font-size: 9px; font-family: 'Press Start 2P', cursive; cursor: pointer; border: 2px solid white; z-index: 10; transition: 0.2s; touch-action: manipulation; }
         .slot:hover { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 15px white; }
         .slot.empty { background: rgba(0,0,0,0.6); border-style: dashed; }
         .slot.filled { color: #fff; font-weight: bold; border-width: 3px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
         .slot.selected-bot { border: 3px solid #eab308; box-shadow: 0 0 20px #eab308; transform: translate(-50%, -50%) scale(1.2); }
-        .slot .pos-label { position: absolute; bottom: -15px; font-size: 8px; color: white; font-family: 'Segoe UI', sans-serif; font-weight: bold; text-shadow: 1px 1px 2px black; }
-        
-        .start-game-btn { margin-top: 10px; padding: 10px 25px; font-size: 18px; font-weight: bold; background: #eab308; color: #000; border: 4px solid #a16207; box-shadow: 4px 4px 0px #713f12; border-radius: 8px; cursor: pointer; display: none; font-family: 'Press Start 2P', cursive; transition: 0.1s; z-index: 10; touch-action: manipulation; }
-        .start-game-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #713f12; }
-        
-        .lobby-actions { display: flex; gap: 10px; margin-top: 10px; z-index: 10; flex-wrap: wrap; justify-content: center; }
-        .add-bot-btn { padding: 10px 15px; font-size: 12px; font-weight: bold; background: #8b5cf6; color: #fff; border: 3px solid #5b21b6; box-shadow: 3px 3px 0px #4c1d95; border-radius: 8px; cursor: pointer; font-family: 'Press Start 2P', cursive; display: none; touch-action: manipulation; }
-        .add-bot-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #4c1d95; }
+        .slot .pos-label { position: absolute; bottom: -12px; font-size: 7px; color: white; font-family: 'Segoe UI', sans-serif; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        .lobby-positions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .position-list {
+            flex: 1;
+            max-width: 500px;
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 4px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .pos-btn {
+            padding: 6px 8px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 6px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+        .pos-btn.red { border-color: #ff4c4c; }
+        .pos-btn.blue { border-color: #4c9aff; }
+        .pos-btn.filled { background: rgba(34, 197, 94, 0.6); }
+        .pos-btn.empty { background: rgba(15, 23, 42, 0.9); }
+        .pos-btn.selected-bot {
+            border-color: #eab308;
+            box-shadow: 0 0 10px #eab308;
+            transform: scale(1.08);
+        }
+        .lobby-actions { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            z-index: 10;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            padding: 4px;
+        }
+        .start-game-btn { 
+            padding: 10px 20px; 
+            font-size: 13px; 
+            font-weight: bold; 
+            background: #eab308; 
+            color: #000; 
+            border: 3px solid #a16207; 
+            box-shadow: 3px 3px 0px #713f12; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            display: none; 
+            font-family: 'Press Start 2P', cursive; 
+            touch-action: manipulation;
+        }
+        .add-bot-btn { 
+            padding: 8px 12px; 
+            font-size: 10px; 
+            font-weight: bold; 
+            background: #8b5cf6; 
+            color: #fff; 
+            border: 3px solid #5b21b6; 
+            box-shadow: 3px 3px 0px #4c1d95; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-family: 'Press Start 2P', cursive; 
+            display: none; 
+            touch-action: manipulation;
+        }
 
         #screen-shop { background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .shop-container { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; width: 90%; max-width: 850px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
         .shop-container h2 { font-family: 'Press Start 2P', cursive; font-size: 28px; margin: 0; color: #eab308; text-shadow: 0 0 20px rgba(234,179,8,0.5); }
-        
         .shop-tabs { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
         .tab-btn { padding: 10px 15px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-weight: bold; font-family: 'Press Start 2P', cursive; font-size: 10px; cursor: pointer; border-radius: 30px; transition: all 0.3s ease; touch-action: manipulation; }
         .tab-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .tab-btn.active { background: linear-gradient(135deg, #eab308, #f59e0b); color: #000; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); border-color: transparent; transform: scale(1.05); }
-        
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; width: 100%; max-height: 350px; overflow-y: auto; padding: 5px; touch-action: pan-y; }
         .shop-grid::-webkit-scrollbar { width: 8px; }
         .shop-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        
         .shop-item { background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; text-align: center; color: white; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
         .shop-item:hover { transform: translateY(-5px) scale(1.05); border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(234, 179, 8, 0.2); background: rgba(30, 41, 59, 0.9); }
         .shop-item.selected { border-color: #eab308; box-shadow: 0 0 25px rgba(234, 179, 8, 0.6), inset 0 0 15px rgba(234, 179, 8, 0.3); background: linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(234,179,8,0.15) 100%); }
@@ -153,7 +298,6 @@
         .sb-team.blue .sb-score { color: #fff; text-shadow: 0 0 10px #4c9aff; }
         .sb-center { padding: 5px 20px; display: flex; flex-direction: column; align-items: center; background: #111; }
         .sb-timer { font-size: clamp(10px, 1.5vw, 16px); font-weight: 700; color: #eab308; text-shadow: 0 0 10px #eab308; background: #000; padding: 2px 10px; border-radius: 4px; border: 1px solid #333; }
-        
         @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); color: #fff; text-shadow: 0 0 30px #fff; } 100% { transform: scale(1); } }
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
@@ -161,7 +305,6 @@
         #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
         #stamina-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
-        
         #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #power-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.05s linear; }
         #power-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; }
@@ -216,7 +359,6 @@
 
         .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
         .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; margin: 0; text-align: center; }
-        
         .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 14px; }
         input[type="range"] { -webkit-appearance: none; width: 120px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; touch-action: manipulation; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #ef4444; border: 2px solid #7f1d1d; border-radius: 50%; cursor: pointer; }
@@ -230,12 +372,9 @@
 
         #screen-game { background: transparent; position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; display: none; z-index: 1000; overflow: hidden; }
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
-        
         #game-wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; background-color: #0f172a; background-image: url('menu.png'); background-size: cover; background-position: center; }
         #game-wrapper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('menu.png'); background-size: cover; background-position: center; filter: blur(15px) brightness(0.3); z-index: 0; }
-        
         canvas { position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; outline: none; display: block; }
-        
         .vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none; z-index: 50; }
 
         @media (pointer: coarse) {
@@ -248,22 +387,25 @@
             #mute-btn { top: 5px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
             #camera-btn { top: 55px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
             
-            #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 5px; gap: 5px; overflow-y: auto; align-items: stretch; }
-            .lobby-side { width: 100%; max-width: none; flex-direction: row; justify-content: space-between; height: auto; margin-bottom: 5px; flex-wrap: wrap; }
-            .lobby-center { width: 100%; height: auto; max-width: none; min-width: 0; }
-            .team-box { width: 48%; height: 100px; padding: 5px; }
-            .team-title { font-size: 10px; margin-bottom: 2px; }
-            .player-slot { padding: 2px; font-size: 9px; margin-bottom: 2px; }
-            #tactics-board { height: 220px; }
+            #screen-lobby { padding: 5px; gap: 4px; }
+            .lobby-top h2 { font-size: 10px; }
+            .room-code { font-size: 11px; padding: 3px 8px; letter-spacing: 2px; }
+            .team-box { min-height: 60px; max-height: 80px; padding: 4px; }
+            .team-title { font-size: 9px; }
+            .player-slot { font-size: 9px; padding: 2px 4px; margin-bottom: 2px; }
+            #tactics-board { min-height: 120px; max-height: 180px; }
             .slot { width: 30px; height: 30px; font-size: 8px; }
-            .slot .pos-label { font-size: 6px; bottom: -12px; }
+            .slot .pos-label { font-size: 6px; bottom: -10px; }
+            .pos-btn { padding: 5px 7px; font-size: 7px; }
+            .lobby-actions { gap: 5px; }
+            .start-game-btn { padding: 8px 15px; font-size: 11px; }
+            .add-bot-btn { padding: 6px 10px; font-size: 9px; }
             .ui-bars { top: 55px; }
             
             .menu-buttons { margin-top: 32vh; gap: 8px; width: 95%; max-height: 55vh; }
             .menu-btn { padding: 12px 5px; font-size: clamp(10px, 3vw, 14px); }
-            
             .modal-content { width: 95%; padding: 15px; gap: 10px; }
-            .modal-content h2 { font-size: 16px; }
+            .modal-content h2 { font-size: 14px; }
             .list-container { width: 95%; height: 60vh; }
             .top-bar { width: 95%; font-size: 16px; }
             .create-btn { font-size: 12px; padding: 8px 15px; }
@@ -272,10 +414,8 @@
             .info-box h2 { font-size: 18px; }
             #credits-content h2 { font-size: 20px; }
             #credits-content p { font-size: 12px; }
-            
             #emote-bar { top: 50px; left: 5px; padding: 5px; gap: 5px; }
             .emote-btn { font-size: 20px; }
-
             #overlay-result h1 { font-size: 24px; }
             #result-score { font-size: 40px; }
             #result-desc { font-size: 16px; }
@@ -388,17 +528,20 @@
                 <label><input type="radio" name="room-type" value="community"> Topluluk</label>
             </div>
             <input type="password" id="input-room-pass" placeholder="Şifre (İsteğe Bağlı)" style="display:none;">
+            
             <div style="border-top: 2px dashed #8b5a2b; padding-top: 10px; margin-top: 5px;">
                 <div class="color-picker-row">
                     <input type="text" id="input-red-name" placeholder="Kırmızı Takım Adı" value="KIRMIZI" style="flex:1; padding: 5px;">
-                    <input type="color" id="input-red-color" value="#ff4c4c">
+                    <input type="color" id="input-red-color" value="#ff4c4c" title="1. Renk">
+                    <input type="color" id="input-red-color2" value="#ffd700" title="2. Renk">
                 </div>
-                <div class="color-picker-row" style="margin-top: 10px;">
+                <div class="color-picker-row" style="margin-top: 8px;">
                     <input type="text" id="input-blue-name" placeholder="Mavi Takım Adı" value="MAVİ" style="flex:1; padding: 5px;">
-                    <input type="color" id="input-blue-color" value="#4c9aff">
+                    <input type="color" id="input-blue-color" value="#4c9aff" title="1. Renk">
+                    <input type="color" id="input-blue-color2" value="#ffffff" title="2. Renk">
                 </div>
-                <div class="color-picker-row" style="margin-top: 10px;">
-                    <span>Hava Durumu:</span>
+                <div class="color-picker-row" style="margin-top: 8px;">
+                    <span>Hava:</span>
                     <select id="input-weather" style="flex:1; padding: 5px; border-radius:4px; font-weight:bold;">
                         <option value="clear">☀️ Güneşli</option>
                         <option value="rain">🌧️ Yağmurlu</option>
@@ -406,6 +549,7 @@
                     </select>
                 </div>
             </div>
+
             <div class="modal-actions">
                 <button class="btn-cancel" id="btn-cancel-create">İPTAL</button>
                 <button class="btn-confirm" id="btn-confirm-create">OLUŞTUR</button>
@@ -413,33 +557,41 @@
         </div>
     </div>
 
+    <!-- YENİ LOBİ TASARIMI -->
     <div id="screen-lobby" class="screen">
         <div class="bg-blur" style="opacity: 0.95;"></div>
-        <div class="lobby-side">
-            <div class="lobby-header">
-                <h2 id="lobby-room-name" style="font-family: 'Press Start 2P', cursive; font-size: 16px; color: white; text-shadow: 2px 2px 0 #000;">Oda Adı</h2>
-                <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
-            </div>
+        
+        <div class="lobby-top">
+            <h2 id="lobby-room-name">Oda Adı</h2>
+            <div class="room-code" id="lobby-room-code" style="display:none;">KOD: ---</div>
+        </div>
+        
+        <div class="lobby-teams">
             <div class="team-box red" id="box-red" onclick="selectTeam('red')">
                 <div class="team-title" id="title-red" style="color:#ff4c4c;">KIRMIZI</div>
                 <div id="red-players" style="width:100%;"></div>
             </div>
-            <div class="team-box blue" id="box-blue" onclick="selectTeam('blue')" style="margin-top: 10px;">
+            <div class="team-box blue" id="box-blue" onclick="selectTeam('blue')">
                 <div class="team-title" id="title-blue" style="color:#4c9aff;">MAVİ</div>
                 <div id="blue-players" style="width:100%;"></div>
             </div>
-            <div class="lobby-actions">
-                <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
-                <button class="menu-btn" style="padding:6px; font-size:10px;" onclick="leaveRoom()">AYRIL</button>
-            </div>
         </div>
-        <div class="lobby-center">
-            <div id="tactics-board">
-                <div class="pitch-line" style="top:50%; left:0; width:100%; height:2px;"></div>
-                <div class="pitch-circle"></div>
-                <div class="pitch-box" style="left:0;"></div>
-                <div class="pitch-box" style="right:0;"></div>
-            </div>
+        
+        <div id="tactics-board">
+            <div class="pitch-line" style="top:50%; left:0; width:100%; height:2px;"></div>
+            <div class="pitch-circle"></div>
+            <div class="pitch-box" style="left:0;"></div>
+            <div class="pitch-box" style="right:0;"></div>
+        </div>
+        
+        <div class="lobby-positions">
+            <div class="position-list" id="red-positions"></div>
+            <div class="position-list" id="blue-positions"></div>
+        </div>
+        
+        <div class="lobby-actions">
+            <button class="add-bot-btn" id="btn-add-bot">+ BOT EKLE</button>
+            <button class="menu-btn" style="padding:8px 15px; font-size:11px;" onclick="leaveRoom()">AYRIL</button>
             <button class="start-game-btn" id="btn-start-game">MAÇI BAŞLAT</button>
         </div>
     </div>
@@ -527,14 +679,11 @@
                 if (navigator.userAgent.includes('Samsung')) { document.body.style.paddingTop = '0'; document.body.style.marginTop = '0'; }
             } catch(e) { console.log("Tam ekran hatası:", e); }
         }
-
         document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
         document.body.addEventListener('touchstart', forceFullscreenAndLandscape, { once: true });
-
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('touchmove', function (e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         window.addEventListener('wheel', function(e) { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
-
         window.onerror = function(msg, url, line, col, error) { console.log("Oyun Hatası: ", msg); return true; };
 
         let socket = { emit: function() {}, on: function() {}, id: "p1" };
@@ -565,6 +714,7 @@
 
         const BASE_FRAME = 60;
         const MOVE_EMIT_MS = 33;
+        const NEON_KEEPER_COLORS = ['#FF10F0', '#39FF14']; // Neon pembe, neon yeşil
 
         let myPlayerName = "";
         let currentRoom = null;
@@ -593,6 +743,7 @@
 
         let ballRotation = 0;
         let ballTrail = [];
+        let myEmotes = []; // Emoji offline da çalışsın
 
         let cameraX = 600;
         let cameraY = 300;
@@ -680,7 +831,6 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        // DÜZELTME: Müzik döngü garantisi (3 sn kesilme sorunu)
         menuMusic.loop = true;
         bgMusic.loop = true;
         menuMusic.addEventListener('ended', () => { if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); } });
@@ -806,6 +956,13 @@
             });
         }
 
+        // YENİ: Offline'da da emoji çalışsın
+        window.sendEmote = (emoji) => { 
+            if (!isPractice && !isOffline && socket) socket.emit('send_emote', emoji); 
+            myEmotes.push({ emoji: emoji, timer: 120 });
+            document.getElementById('emote-bar').style.display = 'none';
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             renderShop();
             loadSocketIO(); 
@@ -854,9 +1011,15 @@
                 let redName = document.getElementById('input-red-name').value || "KIRMIZI";
                 let blueName = document.getElementById('input-blue-name').value || "MAVİ";
                 let redColor = document.getElementById('input-red-color').value;
+                let redColor2 = document.getElementById('input-red-color2').value;
                 let blueColor = document.getElementById('input-blue-color').value;
+                let blueColor2 = document.getElementById('input-blue-color2').value;
                 let weather = document.getElementById('input-weather').value;
-                let payload = { name, type, password: pass, playerName: myPlayerName, redName, blueName, redColor, blueColor, weather, equipped: equipped, ballSkin: equipped.ball };
+                let payload = { 
+                    name, type, password: pass, playerName: myPlayerName, 
+                    redName, blueName, redColor, redColor2, blueColor, blueColor2,
+                    weather, equipped: equipped, ballSkin: equipped.ball 
+                };
                 if (socket.id === "p1") {
                     pendingCreate = payload;
                     alert("Sunucuya bağlanılıyor... Render.com ücretsiz sunucusu uyanıyor, lütfen 30-50 saniye bekleyin. Bağlanınca oda otomatik kurulacak.");
@@ -926,7 +1089,7 @@
                 myTeam = team;
                 selectedBotId = null;
                 if(socket) socket.emit('change_team', team);
-                if(currentRoom) renderTacticsBoard(currentRoom);
+                if(currentRoom) { renderTacticsBoard(currentRoom); renderPositions(currentRoom); }
             };
 
             function renderTacticsBoard(room) {
@@ -946,7 +1109,16 @@
                         let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
                         if (p) {
                             el.innerText = p.name.substring(0, 4);
-                            el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
+                            let posStr = p.position || '';
+                            if (posStr.includes('GK')) {
+                                // Kaleci: tek renk neon
+                                el.style.background = p.neonColor || '#39FF14';
+                            } else {
+                                // Oyuncu: 2 renkli şeritli forma
+                                let c1 = team === 'red' ? room.redColor : room.blueColor;
+                                let c2 = team === 'red' ? (room.redColor2 || c1) : (room.blueColor2 || c1);
+                                el.style.background = `linear-gradient(90deg, ${c1} 50%, ${c2} 50%)`;
+                            }
                             if (selectedBotId === p.id) el.classList.add('selected-bot');
                         } else {
                             el.innerText = '+';
@@ -956,43 +1128,61 @@
                         lbl.className = 'pos-label';
                         lbl.innerText = slot.name;
                         el.appendChild(lbl);
-                        el.onclick = (e) => {
-                            e.stopPropagation();
-                            if (p && p.isBot && room.hostId === socket.id) {
-                                selectedBotId = p.id;
-                                renderTacticsBoard(room);
-                            } 
-                            else if (!p && selectedBotId && room.hostId === socket.id) {
-                                socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
-                                selectedBotId = null;
-                            }
-                            else if (!p) {
-                                if (myTeam !== team) {
-                                    myTeam = team;
-                                    socket.emit('change_team', team);
-                                    setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
-                                } else {
-                                    socket.emit('change_position', slot.id);
-                                }
-                            }
-                        };
-                        el.ondblclick = (e) => {
-                            e.stopPropagation();
-                            if (p && p.isBot && room.hostId === socket.id) {
-                                let currentDiff = p.difficulty || 3;
-                                let d = prompt(
-                                    "Bot Zorluk Seçimi:\n1 - AFK\n2 - Kolay\n3 - Normal\n4 - Pro\n\nLütfen 1, 2, 3 veya 4 girin:", currentDiff
-                                );
-                                if (d && [1,2,3,4].includes(parseInt(d))) {
-                                    socket.emit('change_bot_difficulty', { botId: p.id, difficulty: parseInt(d) });
-                                }
-                            }
-                        };
+                        el.onclick = (e) => { e.stopPropagation(); handleSlotClick(room, team, slot, p); };
+                        el.ondblclick = (e) => { e.stopPropagation(); handleSlotDblClick(room, p); };
                         board.appendChild(el);
                     });
                 };
                 renderTeam('red');
                 renderTeam('blue');
+            }
+
+            function handleSlotClick(room, team, slot, p) {
+                if (p && p.isBot && room.hostId === socket.id) {
+                    selectedBotId = p.id;
+                    renderTacticsBoard(room);
+                    renderPositions(room);
+                } else if (!p && selectedBotId && room.hostId === socket.id) {
+                    socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
+                    selectedBotId = null;
+                } else if (!p) {
+                    if (myTeam !== team) {
+                        myTeam = team;
+                        socket.emit('change_team', team);
+                        setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
+                    } else {
+                        socket.emit('change_position', slot.id);
+                    }
+                }
+            }
+
+            function handleSlotDblClick(room, p) {
+                if (p && p.isBot && room.hostId === socket.id) {
+                    let currentDiff = p.difficulty || 3;
+                    let d = prompt("Bot Zorluk:\n1-AFK\n2-Kolay\n3-Normal\n4-Pro\n\nSeçim:", currentDiff);
+                    if (d && [1,2,3,4].includes(parseInt(d))) {
+                        socket.emit('change_bot_difficulty', { botId: p.id, difficulty: parseInt(d) });
+                    }
+                }
+            }
+
+            function renderPositions(room) {
+                ['red', 'blue'].forEach(team => {
+                    let container = document.getElementById(team + '-positions');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    FORMATION_SLOTS[team].forEach(slot => {
+                        let filledId = room.formation[team][slot.id];
+                        let p = filledId ? room.players.find(pl => pl.id === filledId) : null;
+                        let btn = document.createElement('button');
+                        btn.className = `pos-btn ${team} ${p ? 'filled' : 'empty'}`;
+                        if (p && selectedBotId === p.id) btn.classList.add('selected-bot');
+                        btn.innerText = slot.name + (p ? ': ' + p.name.substring(0, 4) : '');
+                        btn.onclick = () => handleSlotClick(room, team, slot, p);
+                        btn.ondblclick = () => handleSlotDblClick(room, p);
+                        container.appendChild(btn);
+                    });
+                });
             }
 
             let lobbyRenderRAF = null;
@@ -1008,14 +1198,17 @@
                 if (room.type === 'private') {
                     let codeEl = document.getElementById('lobby-room-code');
                     codeEl.innerText = "ODA KODU: " + room.id;
-                    codeEl.style.display = 'block';
+                    codeEl.style.display = 'inline-block';
                 } else {
                     document.getElementById('lobby-room-code').style.display = 'none';
                 }
                 document.getElementById('btn-start-game').style.display = (room.hostId === socket.id) ? 'block' : 'none';
                 document.getElementById('btn-add-bot').style.display = (room.hostId === socket.id) ? 'block' : 'none';
                 if (lobbyRenderRAF) cancelAnimationFrame(lobbyRenderRAF);
-                lobbyRenderRAF = requestAnimationFrame(() => renderTacticsBoard(room));
+                lobbyRenderRAF = requestAnimationFrame(() => { 
+                    renderTacticsBoard(room); 
+                    renderPositions(room);
+                });
             }
 
             socket.on('update_lobby', (room) => {
@@ -1043,7 +1236,7 @@
                 if(myPlayer) isSpectator = (myPlayer.team === 'spectator');
                 else isSpectator = (myTeam === 'spectator');
                 if(currentRoom) currentRoom.status = 'playing';
-                ballTrail = []; ballRotation = 0;
+                ballTrail = []; ballRotation = 0; myEmotes = [];
                 cameraX = 600; cameraY = 300; cameraZoom = 1.0;
                 lastAudioStatus = '';
                 const canvas = document.getElementById('gameCanvas');
@@ -1110,14 +1303,14 @@
                     currentIds.push(p.id);
                     if (p.id === socket.id) {
                         if (!myPlayer) myPlayer = p; 
-                        myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped;
+                        myPlayer.team = p.team; myPlayer.name = p.name; myPlayer.position = p.position; myPlayer.equipped = p.equipped; myPlayer.neonColor = p.neonColor;
                         players[socket.id] = myPlayer; 
                         isSpectator = (p.team === 'spectator');
                     } else {
                         if (!players[p.id]) players[p.id] = { ...p, renderX: p.x, renderY: p.y };
                         else {
                             players[p.id].x = p.x; players[p.id].y = p.y;
-                            players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position; players[p.id].equipped = p.equipped;
+                            players[p.id].team = p.team; players[p.id].name = p.name; players[p.id].position = p.position; players[p.id].equipped = p.equipped; players[p.id].neonColor = p.neonColor;
                         }
                     }
                 }
@@ -1240,11 +1433,6 @@
             shotPower = 0; document.getElementById('power-container').style.display = 'none';
         }
 
-        window.sendEmote = (emoji) => { 
-            if (!isPractice && !isOffline && socket) socket.emit('send_emote', emoji); 
-            document.getElementById('emote-bar').style.display = 'none';
-        };
-
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joystickVector = { x: 0, y: 0 }, maxDistance = 45;
@@ -1318,11 +1506,9 @@
             if ((isPractice || isOffline) && !activePlayer) { requestAnimationFrame(updateMovement); return; }
 
             let myId = isOffline ? "p1" : socket.id;
-
             if (isCharging && !isPractice && !isOffline && ball.owner !== myId) {
                 isCharging = false; shotPower = 0; document.getElementById('power-container').style.display = 'none';
             }
-
             let currentSpeed = normalSpeed;
             if (isExhausted) {
                 stamina += 0.15 * BASE_FRAME * dt;
@@ -1335,7 +1521,6 @@
                 } else { stamina += 0.15 * BASE_FRAME * dt; }
             }
             if (stamina > maxStamina) stamina = maxStamina;
-
             const bar = document.getElementById('stamina-bar');
             if(bar) {
                 bar.style.width = (stamina / maxStamina) * 100 + '%';
@@ -1343,7 +1528,6 @@
                 else if (stamina < 30) bar.style.background = 'linear-gradient(90deg, #f97316, #ea580c)';
                 else bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
             }
-
             if (isCharging && (isPractice || isOffline || ball.owner === myId)) {
                 document.getElementById('power-container').style.display = 'flex'; 
                 shotPower += 3.5 * BASE_FRAME * dt;
@@ -1358,14 +1542,12 @@
                 shotPower = 0;
                 document.getElementById('power-bar').classList.remove('power-full');
             }
-
             let dx = 0, dy = 0;
             if (keys.w || keys.ArrowUp) dy -= 1;
             if (keys.s || keys.ArrowDown) dy += 1;
             if (keys.a || keys.ArrowLeft) dx -= 1;
             if (keys.d || keys.ArrowRight) dx += 1;
             if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
-
             if (dx !== 0 || dy !== 0) {
                 let length = Math.hypot(dx, dy);
                 let speedMultiplier = isCharging ? 0.5 : 1;
@@ -1375,7 +1557,6 @@
             }
             moveX = dx; moveY = dy;
 
-            // DÜZELTME: Saha içinde kalsın
             let newX = Math.max(100, Math.min(1200 - 100, activePlayer.x + dx));
             let newY = Math.max(100, Math.min(600 - 100, activePlayer.y + dy));
 
@@ -1387,7 +1568,6 @@
                 if (currentRoom.concedingTeam === 'blue' && newX > 595) newX = 595;
                 if (currentRoom.concedingTeam === 'red' && newX < 605) newX = 605;
             }
-
             activePlayer.x = newX;
             activePlayer.y = newY;
             if (isOffline && myPlayer) { myPlayer.x = newX; myPlayer.y = newY; }
@@ -1396,8 +1576,16 @@
                 if(socket) socket.emit('move', { x: Math.round(activePlayer.x), y: Math.round(activePlayer.y) });
                 lastMoveEmit = now;
             }
-
             requestAnimationFrame(updateMovement);
+        }
+
+        function assignLocalKeeperColors() {
+            for (let id in players) {
+                let p = players[id];
+                if (p.position && p.position.includes('GK')) {
+                    p.neonColor = NEON_KEEPER_COLORS[Math.floor(Math.random() * NEON_KEEPER_COLORS.length)];
+                }
+            }
         }
 
         function startOfflineMatch() {
@@ -1414,7 +1602,7 @@
             ];
             redBots.forEach((b, i) => {
                 let id = "r_bot" + i;
-                players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, neonColor: '#39FF14', isBot: true };
+                players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
             });
             let blueBots = [
                 { pos: 'GK', x: 1140, y: 300 },
@@ -1425,11 +1613,15 @@
             ];
             blueBots.forEach((b, i) => {
                 let id = "b_bot" + i;
-                players[id] = { id: id, name: "M. Bot " + (i+1), team: "blue", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, neonColor: '#FF073A', isBot: true };
+                players[id] = { id: id, name: "M. Bot " + (i+1), team: "blue", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, isBot: true };
             });
+            assignLocalKeeperColors();
+
             score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball, redColor: '#ff0000', blueColor: '#1e90ff' };
+            // Offline: çift renk
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball, redColor: '#ff0000', redColor2: '#ffd700', blueColor: '#1e90ff', blueColor2: '#ffffff' };
+            myEmotes = [];
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
@@ -1447,7 +1639,8 @@
             players["p1"] = myPlayer;
             score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball, redColor: '#ff0000', blueColor: '#1e90ff' };
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball, redColor: '#ff0000', redColor2: '#ffd700', blueColor: '#1e90ff', blueColor2: '#ffffff' };
+            myEmotes = [];
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             const canvas = document.getElementById('gameCanvas');
             if (canvas) canvas.focus();
@@ -1535,7 +1728,6 @@
                     p.lastDy = Math.sin(angle);
                     p.x += p.lastDx * speed * timeMult;
                     p.y += p.lastDy * speed * timeMult;
-                    // DÜZELTME: Saha içinde kalsın
                     p.x = Math.max(100, Math.min(1200 - 100, p.x));
                     p.y = Math.max(100, Math.min(600 - 100, p.y));
                 }
@@ -1709,6 +1901,13 @@
             now = now || performance.now();
             let dt = Math.min((now - lastRenderTime) / 1000, 0.1);
             lastRenderTime = now;
+
+            // Emote timer decrement (her zaman)
+            for (let i = myEmotes.length - 1; i >= 0; i--) {
+                myEmotes[i].timer--;
+                if (myEmotes[i].timer <= 0) myEmotes.splice(i, 1);
+            }
+
             if (document.getElementById('screen-game').classList.contains('active')) {
                 if (isOffline) {
                     updateOfflinePhysics(dt);
@@ -1749,20 +1948,13 @@
                 }
 
                 ctx.clearRect(0, 0, 1200, 600);
-
-                // DÜZELTME: Kamera 2 mod
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
                 if (currentRoom && currentRoom.status === 'goal_replay') {
                     updateReplay(dt);
                     targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5;
                 } else if (isDynamicCamera && myPlayer && !isSpectator) {
-                    // Mod 2: Oyuncuyu takip
-                    targetCamX = myPlayer.x;
-                    targetCamY = myPlayer.y;
-                    targetZoom = 1.3;
+                    targetCamX = myPlayer.x; targetCamY = myPlayer.y; targetZoom = 1.3;
                 }
-                // Mod 1 (default): Sabit ortada, zoom 1.0
-
                 cameraX += (targetCamX - cameraX) * Math.min(1, dt * 5);
                 cameraY += (targetCamY - cameraY) * Math.min(1, dt * 5);
                 cameraZoom += (targetZoom - cameraZoom) * Math.min(1, dt * 5);
@@ -1799,26 +1991,77 @@
                             ctx.beginPath(); ctx.arc(px, py, pSize + 5, 0, Math.PI * 2); ctx.fillStyle = glowColor; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1; ctx.shadowColor = glowColor; ctx.shadowBlur = 15;
                         }
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-                        ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
-                        let teamColor = p.team === 'red' ? (currentRoom && currentRoom.redColor ? currentRoom.redColor : '#ff0000') : (currentRoom && currentRoom.blueColor ? currentRoom.blueColor : '#1e90ff');
-                        if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
-                        if (isPractice) teamColor = p.team === 'red' ? '#ff0000' : '#1e90ff';
-                        let grad = ctx.createRadialGradient(px - 5, py - 5, 2, px, py, pSize); grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.2, teamColor); grad.addColorStop(1, teamColor);
-                        ctx.fillStyle = grad; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke(); ctx.shadowBlur = 0;
+
+                        // ==== YENİ: Çift renkli forma + Neon kaleci ====
+                        let posStr = p.position || '';
+                        let isGK = posStr.includes('GK');
+                        let c1, c2;
+                        if (isGK) {
+                            c1 = c2 = p.neonColor || '#39FF14';
+                        } else {
+                            if (p.team === 'red') {
+                                c1 = (currentRoom && currentRoom.redColor) ? currentRoom.redColor : '#ff0000';
+                                c2 = (currentRoom && currentRoom.redColor2) ? currentRoom.redColor2 : c1;
+                            } else {
+                                c1 = (currentRoom && currentRoom.blueColor) ? currentRoom.blueColor : '#1e90ff';
+                                c2 = (currentRoom && currentRoom.blueColor2) ? currentRoom.blueColor2 : c1;
+                            }
+                        }
+                        ctx.beginPath();
+                        ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                        if (isGK || c1 === c2) {
+                            ctx.fillStyle = c1;
+                        } else {
+                            // Şeritli forma (sol-sağ 2 renk)
+                            let stripeGrad = ctx.createLinearGradient(px - pSize, 0, px + pSize, 0);
+                            stripeGrad.addColorStop(0, c1);
+                            stripeGrad.addColorStop(0.48, c1);
+                            stripeGrad.addColorStop(0.52, c2);
+                            stripeGrad.addColorStop(1, c2);
+                            ctx.fillStyle = stripeGrad;
+                        }
+                        ctx.fill();
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+
+                        // Kıyafet aksesuarları
                         if (p.equipped && p.equipped.outfit === 'crown') { ctx.font = '18px Arial'; ctx.textAlign='center'; ctx.fillText('👑', px, py - 15); }
                         else if (p.equipped && p.equipped.outfit === 'band') { ctx.fillStyle = 'red'; ctx.fillRect(px - 20, py - 10, 40, 5); }
                         else if (p.equipped && p.equipped.outfit === 'glasses') { ctx.fillStyle = 'black'; ctx.fillRect(px - 12, py - 8, 10, 5); ctx.fillRect(px + 2, py - 8, 10, 5); }
                         else if (p.equipped && p.equipped.outfit === 'cap') { ctx.fillStyle = 'blue'; ctx.beginPath(); ctx.arc(px, py - 10, 15, Math.PI, 0); ctx.fill(); }
+                        
+                        // İz
                         if (p.equipped && p.equipped.trail && p.equipped.trail !== 'none') {
                             let speed = Math.hypot(p.lastDx || 0, p.lastDy || 0);
                             if (speed > 1) {
-                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : teamColor; ctx.fillStyle = trailColor;
+                                let trailColor = p.equipped.trail === 'stars' ? '#ffff00' : c1; ctx.fillStyle = trailColor;
                                 let angle = Math.atan2(p.lastDy, p.lastDx); let backX = px - Math.cos(angle) * pSize; let backY = py - Math.sin(angle) * pSize;
                                 if (p.equipped.trail === 'stars') { ctx.font = '12px Arial'; ctx.fillText('✨', backX, backY); }
                                 else { ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(backX, backY, 5, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; }
                             }
                         }
-                        if (!isPractice && !isOffline && currentRoom.emotes) { for (let em of currentRoom.emotes) { if (em.playerId === id) { ctx.font = '30px Arial'; ctx.textAlign = 'center'; ctx.fillText(em.emoji, px, py - pSize - 20); } } }
+
+                        // ==== YENİ: Emoji render ====
+                        // Başka oyuncuların (online)
+                        if (!isPractice && !isOffline && currentRoom.emotes) {
+                            for (let em of currentRoom.emotes) {
+                                if (em.playerId === id && id !== socket.id) {
+                                    ctx.font = '30px Arial'; ctx.textAlign = 'center';
+                                    ctx.fillText(em.emoji, px, py - pSize - 20);
+                                }
+                            }
+                        }
+                        // Kendi emote'larım (her zaman görünsün)
+                        let isMyself = (id === socket.id) || (isOffline && id === "p1") || (isPractice && id === "p1");
+                        if (isMyself && myEmotes.length > 0) {
+                            for (let em of myEmotes) {
+                                ctx.font = '30px Arial'; ctx.textAlign = 'center';
+                                ctx.fillText(em.emoji, px, py - pSize - 20);
+                            }
+                        }
+
                         if (id === ball.owner && ball.possessionTimer > 0 && !isPractice) {
                             let time = Date.now(); let pulse = (Math.sin(time / 80) + 1) / 2; let radius = pSize + 4 + (pulse * 6); 
                             ctx.save(); ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + (pulse * 0.4)})`; ctx.lineWidth = 4; ctx.shadowColor = '#39FF14'; ctx.shadowBlur = 10 + (pulse * 10); ctx.stroke(); ctx.restore();
