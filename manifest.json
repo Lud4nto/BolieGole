@@ -8,5 +8,19 @@
   "short_name": "BolieGole",
   "start_url": "/",
   "theme_color": "#453314",
-  "description": "A mini football game."
+  "description": "A mini football game.",
+  "icons": [
+    {
+      "src": "menu.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "menu.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
