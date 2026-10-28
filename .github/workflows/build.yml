@@ -107,9 +107,10 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/BolieGole.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: BolieGole-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/BolieGole.apk
