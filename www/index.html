@@ -302,7 +302,7 @@
         .score-anim { animation: scorePop 0.6s ease-out; display: inline-block; }
 
         .ui-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: flex; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #stamina-container { width: clamp(150px, 20vw, 250px); height: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; display: none; align-items: center; backdrop-filter: blur(10px); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #stamina-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308); transition: width 0.1s linear; }
         #stamina-text { position: absolute; width: clamp(150px, 20vw, 250px); text-align: center; font-size: 8px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
         #power-container { width: clamp(150px, 20vw, 250px); height: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; display: none; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
@@ -669,16 +669,11 @@
 
     <script>
         function forceFullscreenAndLandscape() {
-            try {
-                let elem = document.documentElement;
-                if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
-                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
-                else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
-                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
-                if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(() => {}); }
-                if (navigator.userAgent.includes('Samsung')) { document.body.style.paddingTop = '0'; document.body.style.marginTop = '0'; }
-            } catch(e) { console.log("Tam ekran hatası:", e); }
-        }
+    try {
+        // APK'da fullscreen manifest'te hallediliyor. JS'den çağırınca WebView yeniden yüklenip ses kesiyor.
+        if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(() => {}); }
+    } catch(e) { console.log("Orientation hatası:", e); }
+}
         document.body.addEventListener('click', forceFullscreenAndLandscape, { once: true });
         document.body.addEventListener('touchstart', forceFullscreenAndLandscape, { once: true });
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
@@ -967,15 +962,21 @@
             renderShop();
             loadSocketIO(); 
 
-            function startMenuBGM() {
-                if (!isMuted) {
-                    menuMusic.volume = musicSlider.value / 100;
-                    menuMusic.play().then(() => {
-                        document.removeEventListener('click', startMenuBGM);
-                        document.removeEventListener('touchstart', startMenuBGM);
-                    }).catch(e => console.log("Menü müziği başlatılamadı."));
-                }
-            }
+function startMenuBGM() {
+    if (!isMuted) {
+        menuMusic.volume = musicSlider.value / 100;
+        menuMusic.play().then(() => {
+            // Diğer sesleri de unlock et (mobil için kritik)
+            [bgMusic, goalSound, whistleSound].forEach(a => {
+                let origVol = a.volume;
+                a.volume = 0;
+                a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+            });
+            document.removeEventListener('click', startMenuBGM);
+            document.removeEventListener('touchstart', startMenuBGM);
+        }).catch(e => console.log("Menü müziği başlatılamadı."));
+    }
+}
             document.addEventListener('click', startMenuBGM);
             document.addEventListener('touchstart', startMenuBGM);
 
@@ -1262,7 +1263,7 @@
 
             socket.on('play_whistle', () => { if(!isMuted) { whistleSound.currentTime = 0; whistleSound.play().catch(()=>{}); } });
             socket.on('goal_scored', (data) => {
-                if(!isMuted) goalSound.play().catch(()=>{});
+                if(!isMuted) { goalSound.currentTime = 0; goalSound.play().catch(()=>{}); }
                 document.getElementById('replay-scorer').innerText = data.lastKickName ? data.lastKickName + " attı!" : "Gol!";
                 document.getElementById('stadium-scoreboard').classList.add('score-anim');
                 setTimeout(() => document.getElementById('stadium-scoreboard').classList.remove('score-anim'), 600);
@@ -1322,7 +1323,6 @@
                 let s = Math.floor(room.matchTime % 60);
                 let timeStr = (room.half === 1 ? "1. YARI " : "2. YARI ") + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
                 if (timeStr !== lastTimerText) { elTimer.innerText = timeStr; lastTimerText = timeStr; }
-                document.getElementById('stamina-container').style.display = isSpectator ? 'none' : 'flex';
             });
         }
 
@@ -1548,14 +1548,20 @@
             if (keys.a || keys.ArrowLeft) dx -= 1;
             if (keys.d || keys.ArrowRight) dx += 1;
             if (joystickActive) { dx += joystickVector.x; dy += joystickVector.y; }
-            if (dx !== 0 || dy !== 0) {
-                let length = Math.hypot(dx, dy);
-                let speedMultiplier = isCharging ? 0.5 : 1;
-                dx = (dx / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
-                dy = (dy / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
-                localLastDx = dx; localLastDy = dy;
-            }
-            moveX = dx; moveY = dy;
+
+// ▼▼▼ YENİ EKLENEN 4 SATIR ▼▼▼
+const isSprintingNow = keys['f'] && (dx !== 0 || dy !== 0) && (!activePlayer.position || !activePlayer.position.includes('GK'));
+document.getElementById('stamina-container').style.display = (isSprintingNow && !isSpectator) ? 'flex' : 'none';
+// ▲▲▲ YENİ EKLENEN 4 SATIR ▲▲▲
+
+if (dx !== 0 || dy !== 0) {
+    let length = Math.hypot(dx, dy);
+    let speedMultiplier = isCharging ? 0.5 : 1;
+    dx = (dx / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+    dy = (dy / length) * (currentSpeed * speedMultiplier) * BASE_FRAME * dt;
+    localLastDx = dx; localLastDy = dy;
+}
+moveX = dx; moveY = dy;
 
             let newX = Math.max(100, Math.min(1200 - 100, activePlayer.x + dx));
             let newY = Math.max(100, Math.min(600 - 100, activePlayer.y + dy));
