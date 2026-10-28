@@ -9,12 +9,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
-        /* EKRAN KİLİDİ VE MOBİL UYUM */
         html, body { 
             margin: 0; padding: 0; 
-            width: 100vw; height: 100vh; height: 100dvh; /* Mobil adres çubuğu taşmalarını engeller */
+            width: 100vw; height: 100vh; height: 100dvh; 
             overflow: hidden; 
-            background-color: #0f172a; 
+            background-color: #000; 
             color: white; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             touch-action: none; 
@@ -39,15 +38,13 @@
         }
         .active { display: flex; }
         
-        /* Taşmayı önlemek için sadece gerekli ekranlarda kaydırma */
         #screen-shop, #screen-server-list, #screen-options, .modal-content { overflow-y: auto; }
 
-        /* ARKA PLAN AYARI */
+        /* ANA MENÜ ARKA PLAN AYARI */
         .bg-image { 
             position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             background-image: url('menu.png'); 
-            background-size: contain; 
-            background-repeat: no-repeat;
+            background-size: cover; 
             background-position: center center; 
             z-index: -2; 
         }
@@ -56,24 +53,33 @@
             background-image: url('menu.png'); 
             background-size: cover; 
             background-position: center; 
-            filter: blur(15px) brightness(0.4); 
+            filter: blur(15px) brightness(0.3); 
             z-index: -3; 
             opacity: 1; 
         }
 
-        /* ESNEK BUTONLAR (Mobil taşmasını engeller) */
+        /* MENÜ BUTONLARI (IZGARA DÜZENİ) */
+        .menu-buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-top: 40vh; /* Butonları aşağıya çekip resmi gösteriyoruz */
+            width: clamp(300px, 80vw, 700px); 
+            z-index: 10; 
+            align-items: center;
+            justify-content: center;
+        }
         .menu-btn { 
-            width: clamp(250px, 80vw, 320px); 
-            padding: 15px; 
+            width: 100%; 
+            padding: 15px 10px; 
             background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; 
-            font-family: 'Press Start 2P', cursive; font-size: clamp(14px, 4vw, 20px); 
+            font-family: 'Press Start 2P', cursive; font-size: clamp(12px, 2vw, 18px); 
             color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; touch-action: manipulation; pointer-events: auto; 
         }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
-        
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: clamp(100px, 20vh, 180px); z-index: 10; align-items: center; }
 
+        /* DİĞER EKRANLAR İÇİN TEMEL CSS */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); padding: 15px; box-sizing: border-box; }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
         .modal-content h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; margin-top: 0; }
@@ -149,7 +155,7 @@
         .shop-icon { font-size: 36px; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transition: transform 0.3s; }
         .shop-item:hover .shop-icon { transform: scale(1.2) rotate(5deg); }
         
-        /* DEV STADYUM SKOR TABELASI */
+        /* SKOR TABELASI */
         #stadium-scoreboard {
             position: absolute;
             top: 10px; left: 50%; transform: translateX(-50%);
@@ -194,7 +200,8 @@
         #camera-btn { top: 75px; }
         #mute-btn:hover, #camera-btn:hover { background: rgba(15, 23, 42, 0.9); transform: scale(1.1); border-color: white; }
 
-        #mobile-controls { position: absolute; bottom: 20px; right: 20px; display: none; gap: 15px; align-items: flex-end; pointer-events: auto; touch-action: none; }
+        /* MOBİL KONTROLLER (SAHA ÜZERİNE BİNER) */
+        #mobile-controls { position: absolute; bottom: 10px; right: 10px; display: none; gap: 15px; align-items: flex-end; pointer-events: auto; touch-action: none; z-index: 100; }
         .mob-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4); transition: transform 0.1s; pointer-events: auto; touch-action: manipulation; }
         .mob-btn:active { transform: scale(0.9); }
         .mob-btn svg { width: 55%; height: 55%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
@@ -202,7 +209,7 @@
         #btn-tackle { background: linear-gradient(135deg, #dc2626, #991b1b); } 
         #btn-action { background: linear-gradient(135deg, #059669, #065f46); } 
 
-        #joystick-zone { position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: none; backdrop-filter: blur(5px); pointer-events: auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); touch-action: none; }
+        #joystick-zone { position: absolute; bottom: 10px; left: 10px; width: 130px; height: 130px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: none; backdrop-filter: blur(5px); pointer-events: auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); touch-action: none; z-index: 100; }
         #joystick-knob { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 20px rgba(76, 154, 255, 0.8), inset 0 0 10px rgba(255,255,255,0.5); pointer-events: none; }
 
         #pc-controls { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: auto; }
@@ -212,7 +219,7 @@
         .key.disabled { opacity: 0.3; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
         .wide-key { width: 110px; }
 
-        #emote-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 100; border: 1px solid rgba(255,255,255,0.1); touch-action: manipulation; }
+        #emote-bar { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); z-index: 100; border: 1px solid rgba(255,255,255,0.1); touch-action: manipulation; }
         .emote-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: transform 0.1s; user-select: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); touch-action: manipulation; }
         .emote-btn:active { transform: scale(1.3); }
 
@@ -244,53 +251,28 @@
         #credits-content p { font-size: 16px; line-height: 1.6; color: #d4a373; }
         @keyframes scrollCredits { 0% { transform: translateY(100vh); } 100% { transform: translateY(-100%); } }
 
-        /* --- OYUN EKRANI TAM SIFIRLAMA VE BLUR ARKA PLAN --- */
+        /* --- OYUN EKRANI TAM SIFIRLAMA --- */
         #screen-game { 
             background: transparent; 
-            position: absolute; 
-            top: 0; left: 0; 
+            position: absolute; top: 0; left: 0; 
             width: 100vw; height: 100dvh; 
-            display: none; 
-            z-index: 1000; 
+            display: none; z-index: 1000; 
             overflow: hidden; 
         }
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
         
         #game-wrapper { 
-            position: absolute; 
-            top: 0; left: 0;
-            width: 100vw; 
-            height: 100dvh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100dvh; 
+            display: flex; justify-content: center; align-items: center; 
             overflow: hidden; 
-            background-color: #000;
-            background-image: url('menu.png'); /* Siyah çerçeveler yerine blur arka plan */
-            background-size: cover;
-            background-position: center;
-        }
-        
-        /* Blur katmanı */
-        #game-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url('menu.png');
-            background-size: cover;
-            background-position: center;
-            filter: blur(15px) brightness(0.3);
-            z-index: 0;
+            background-color: #0f172a;
         }
         
         canvas { 
-            position: relative;
-            z-index: 1;
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-            outline: none; 
-            display: block;
+            width: 100%; height: 100%; 
+            object-fit: cover; /* Tam ekran kaplaması için */
+            outline: none; display: block;
         }
         
         .vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none; z-index: 50; }
@@ -315,8 +297,8 @@
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
             
-            .menu-buttons { margin-top: 60px; gap: 10px; }
-            .menu-btn { padding: 12px 5px; font-size: clamp(12px, 3.5vw, 16px); }
+            .menu-buttons { margin-top: 50vh; gap: 10px; width: 95%; }
+            .menu-btn { padding: 12px 5px; font-size: clamp(10px, 3vw, 14px); }
             
             .modal-content { width: 95%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
@@ -328,7 +310,7 @@
             .info-box h2 { font-size: 18px; }
             #credits-content h2 { font-size: 20px; }
             #credits-content p { font-size: 12px; }
-            #emote-bar { bottom: 120px; padding: 5px; gap: 5px; }
+            #emote-bar { bottom: 130px; padding: 5px; gap: 5px; }
             .emote-btn { font-size: 20px; }
             #overlay-result h1 { font-size: 24px; }
             #result-score { font-size: 40px; }
@@ -350,6 +332,7 @@
         <p>En iyi deneyim için lütfen telefonunuzu yatay çevirin.</p>
     </div>
 
+    <!-- ANA MENÜ (YENİ TASARIM) -->
     <div id="screen-main-menu" class="screen active">
         <div class="bg-blur"></div>
         <div class="bg-image"></div>
@@ -360,7 +343,6 @@
             <button class="menu-btn" id="btn-shop">MAĞAZA</button>
             <button class="menu-btn" id="btn-options">AYARLAR</button>
             <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
-            <button class="menu-btn" id="btn-exit">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -520,7 +502,7 @@
             </div>
             
             <div id="mute-btn">🔊</div>
-            <div id="camera-btn">📷</div> <!-- YENİ KAMERA BUTONU -->
+            <div id="camera-btn">📷</div>
             
             <div id="stadium-scoreboard">
                 <div class="sb-team red">
@@ -582,6 +564,8 @@
         </div>
     </div>
 
+    <!-- SES DOSYALARI -->
+    <audio id="menuMusic" src="main.mp3" loop preload="auto"></audio>
     <audio id="bgMusic" src="bg_music.mp3" loop preload="auto"></audio>
     <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
@@ -626,7 +610,7 @@
         let isSpectator = true;
         let isOffline = false;
         
-        let isDynamicCamera = false; // YENİ: Kamera başlangıçta sabit (tüm saha)
+        let isDynamicCamera = false;
 
         let stamina = 100;
         let isExhausted = false; 
@@ -718,6 +702,8 @@
         const musicSlider = document.getElementById('vol-music');
         const goalSlider = document.getElementById('vol-goal');
         const whistleSlider = document.getElementById('vol-whistle');
+        
+        const menuMusic = document.getElementById('menuMusic');
         const bgMusic = document.getElementById('bgMusic');
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
@@ -748,14 +734,20 @@
             let savedWhistle = localStorage.getItem('bolie_whistle_vol');
             let savedMute = localStorage.getItem('bolie_mute');
 
-            if (savedMusic !== null) { musicSlider.value = savedMusic; bgMusic.volume = savedMusic / 100; }
-            else { bgMusic.volume = 0.5; }
+            let vol = savedMusic !== null ? savedMusic / 100 : 0.5;
+            if (savedMusic !== null) musicSlider.value = savedMusic;
+            menuMusic.volume = vol; bgMusic.volume = vol;
+
             if (savedGoal !== null) { goalSlider.value = savedGoal; goalSound.volume = savedGoal / 100; }
             if (savedWhistle !== null) { whistleSlider.value = savedWhistle; whistleSound.volume = savedWhistle / 100; }
             if (savedMute === 'true') { isMuted = true; document.getElementById('mute-btn').innerText = '🔇'; }
         }
 
-        musicSlider.addEventListener('input', (e) => { bgMusic.volume = e.target.value / 100; localStorage.setItem('bolie_music_vol', e.target.value); });
+        musicSlider.addEventListener('input', (e) => { 
+            let v = e.target.value / 100; 
+            menuMusic.volume = v; bgMusic.volume = v;
+            localStorage.setItem('bolie_music_vol', e.target.value); 
+        });
         goalSlider.addEventListener('input', (e) => { goalSound.volume = e.target.value / 100; localStorage.setItem('bolie_goal_vol', e.target.value); });
         whistleSlider.addEventListener('input', (e) => { whistleSound.volume = e.target.value / 100; localStorage.setItem('bolie_whistle_vol', e.target.value); });
         loadAudioSettings();
@@ -763,10 +755,17 @@
         document.getElementById('mute-btn').onclick = () => {
             isMuted = !isMuted; document.getElementById('mute-btn').innerText = isMuted ? '🔇' : '🔊';
             localStorage.setItem('bolie_mute', isMuted);
-            if (isMuted) { bgMusic.pause(); } else if ((currentRoom && currentRoom.status === 'playing') || isOffline) { bgMusic.play().catch(()=>{}); }
+            if (isMuted) { 
+                menuMusic.pause(); 
+                bgMusic.pause(); 
+            } else { 
+                if (currentRoom && currentRoom.status === 'playing') { bgMusic.play().catch(()=>{}); }
+                else if (!isOffline && !isPractice && document.getElementById('screen-game').classList.contains('active') === false) {
+                    menuMusic.play().catch(()=>{});
+                }
+            }
         };
 
-        // YENİ: KAMERA BUTONU MANTIĞI
         document.getElementById('camera-btn').onclick = () => {
             isDynamicCamera = !isDynamicCamera;
             document.getElementById('camera-btn').innerText = isDynamicCamera ? '🎥' : '📷';
@@ -786,6 +785,17 @@
         window.switchScreen = function(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            // Müzik Geçişleri
+            if (!isMuted) {
+                if (screenId === 'screen-game') {
+                    menuMusic.pause();
+                    if (!isOffline && !isPractice) bgMusic.play().catch(()=>{});
+                } else {
+                    bgMusic.pause();
+                    menuMusic.play().catch(()=>{});
+                }
+            }
         };
 
         let currentShopTab = 'outfit';
@@ -816,19 +826,18 @@
             renderShop();
             loadSocketIO(); 
 
-            // --- ARKA PLAN MÜZİĞİNİ BAŞLATMA KODU ---
-            function startBGM() {
+            // MENÜ MÜZİĞİ İLK TIKLAMA
+            function startMenuBGM() {
                 if (!isMuted) {
-                    bgMusic.volume = musicSlider.value / 100;
-                    bgMusic.play().then(() => {
-                        document.removeEventListener('click', startBGM);
-                        document.removeEventListener('touchstart', startBGM);
-                    }).catch(e => console.log("Müzik başlatılamadı, etkileşim bekleniyor..."));
+                    menuMusic.volume = musicSlider.value / 100;
+                    menuMusic.play().then(() => {
+                        document.removeEventListener('click', startMenuBGM);
+                        document.removeEventListener('touchstart', startMenuBGM);
+                    }).catch(e => console.log("Menü müziği başlatılamadı."));
                 }
             }
-            document.addEventListener('click', startBGM);
-            document.addEventListener('touchstart', startBGM);
-            // -----------------------------------------
+            document.addEventListener('click', startMenuBGM);
+            document.addEventListener('touchstart', startMenuBGM);
 
             document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
@@ -1058,12 +1067,11 @@
                 document.getElementById('label-red').style.color = currentRoom.redColor;
                 document.getElementById('label-blue').innerText = currentRoom.blueName;
                 document.getElementById('label-blue').style.color = currentRoom.blueColor;
-                if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
+                // Menü müziğini durdur, maç müziğini başlat (switchScreen hallediyor)
             });
 
             socket.on('game_ended', (room) => {
                 currentRoom = room;
-                bgMusic.pause();
                 let resultScore = document.getElementById('result-score');
                 let resultDesc = document.getElementById('result-desc');
                 let overlay = document.getElementById('overlay-result');
@@ -1113,11 +1121,7 @@
                     document.getElementById('overlay-replay').style.display = 'flex';
                     document.getElementById('overlay-message').style.display = 'none';
                 }
-                if (room.status !== lastAudioStatus) {
-                    lastAudioStatus = room.status;
-                    if (room.status === 'playing') { if (!isMuted && bgMusic.paused) bgMusic.play().catch(()=>{}); } 
-                    else bgMusic.pause();
-                }
+                
                 let currentIds = [];
                 for (let p of room.players) {
                     currentIds.push(p.id);
@@ -1185,6 +1189,8 @@
         window.goToMainMenu = function() {
             if (confirm("Ana menüye dönmek istiyor musunuz?")) {
                 isPractice = false; isOffline = false;
+                switchScreen('screen-main-menu'); // Müzik geçişi switchScreen içinde
+                // Tam yenilenme gerekebilir ama state sıfırlamak için location.href daha güvenli
                 window.location.href = window.location.pathname;
             }
         };
@@ -1672,37 +1678,96 @@
         bgCanvas.width = 1200; bgCanvas.height = 600;
         const bgCtx = bgCanvas.getContext('2d');
 
+        // YENİ STADYUM TASARIMI
         function renderBackground() {
-            bgCtx.fillStyle = '#1e3a8a'; bgCtx.fillRect(0, 0, 1200, 600);
-            bgCtx.fillStyle = '#3b82f6'; bgCtx.fillRect(10, 10, 1180, 580);
-            const stripeWidth = 1200 / 16;
-            for (let i = 0; i < 16; i++) {
-                bgCtx.fillStyle = (i % 2 === 0) ? '#4caf50' : '#388e3c';
-                bgCtx.fillRect(i * stripeWidth, 0, stripeWidth, 600);
+            // 1. Arka plan (Ağaçlar, zemin)
+            bgCtx.fillStyle = '#1a2e1a'; 
+            bgCtx.fillRect(0, 0, 1200, 600);
+            
+            // 2. Stadyum Dış Çerçevesi (Oval/Bitişik)
+            bgCtx.fillStyle = '#1e293b'; // Koyu gri/mavi
+            bgCtx.beginPath();
+            bgCtx.roundRect(20, 20, 1160, 560, 80);
+            bgCtx.fill();
+
+            // 3. Tribünler (Çim ile tribün arası)
+            bgCtx.fillStyle = '#334155';
+            bgCtx.beginPath();
+            bgCtx.roundRect(40, 40, 1120, 520, 60);
+            bgCtx.fill();
+
+            // 4. Taraftarlar (Tribünlere rastgele renkli pikseller)
+            let fanColors = ['#ef4444', '#3b82f6', '#fbbf24', '#ffffff', '#f97316', '#10b981'];
+            for(let i=0; i<2000; i++) {
+                // Sadece tribün alanına denk gelen rastgele noktalar
+                let angle = Math.random() * Math.PI * 2;
+                let rad = 160 + Math.random() * 100; // Çim ile dış duvar arası
+                let cx = 600 + Math.cos(angle) * rad * 1.8;
+                let cy = 300 + Math.sin(angle) * rad;
+                
+                if(cx > 50 && cx < 1150 && cy > 50 && cy < 550) {
+                    bgCtx.fillStyle = fanColors[Math.floor(Math.random() * fanColors.length)];
+                    bgCtx.fillRect(cx, cy, 4, 4);
+                }
             }
-            let grad = bgCtx.createRadialGradient(600, 300, 50, 600, 300, 600);
-            grad.addColorStop(0, 'rgba(255,255,255,0.2)'); grad.addColorStop(1, 'rgba(0,0,0,0.4)');
-            bgCtx.fillStyle = grad; bgCtx.fillRect(0, 0, 1200, 600);
-            bgCtx.strokeStyle = 'rgba(255, 255, 255, 1)'; bgCtx.lineWidth = 6; 
-            bgCtx.lineCap = 'round'; bgCtx.lineJoin = 'round';
-            bgCtx.shadowColor = 'rgba(255, 255, 255, 0.8)'; bgCtx.shadowBlur = 10;
-            const margin = 40; 
-            bgCtx.strokeRect(margin, margin, 1200 - (margin * 2), 600 - (margin * 2));
-            bgCtx.beginPath(); bgCtx.moveTo(600, margin); bgCtx.lineTo(600, 600 - margin); bgCtx.stroke();
-            bgCtx.beginPath(); bgCtx.arc(600, 300, 70, 0, Math.PI * 2); bgCtx.stroke();
-            bgCtx.beginPath(); bgCtx.arc(600, 300, 6, 0, Math.PI * 2); bgCtx.fillStyle = '#fff'; bgCtx.fill();
-            const penaltyW = 160, penaltyH = 300, penaltyY = (600 - penaltyH) / 2;
-            bgCtx.strokeRect(margin, penaltyY, penaltyW, penaltyH); bgCtx.strokeRect(1200 - margin - penaltyW, penaltyY, penaltyW, penaltyH);
-            const goalAreaW = 60, goalAreaH = 180, goalAreaY = (600 - goalAreaH) / 2;
-            bgCtx.strokeRect(margin, goalAreaY, goalAreaW, goalAreaH); bgCtx.strokeRect(1200 - margin - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
-            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.9)'; bgCtx.shadowBlur = 20;
-            bgCtx.fillRect(margin - 12, 200, 12, 200); bgCtx.fillRect(1200 - margin, 200, 12, 200);
-            bgCtx.shadowBlur = 0;
+
+            // 5. Çim Saha (Köşeleri yuvarlatılmış)
+            bgCtx.save();
+            bgCtx.beginPath();
+            bgCtx.roundRect(100, 100, 1000, 400, 20);
+            bgCtx.clip();
+
+            // Çim Şeritleri
+            const stripeWidth = 1000 / 16;
+            for (let i = 0; i < 16; i++) {
+                bgCtx.fillStyle = (i % 2 === 0) ? '#2e7d32' : '#388e3c';
+                bgCtx.fillRect(100 + (i * stripeWidth), 100, stripeWidth, 400);
+            }
+            bgCtx.restore();
+
+            // 6. Saha Çizgileri
+            bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            bgCtx.lineWidth = 4;
+            bgCtx.lineCap = 'round';
+            bgCtx.lineJoin = 'round';
+            
+            // Dış Sınır
+            bgCtx.beginPath();
+            bgCtx.roundRect(100, 100, 1000, 400, 20);
+            bgCtx.stroke();
+
+            // Orta Çizgi
+            bgCtx.beginPath(); bgCtx.moveTo(600, 100); bgCtx.lineTo(600, 500); bgCtx.stroke();
+            
+            // Orta Yuvarlak
+            bgCtx.beginPath(); bgCtx.arc(600, 300, 60, 0, Math.PI * 2); bgCtx.stroke();
+            bgCtx.beginPath(); bgCtx.arc(600, 300, 4, 0, Math.PI * 2); bgCtx.fillStyle = '#fff'; bgCtx.fill();
+            
+            // Ceza Sahaları
+            const penaltyW = 150, penaltyH = 240, penaltyY = (600 - penaltyH) / 2;
+            bgCtx.strokeRect(100, penaltyY, penaltyW, penaltyH);
+            bgCtx.strokeRect(1100 - penaltyW, penaltyY, penaltyW, penaltyH);
+
+            // Kale Sahaları
+            const goalAreaW = 50, goalAreaH = 120, goalAreaY = (600 - goalAreaH) / 2;
+            bgCtx.strokeRect(100, goalAreaY, goalAreaW, goalAreaH);
+            bgCtx.strokeRect(1100 - goalAreaW, goalAreaY, goalAreaW, goalAreaH);
+
+            // Penaltı Noktaları
+            bgCtx.beginPath(); bgCtx.arc(220, 300, 4, 0, Math.PI * 2); bgCtx.fill();
+            bgCtx.beginPath(); bgCtx.arc(980, 300, 4, 0, Math.PI * 2); bgCtx.fill();
+
+            // Kaleler
+            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            bgCtx.fillRect(90, 220, 10, 160); 
+            bgCtx.fillRect(1100, 220, 10, 160);
         }
         renderBackground();
 
         function drawStadium() {
             ctx.drawImage(bgCanvas, 0, 0);
+            
+            // Hava Durumu Efektleri
             if (currentRoom && currentRoom.weather === 'rain') {
                 ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
                 for(let i=0; i<50; i++) { let x = (Math.random() * 1200); let y = (Math.random() * 600); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x-5, y+15); ctx.stroke(); }
@@ -1711,10 +1776,12 @@
                 for(let i=0; i<50; i++) { let x = (Math.random() * 1200); let y = (Math.random() * 600); ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill(); }
                 ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, 0, 1200, 600);
             }
+
+            // Santra Çizgisi
             if (!isPractice && !isOffline && currentRoom && currentRoom.isKickoff) {
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(600, 40, 8, 600 - (40 * 2)); } else { ctx.fillRect(592, 40, 8, 600 - (40 * 2)); }
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 5; ctx.fillText("SANTRA", 600, 60); ctx.shadowBlur = 0;
+                if (currentRoom.concedingTeam === 'blue') { ctx.fillRect(596, 100, 8, 400); } else { ctx.fillRect(596, 100, 8, 400); }
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.shadowColor = 'black'; ctx.shadowBlur = 5; ctx.fillText("SANTRA", 600, 80); ctx.shadowBlur = 0;
             }
         }
 
@@ -1798,10 +1865,7 @@
 
                 ctx.clearRect(0, 0, 1200, 600);
 
-                // KAMERA MANTIĞI (YENİLENDİ)
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
-                
-                // Eğer "Dinamik Kamera" (Takip/Zoom) aktifse eski mantık çalışır
                 if (isDynamicCamera && currentRoom && !isPractice && !isOffline) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
                     if (currentRoom.status === 'goal_replay') { updateReplay(now); targetCamX = ball.x; targetCamY = ball.y; targetZoom = 1.5; }
