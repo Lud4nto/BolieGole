@@ -18,6 +18,8 @@ const GOAL_TOP_Z = 80;
 const PLAYER_MIN_X = 100, PLAYER_MAX_X = width - 100;
 const PLAYER_MIN_Y = 100, PLAYER_MAX_Y = height - 100;
 
+// YENİ: Kaleci neon renkleri (sadece 2 renk)
+const NEON_KEEPER_COLORS = ['#FF10F0', '#39FF14']; // Neon pembe, neon yeşil
 const NEON_COLORS = ['#39FF14', '#FF073A', '#00FFFF', '#FF00FF', '#FFFF00', '#FF5E00', '#00FFAA'];
 
 const FORMATION_SLOTS = {
@@ -48,6 +50,15 @@ function generateRoomCode() {
     return result;
 }
 
+// YENİ: Kaleci neon renk ataması
+function assignKeeperColors(s) {
+    for (let p of s.players) {
+        if (p.position && p.position.includes('GK')) {
+            p.neonColor = NEON_KEEPER_COLORS[Math.floor(Math.random() * NEON_KEEPER_COLORS.length)];
+        }
+    }
+}
+
 process.on('uncaughtException', (err) => { console.error('Hata:', err.message); });
 
 io.on('connection', (socket) => {
@@ -67,7 +78,7 @@ io.on('connection', (socket) => {
         const code = generateRoomCode();
         const hostPlayer = { 
             id: socket.id, name: (data.playerName || "Kurucu").substring(0, 20), team: "spectator", 
-            position: null, equipped: data.equipped || {}, neonColor: data.neonColor || NEON_COLORS[0],
+            position: null, equipped: data.equipped || {}, neonColor: NEON_COLORS[0],
             lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
         };
 
@@ -75,7 +86,8 @@ io.on('connection', (socket) => {
             id: code, name: (data.name || "Oda").substring(0, 30), type: data.type || "private", password: data.password || "",
             hostId: socket.id, players: [hostPlayer], status: "lobby",
             redName: data.redName || "KIRMIZI", blueName: data.blueName || "MAVİ",
-            redColor: data.redColor || "#ff4c4c", blueColor: data.blueColor || "#4c9aff",
+            redColor: data.redColor || "#ff4c4c", redColor2: data.redColor2 || "#ffd700",
+            blueColor: data.blueColor || "#4c9aff", blueColor2: data.blueColor2 || "#ffffff",
             weather: data.weather || 'clear', ballSkin: data.ballSkin || 'classic',
             ball: { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickX: 0, lastKickName: "" },
             score: { red: 0, blue: 0 }, matchTime: 0, half: 1, isKickoff: false, concedingTeam: null,
@@ -102,7 +114,7 @@ io.on('connection', (socket) => {
         if (s.emptyTimer) clearTimeout(s.emptyTimer);
         let newPlayer = { 
             id: socket.id, name: (data.playerName || "Oyuncu").substring(0, 20), team: "spectator", 
-            position: null, equipped: data.equipped || {}, neonColor: data.neonColor || NEON_COLORS[0],
+            position: null, equipped: data.equipped || {}, neonColor: NEON_COLORS[0],
             lastDx: 0, lastDy: 0, x: 600, y: 300, isBot: false, effects: {} 
         };
         s.players.push(newPlayer);
@@ -132,7 +144,7 @@ io.on('connection', (socket) => {
             team: botTeam, position: emptySlot.id,
             difficulty: 3,
             equipped: { outfit: 'default', aura: 'none', trail: 'none' }, 
-            neonColor: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+            neonColor: NEON_KEEPER_COLORS[Math.floor(Math.random() * NEON_KEEPER_COLORS.length)],
             lastDx: 0, lastDy: 0, x: emptySlot.x, y: emptySlot.y, isBot: true, effects: {} 
         };
         s.formation[botTeam][emptySlot.id] = bot.id;
@@ -223,6 +235,7 @@ io.on('connection', (socket) => {
         s.score = { red: 0, blue: 0 };
         s.matchTime = 0; s.half = 1; s.history = []; s.emotes = []; s.powerups = []; s.powerupTimer = 0;
         resetBall(s, null, false);
+        assignKeeperColors(s); // YENİ: Kaleci neon rengi her maç başında yeniden atanır
 
         io.to(s.id).emit('game_started');
         io.to(s.id).emit('play_whistle');
@@ -258,6 +271,7 @@ io.on('connection', (socket) => {
         s.score = { red: 0, blue: 0 };
         s.matchTime = 0; s.half = 1; s.history = []; s.emotes = []; s.powerups = []; s.powerupTimer = 0;
         resetBall(s, null, false);
+        assignKeeperColors(s); // YENİ: Kaleci neon rengi
 
         io.to(s.id).emit('game_started');
         io.to(s.id).emit('play_whistle');
