@@ -25,7 +25,8 @@
         .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 100px; z-index: 10; }
+        
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 80px; z-index: 10; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
@@ -212,7 +213,18 @@
             .slot { width: 30px; height: 30px; font-size: 8px; }
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
-            .menu-btn { width: 260px; padding: 10px; font-size: 16px; }
+            
+            /* TELEFON MENÜSÜ DÜZELTİLDİ */
+            .menu-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-top: 40px;
+                width: 90%;
+                max-width: 400px;
+            }
+            .menu-btn { width: 100%; padding: 10px 5px; font-size: 13px; }
+            
             .modal-content { width: 80%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
             .list-container { width: 90%; height: 60vh; }
@@ -478,36 +490,19 @@
     <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
-    <!-- BURASI ÇOK ÖNEMLİ: SOCKET BAĞLANTISI VE HATA YAKALAMA -->
     <script src="https://boliegole.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        // Global hata yakalayıcı (Oyunun donmasını engeller)
         window.onerror = function(msg, url, line, col, error) {
-            console.log("Oyun Hatası Yakalandı: ", msg);
+            console.log("Oyun Hatası: ", msg);
             return true; 
         };
 
-        // Sahte Socket (İnternet yoksa bile kodun çökmesini engeller)
-        let socket = {
-            emit: function() {},
-            on: function() {},
-            id: "p1"
-        };
-
-        // Eğer io fonksiyonu yüklendiyse gerçek sunucuya bağlanmayı dene
+        let socket = { emit: function() {}, on: function() {}, id: "p1" };
         if (typeof io !== 'undefined') {
             try {
                 let realSocket = io("https://boliegole.onrender.com", { transports: ["websocket", "polling"] });
-                realSocket.on('connect', () => {
-                    socket = realSocket;
-                    console.log("Sunucuya bağlanıldı.");
-                });
-                realSocket.on('connect_error', () => {
-                    console.log("Sunucuya bağlanılamadı, offline mod aktif.");
-                });
-            } catch(e) {
-                console.log("Socket kurulum hatası:", e);
-            }
+                realSocket.on('connect', () => { socket = realSocket; });
+            } catch(e) { console.log("Socket hatası:", e); }
         }
 
         const BASE_FRAME = 60;
@@ -559,13 +554,11 @@
         let isPractice = false;
         let selectedBotId = null;
 
-        // DOM ELEMENTLERİ
         const elScoreRed = document.getElementById('score-red');
         const elScoreBlue = document.getElementById('score-blue');
         const elTimer = document.getElementById('match-timer');
         let lastScoreRed = -1, lastScoreBlue = -1, lastTimerText = '';
 
-        // EŞYALAR
         let equipped = JSON.parse(localStorage.getItem('bolie_equipped')) || { outfit: 'default', aura: 'none', trail: 'none', ball: 'classic' };
         
         const SHOP_ITEMS = {
@@ -614,7 +607,6 @@
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, ' ': false, 'f': false };
 
-        // --- SES AYARLARI ---
         const musicSlider = document.getElementById('vol-music');
         const goalSlider = document.getElementById('vol-goal');
         const whistleSlider = document.getElementById('vol-whistle');
@@ -682,7 +674,6 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // --- MAĞAZA ---
         let currentShopTab = 'outfit';
         window.switchShopTab = (tab, btn) => {
             currentShopTab = tab;
@@ -708,7 +699,6 @@
         }
         renderShop();
 
-        // --- MENÜ OLAYLARI ---
         document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
         document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
         document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
@@ -747,7 +737,6 @@
             document.getElementById('modal-create').style.display = 'none';
         };
 
-        // --- SOCKET OLAYLARI (Online Mod İçin) ---
         if(socket) {
             socket.on('server_list', (list) => {
                 serverListData = list;
@@ -790,8 +779,6 @@
             socket.on('joined_successfully', (room) => { currentRoom = room; showLobby(room); });
             
             document.getElementById('btn-add-bot').onclick = () => { if(socket) socket.emit('add_bot'); };
-
-            function renderTacticsBoard(room) { /* ... (önceki kodun aynısı) ... */ }
             window.selectTeam = (team) => {
                 if (!currentRoom || currentRoom.status !== 'lobby') return;
                 myTeam = team;
@@ -1214,7 +1201,6 @@
             requestAnimationFrame(updateMovement);
         }
 
-        // --- OFFLINE MAÇ BAŞLATMA (YENİ MOTOR) ---
         function startOfflineMatch() {
             isOffline = true; isPractice = false; isSpectator = false;
             switchScreen('screen-game');
@@ -1223,7 +1209,6 @@
             myPlayer = { id: "p1", name: "Sen", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
             players["p1"] = myPlayer;
             
-            // Kırmızı Botlar (4)
             let redBots = [
                 { pos: 'GK', x: 60, y: 300 },
                 { pos: 'DEF', x: 250, y: 200 },
@@ -1235,7 +1220,6 @@
                 players[id] = { id: id, name: "K. Bot " + (i+1), team: "red", position: b.pos, x: b.x, y: b.y, lastDx: 0, lastDy: 0, equipped: { outfit: 'default', aura: 'none', trail: 'none' }, neonColor: '#39FF14', isBot: true };
             });
 
-            // Mavi Botlar (5)
             let blueBots = [
                 { pos: 'GK', x: 1140, y: 300 },
                 { pos: 'DEF', x: 950, y: 200 },
