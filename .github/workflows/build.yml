@@ -13,7 +13,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Dependencies
         run: |
@@ -36,13 +36,51 @@ jobs:
         run: |
           npx capacitor-assets generate --android
 
-      # YENİ EKLENEN KISIM: TAM EKRAN VE YATAY EKRAN ZORLAMA
+      # DÜZELTME: sed yerine Node ile güvenli XML düzenleme
       - name: Force Fullscreen and Landscape
         run: |
-          # Durum çubuğunu gizle (Tam Ekran)
-          sed -i 's|<item name="windowNoTitle">true</item>|<item name="windowNoTitle">true</item><item name="android:windowFullscreen">true</item>|' android/app/src/main/res/values/styles.xml
-          # Ekranı yatay moda zorla
-          sed -i 's|android:screenOrientation="portrait"|android:screenOrientation="sensorLandscape"|' android/app/src/main/AndroidManifest.xml
+          node -e "
+            const fs = require('fs');
+            // 1) Fullscreen ekle
+            const stylesPath = 'android/app/src/main/res/values/styles.xml';
+            if (fs.existsSync(stylesPath)) {
+              let s = fs.readFileSync(stylesPath, 'utf8');
+              if (!s.includes('android:windowFullscreen')) {
+                s = s.replace(
+                  /<item name=\"windowNoTitle\">true<\/item>/,
+                  '<item name=\"windowNoTitle\">true</item><item name=\"android:windowFullscreen\">true</item>'
+                );
+                fs.writeFileSync(stylesPath, s);
+                console.log('Fullscreen OK');
+              } else { console.log('Fullscreen zaten var'); }
+            } else { console.log('styles.xml bulunamadı'); }
+
+            // 2) Landscape zorla
+            const manifestPath = 'android/app/src/main/AndroidManifest.xml';
+            if (fs.existsSync(manifestPath)) {
+              let m = fs.readFileSync(manifestPath, 'utf8');
+              if (!m.includes('android:screenOrientation=\"sensorLandscape\"')) {
+                if (m.includes('android:screenOrientation=\"portrait\"')) {
+                  m = m.replace(/android:screenOrientation=\"portrait\"/, 'android:screenOrientation=\"sensorLandscape\"');
+                } else {
+                  // Activity tag'ine ekle
+                  m = m.replace(/<activity/, '<activity android:screenOrientation=\"sensorLandscape\"');
+                }
+                fs.writeFileSync(manifestPath, m);
+                console.log('Landscape OK');
+              } else { console.log('Landscape zaten var'); }
+            } else { console.log('AndroidManifest.xml bulunamadı'); }
+          "
+
+      # DÜZELTME: www/manifest.json yoksa kopyala (Capacitor webDir kontrolü)
+      - name: Ensure manifest.json in www
+        run: |
+          if [ ! -f www/manifest.json ] && [ -f manifest.json ]; then
+            cp manifest.json www/manifest.json
+            echo "manifest.json www/ içine kopyalandı"
+          else
+            echo "manifest.json zaten www/ içinde veya kaynak yok"
+          fi
 
       - name: Build APK
         run: |
