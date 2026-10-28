@@ -32,6 +32,26 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Patch MainActivity for Autoplay
+        run: |
+          mkdir -p android/app/src/main/java/com/boliegole/app
+          cat > android/app/src/main/java/com/boliegole/app/MainActivity.java << 'JAVA_EOF'
+          package com.boliegole.app;
+
+          import com.getcapacitor.BridgeActivity;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  WebSettings settings = this.bridge.getWebView().getSettings();
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+              }
+          }
+          JAVA_EOF
+
       - name: Generate App Icons
         run: |
           npx capacitor-assets generate --android
