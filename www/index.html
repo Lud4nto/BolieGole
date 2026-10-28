@@ -835,23 +835,15 @@
         const goalSound = document.getElementById('goalSound');
         const whistleSound = document.getElementById('whistleSound');
 
-        menuMusic.loop = false;
-        bgMusic.loop = false;
+        menuMusic.loop = true;
+        bgMusic.loop = true;
         
-        menuMusic.addEventListener('timeupdate', () => {
-            if (isFinite(menuMusic.duration) && menuMusic.duration > 0 && menuMusic.currentTime >= menuMusic.duration - 0.2) {
-                menuMusic.currentTime = 0;
-                menuMusic.play().catch(()=>{});
-            }
+        menuMusic.addEventListener('ended', () => {
+            if (!isMuted) { menuMusic.currentTime = 0; menuMusic.play().catch(()=>{}); }
         });
-        
-        bgMusic.addEventListener('timeupdate', () => {
-            if (isFinite(bgMusic.duration) && bgMusic.duration > 0 && bgMusic.currentTime >= bgMusic.duration - 0.2) {
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(()=>{});
-            }
+        bgMusic.addEventListener('ended', () => {
+            if (!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }
         });
-
         document.getElementById('emote-toggle').onclick = () => {
             let bar = document.getElementById('emote-bar');
             if (bar.style.display === 'flex') { bar.style.display = 'none'; }
@@ -1040,18 +1032,9 @@
                 document.getElementById('modal-name').style.display = 'flex';
             }
 
-            if (!isMuted) {
+            if (!isMuted && myPlayerName) {
                 menuMusic.volume = musicSlider.value / 100;
                 menuMusic.play().then(() => {
-                    [bgMusic, goalSound, whistleSound].forEach(a => {
-                        let origVol = a.volume;
-                        a.volume = 0;
-                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
-                    });
-                }).catch(() => {
-                    function startMenuBGM() {
-                        if (!isMuted) {
-                            menuMusic.play().then(() => {
                                 [bgMusic, goalSound, whistleSound].forEach(a => {
                                     let origVol = a.volume;
                                     a.volume = 0;
@@ -1090,7 +1073,20 @@
                 myPlayerName = name;
                 localStorage.setItem('bolie_player_name', myPlayerName);
                 document.getElementById('modal-name').style.display = 'none';
+
+                // İlk etkileşimle birlikte müzikleri başlat ve unlock et
+                if (!isMuted) {
+                    menuMusic.volume = musicSlider.value / 100;
+                    menuMusic.play().catch(()=>{});
+                    [bgMusic, goalSound, whistleSound].forEach(a => {
+                        let origVol = a.volume;
+                        a.volume = 0;
+                        a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = origVol; }).catch(() => { a.volume = origVol; });
+                    });
+                }
+
                 switchScreen('screen-server-list');
+
                 if (socket.id !== "p1") socket.emit('get_servers');
                 else if (socket) socket.emit('get_servers');
             };
