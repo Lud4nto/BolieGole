@@ -1,0 +1,12 @@
+{
+  "background_color": "#1f5434",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "BolieGole",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "BolieGole",
+  "start_url": "/",
+  "theme_color": "#453314",
+  "description": "A mini football game."
+}
