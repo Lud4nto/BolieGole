@@ -479,15 +479,26 @@
     <audio id="goalSound" src="goal_music.mp3" preload="auto"></audio>
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
-    <script src="/socket.io/socket.io.js"></script>
+        <!-- Socket.io'yu Render sunucusundan çekiyoruz (APK için) -->
+    <script src="https://boliegole.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        let socket;
-        try {
-            socket = io();
-        } catch(e) {
-            console.log("Socket.io yüklenemedi, offline modda çalışılıyor.");
-            socket = { emit: () => {}, on: () => {} };
+        // EĞER İNTERNET YOKSA VEYA SOCKET YÜKLENEMEZSE HATA VERMESİNİ ENGELLİYORUZ
+        let socket = {
+            emit: function() {}, 
+            on: function() {}
+        };
+        
+        // İnternet varsa gerçek sunucuya bağlan
+        if (typeof io !== 'undefined') {
+            try {
+                socket = io("https://boliegole.onrender.com");
+            } catch(e) {
+                console.log("Sunucuya bağlanılamadı, offline mod aktif.");
+            }
         }
+
+        const BASE_FRAME = 60;
+        const MOVE_EMIT_MS = 33;
 
         const BASE_FRAME = 60;
         const MOVE_EMIT_MS = 33;
