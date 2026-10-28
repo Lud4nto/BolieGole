@@ -20,7 +20,7 @@
             .screen, #modal-name, #modal-create { display: none !important; } 
         }
 
-        .screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; }
         .active { display: flex; }
 
         .bg-image { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('menu.png'); background-size: cover; background-position: center; z-index: -2; }
@@ -30,7 +30,7 @@
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
         
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 80px; z-index: 10; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 80px; z-index: 10; max-height: 80vh; overflow-y: auto; padding: 10px; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
@@ -56,13 +56,13 @@
         .join-btn { background: #4c9aff; border: 3px solid #2563eb; box-shadow: 3px 3px 0px #1e3a8a; color: white; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 6px; touch-action: manipulation; }
         .join-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #1e3a8a; }
 
-        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 0 20px; box-sizing: border-box; }
+        #screen-lobby { background-color: transparent; flex-direction: row; justify-content: space-around; padding: 0 10px; box-sizing: border-box; }
         .lobby-side { display: flex; flex-direction: column; align-items: center; width: 30%; }
         .lobby-center { display: flex; flex-direction: column; align-items: center; width: 40%; }
         .lobby-header { text-align: center; margin-bottom: 10px; z-index: 10; }
         .room-code { font-family: 'Press Start 2P', cursive; font-size: 18px; font-weight: bold; color: #eab308; letter-spacing: 5px; text-shadow: 0 0 10px #eab308; background: #000; padding: 5px 15px; border-radius: 8px; border: 3px solid #eab308; display: inline-block; margin-top: 5px; }
         
-        .team-box { width: 100%; height: 320px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; }
+        .team-box { width: 100%; height: 320px; background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 4px solid transparent; transition: 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; overflow-y: auto; }
         .team-box:hover { transform: scale(1.02); }
         .team-title { font-family: 'Press Start 2P', cursive; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; }
         .player-slot { width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: white; font-size: 12px; }
@@ -88,23 +88,23 @@
 
         /* MAĞAZA */
         #screen-shop { background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
-        .shop-container { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; width: 90%; max-width: 850px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
+        .shop-container { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; width: 90%; max-width: 850px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; max-height: 90vh; overflow-y: auto; }
         .shop-container h2 { font-family: 'Press Start 2P', cursive; font-size: 28px; margin: 0; color: #eab308; text-shadow: 0 0 20px rgba(234,179,8,0.5); }
         
-        .shop-tabs { display: flex; gap: 15px; margin-bottom: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 25px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-weight: bold; font-family: 'Press Start 2P', cursive; font-size: 12px; cursor: pointer; border-radius: 30px; transition: all 0.3s ease; touch-action: manipulation; }
+        .shop-tabs { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 15px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-weight: bold; font-family: 'Press Start 2P', cursive; font-size: 10px; cursor: pointer; border-radius: 30px; transition: all 0.3s ease; touch-action: manipulation; }
         .tab-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .tab-btn.active { background: linear-gradient(135deg, #eab308, #f59e0b); color: #000; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); border-color: transparent; transform: scale(1.05); }
         
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; width: 100%; max-height: 350px; overflow-y: auto; padding: 10px; touch-action: pan-y; }
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; width: 100%; max-height: 350px; overflow-y: auto; padding: 5px; touch-action: pan-y; }
         .shop-grid::-webkit-scrollbar { width: 8px; }
         .shop-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
         
-        .shop-item { background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; text-align: center; color: white; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
+        .shop-item { background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; text-align: center; color: white; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
         .shop-item:hover { transform: translateY(-5px) scale(1.05); border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(234, 179, 8, 0.2); background: rgba(30, 41, 59, 0.9); }
         .shop-item.selected { border-color: #eab308; box-shadow: 0 0 25px rgba(234, 179, 8, 0.6), inset 0 0 15px rgba(234, 179, 8, 0.3); background: linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(234,179,8,0.15) 100%); }
-        .shop-item.selected::after { content: '✓'; position: absolute; top: 10px; right: 10px; color: #eab308; font-size: 20px; font-weight: bold; text-shadow: 0 0 10px #eab308; }
-        .shop-icon { font-size: 48px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transition: transform 0.3s; }
+        .shop-item.selected::after { content: '✓'; position: absolute; top: 5px; right: 5px; color: #eab308; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #eab308; }
+        .shop-icon { font-size: 36px; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); transition: transform 0.3s; }
         .shop-item:hover .shop-icon { transform: scale(1.2) rotate(5deg); }
         
         /* DEV STADYUM SKOR TABELASI */
@@ -186,11 +186,11 @@
         #result-score { font-family: 'Press Start 2P', cursive; font-size: 60px; color: #fff; margin-bottom: 20px; text-shadow: 4px 4px 0 #000; }
         #result-desc { font-size: 24px; font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000; }
 
-        .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
-        .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 24px; margin: 0; text-align: center; }
+        .info-box { background: rgba(212, 163, 115, 0.95); border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; color: #2b1b0e; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; max-height: 90vh; overflow-y: auto; }
+        .info-box h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; margin: 0; text-align: center; }
         
-        .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 16px; }
-        input[type="range"] { -webkit-appearance: none; width: 150px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; touch-action: manipulation; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 14px; }
+        input[type="range"] { -webkit-appearance: none; width: 120px; height: 15px; background: #fefae0; border: 2px solid #8b5a2b; border-radius: 8px; outline: none; touch-action: manipulation; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #ef4444; border: 2px solid #7f1d1d; border-radius: 50%; cursor: pointer; }
 
         #screen-credits { background: #000; overflow: hidden; justify-content: flex-start; }
@@ -207,35 +207,28 @@
             #top-left-btns { top: 5px; left: 5px; }
             .top-ui-btn { padding: 5px 10px; font-size: 12px; }
             #mute-btn { top: 5px; right: 5px; width: 40px; height: 40px; font-size: 20px; }
-            #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 10px; }
+            
+            #screen-lobby { flex-direction: column; justify-content: flex-start; padding: 5px; }
             .lobby-side { width: 100%; flex-direction: row; justify-content: space-between; height: auto; margin-bottom: 5px; }
             .lobby-center { width: 100%; height: auto; }
-            .team-box { width: 48%; height: 120px; padding: 5px; }
+            .team-box { width: 48%; height: 100px; padding: 5px; }
             .team-title { font-size: 10px; margin-bottom: 2px; }
             .player-slot { padding: 2px; font-size: 9px; margin-bottom: 2px; }
-            #tactics-board { height: 250px; }
+            #tactics-board { height: 220px; }
             .slot { width: 30px; height: 30px; font-size: 8px; }
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
             
-            /* TELEFON MENÜSÜ DÜZELTİLDİ */
-            .menu-buttons {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                margin-top: 40px;
-                width: 90%;
-                max-width: 400px;
-            }
-            .menu-btn { width: 100%; padding: 10px 5px; font-size: 13px; }
+            .menu-buttons { width: 90%; max-width: 400px; gap: 10px; margin-top: 20px; }
+            .menu-btn { width: 100%; padding: 12px 5px; font-size: 14px; }
             
-            .modal-content { width: 80%; padding: 15px; gap: 10px; }
+            .modal-content { width: 90%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
-            .list-container { width: 90%; height: 60vh; }
-            .top-bar { width: 90%; font-size: 16px; flex-direction: column; gap: 10px; }
+            .list-container { width: 95%; height: 60vh; }
+            .top-bar { width: 95%; font-size: 16px; flex-direction: column; gap: 10px; }
             .create-btn { font-size: 12px; padding: 8px 15px; }
             .server-item { padding: 10px; }
-            .info-box { width: 85%; padding: 20px; }
+            .info-box { width: 90%; padding: 15px; }
             .info-box h2 { font-size: 18px; }
             #credits-content h2 { font-size: 20px; }
             #credits-content p { font-size: 12px; }
@@ -265,7 +258,8 @@
         <div class="bg-image"></div>
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
-            <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU (OFFLINE)</button>
+            <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU</button>
+            <button class="menu-btn" id="btn-practice" style="background-color: #4c9aff; border-color: #2563eb; box-shadow: 4px 4px 0px #1e3a8a; color: white;">ANTRENMAN</button>
             <button class="menu-btn" id="btn-shop">MAĞAZA</button>
             <button class="menu-btn" id="btn-options">AYARLAR</button>
             <button class="menu-btn" id="btn-credits">YAPIMCILAR</button>
@@ -500,11 +494,10 @@
             return true; 
         };
 
-        // Socket'i güvenli bir şekilde arka planda yükle (Butonları kilitlemesin diye)
         let socket = { emit: function() {}, on: function() {}, id: "p1" };
         
         function loadSocketIO() {
-            if (!navigator.onLine) return; // İnternet yoksa hiç denemе
+            if (!navigator.onLine) return; 
             let script = document.createElement('script');
             script.src = "https://boliegole.onrender.com/socket.io/socket.io.js";
             script.onload = () => {
@@ -709,13 +702,13 @@
             });
         }
 
-        // Tüm tıklama olaylarını sayfa yüklendikten sonra bağla (Hata payını sıfırlamak için)
         document.addEventListener("DOMContentLoaded", () => {
             renderShop();
-            loadSocketIO(); // Socket'i arka planda yükle
+            loadSocketIO(); 
 
             document.getElementById('btn-play').onclick = () => { isOffline = false; document.getElementById('modal-name').style.display = 'flex'; };
             document.getElementById('btn-offline').onclick = () => { startOfflineMatch(); };
+            document.getElementById('btn-practice').onclick = () => { startPracticeMode(); };
             document.getElementById('btn-shop').onclick = () => switchScreen('screen-shop');
             document.getElementById('btn-options').onclick = () => switchScreen('screen-options');
             document.getElementById('btn-credits').onclick = () => switchScreen('screen-credits');
@@ -760,7 +753,6 @@
             document.getElementById('btn-add-bot').onclick = () => { if(socket) socket.emit('add_bot'); };
         });
 
-        // Socket event listeners (Bağlantı kurulunca aktif olur)
         function setupSocketListeners() {
             socket.on('server_list', (list) => {
                 serverListData = list;
@@ -808,6 +800,82 @@
                 if(socket) socket.emit('change_team', team);
                 if(currentRoom) renderTacticsBoard(currentRoom);
             };
+
+            function renderTacticsBoard(room) {
+                let board = document.getElementById('tactics-board');
+                if(!board) return;
+                board.querySelectorAll('.slot').forEach(el => el.remove());
+
+                let renderTeam = (team) => {
+                    FORMATION_SLOTS[team].forEach(slot => {
+                        let el = document.createElement('div');
+                        el.className = 'slot ' + (room.formation[team][slot.id] ? 'filled' : 'empty');
+                        
+                        let boardRect = board.getBoundingClientRect();
+                        let pxX = (slot.x / 1200) * boardRect.width;
+                        let pxY = (slot.y / 600) * boardRect.height;
+                        el.style.left = pxX + 'px';
+                        el.style.top = pxY + 'px';
+
+                        let p = room.players.find(pl => pl.id === room.formation[team][slot.id]);
+                        if (p) {
+                            el.innerText = p.name.substring(0, 4);
+                            el.style.backgroundColor = (p.position && p.position.includes('GK')) ? p.neonColor : (team === 'red' ? room.redColor : room.blueColor);
+                            if (selectedBotId === p.id) el.classList.add('selected-bot');
+                        } else {
+                            el.innerText = '+';
+                            el.style.backgroundColor = team === 'red' ? 'rgba(255,76,76,0.5)' : 'rgba(76,154,255,0.5)';
+                        }
+                        
+                        let lbl = document.createElement('div');
+                        lbl.className = 'pos-label';
+                        lbl.innerText = slot.name;
+                        el.appendChild(lbl);
+
+                        el.onclick = (e) => {
+                            e.stopPropagation();
+                            if (p && p.isBot && room.hostId === socket.id) {
+                                selectedBotId = p.id;
+                                renderTacticsBoard(room);
+                            } 
+                            else if (!p && selectedBotId && room.hostId === socket.id) {
+                                socket.emit('move_bot', { botId: selectedBotId, newSlotId: slot.id });
+                                selectedBotId = null;
+                            }
+                            else if (!p) {
+                                if (myTeam !== team) {
+                                    myTeam = team;
+                                    socket.emit('change_team', team);
+                                    setTimeout(() => { socket.emit('change_position', slot.id); }, 150);
+                                } else {
+                                    socket.emit('change_position', slot.id);
+                                }
+                            }
+                        };
+
+                        el.ondblclick = (e) => {
+                            e.stopPropagation();
+                            if (p && p.isBot && room.hostId === socket.id) {
+                                let currentDiff = p.difficulty || 3;
+                                let d = prompt(
+                                    "Bot Zorluk Seçimi:\n" +
+                                    "1 - AFK (Hareket Etmez)\n" +
+                                    "2 - Kolay\n" +
+                                    "3 - Normal (Klasik)\n" +
+                                    "4 - Extra Profesyonel (Ordu)\n\n" +
+                                    "Lütfen 1, 2, 3 veya 4 girin:", currentDiff
+                                );
+                                if (d && [1,2,3,4].includes(parseInt(d))) {
+                                    socket.emit('change_bot_difficulty', { botId: p.id, difficulty: parseInt(d) });
+                                }
+                            }
+                        };
+                        board.appendChild(el);
+                    });
+                };
+                renderTeam('red');
+                renderTeam('blue');
+            }
 
             function showLobby(room) {
                 switchScreen('screen-lobby');
@@ -954,7 +1022,6 @@
             });
         }
 
-        // Socket bağlandığında dinleyicileri kur
         let oldSocketConnect = socket.on;
         Object.defineProperty(socket, 'on', {
             set: function(val) { oldSocketConnect = val; },
@@ -965,10 +1032,8 @@
             }
         });
 
-        // Dinleyicileri başlat
         setupSocketListeners();
         
-        // Eğer gerçek socket gelirse dinleyicileri kopyala
         setInterval(() => {
             if (socket.id !== "p1" && !socket._listenersMoved) {
                 socket._listenersMoved = true;
@@ -1273,7 +1338,10 @@
 
             score = { red: 0, blue: 0 };
             ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
-            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball };
+            
+            // HATA ÇÖZÜMÜ: Renkleri ve top görünümünü buraya ekledik ki kod çökmesin!
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, weather: 'clear', ballSkin: equipped.ball, redColor: '#ff0000', blueColor: '#1e90ff' };
+            
             cameraX = 600; cameraY = 300; cameraZoom = 1.0;
             
             const canvas = document.getElementById('gameCanvas');
@@ -1283,6 +1351,30 @@
             document.getElementById('label-blue').innerText = "MAVİ";
             document.getElementById('match-timer').innerText = "OFFLINE MAÇ";
             if (!isMuted) bgMusic.play().catch(e=>console.log("Müzik engellendi"));
+        }
+
+        function startPracticeMode() {
+            isPractice = true; isOffline = false; isSpectator = false;
+            switchScreen('screen-game');
+            
+            players = {};
+            myPlayer = { id: "p1", name: "Oyuncu", team: "red", position: "FWD", x: 400, y: 300, lastDx: 0, lastDy: 0, equipped: equipped, isBot: false };
+            players["p1"] = myPlayer;
+            
+            score = { red: 0, blue: 0 };
+            ball = { x: 600, y: 300, z: 0, vx: 0, vy: 0, vz: 0, owner: null, possessionTimer: 0, pickupCooldown: 0, shotPower: 0, lastKickName: "" };
+            
+            // HATA ÇÖZÜMÜ: Renkleri buraya ekledik!
+            currentRoom = { status: 'playing', isKickoff: false, concedingTeam: null, ballSkin: equipped.ball, redColor: '#ff0000', blueColor: '#1e90ff' };
+            
+            cameraX = 600; cameraY = 300; cameraZoom = 1.0;
+            
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) canvas.focus();
+            
+            document.getElementById('label-red').innerText = "ANTRENMAN"; document.getElementById('label-blue').innerText = " ";
+            document.getElementById('score-red').innerText = "0"; document.getElementById('score-blue').innerText = "0";
+            document.getElementById('match-timer').innerText = "SERBEST ÇALIŞMA (R: Topu Yenile)";
         }
 
         function updateOfflinePhysics(dt) {
@@ -1632,7 +1724,10 @@
                         }
                         ctx.beginPath(); ctx.arc(px, py + 5, pSize, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
                         ctx.beginPath(); ctx.arc(px, py, pSize, 0, Math.PI * 2);
-                        let teamColor = p.team === 'red' ? (currentRoom ? currentRoom.redColor : '#ff0000') : (currentRoom ? currentRoom.blueColor : '#1e90ff');
+                        
+                        // HATA ÇÖZÜMÜ: RedColor / BlueColor undefined gelirse varsayılan renk ata
+                        let teamColor = p.team === 'red' ? (currentRoom && currentRoom.redColor ? currentRoom.redColor : '#ff0000') : (currentRoom && currentRoom.blueColor ? currentRoom.blueColor : '#1e90ff');
+                        
                         if (p.position && p.position.includes('GK')) teamColor = p.neonColor || '#39FF14';
                         if (isPractice) teamColor = p.team === 'red' ? '#ff0000' : '#1e90ff';
                         let grad = ctx.createRadialGradient(px - 5, py - 5, 2, px, py, pSize); grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.2, teamColor); grad.addColorStop(1, teamColor);
