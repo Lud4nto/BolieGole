@@ -35,21 +35,43 @@
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
             display: none; flex-direction: column; align-items: center; justify-content: center; 
             z-index: 1000; 
-            overflow: hidden; /* Varsayılan olarak kaydırmayı kapat */
+            overflow: hidden; 
         }
         .active { display: flex; }
         
-        /* Sadece menü ve lobi gibi ekranlarda dikey kaydırma olsun */
         #screen-shop, #screen-lobby, #screen-server-list, #screen-options { overflow-y: auto; }
 
-        .bg-image { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('menu.png'); background-size: cover; background-position: center; z-index: -2; }
-        .bg-blur { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('menu.png'); background-size: cover; background-position: center; filter: blur(12px) brightness(0.6); z-index: -1; opacity: 0.9; }
+        /* ARKA PLAN AYARI: Resim tam ortada ve kesilmeden duracak */
+        .bg-image { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh; 
+            background-image: url('menu.png'); 
+            background-size: contain; /* Resmin TAMAMI görünsün diye */
+            background-repeat: no-repeat;
+            background-position: center center; 
+            z-index: -2; 
+        }
+        
+        /* Arka plandaki bulanık efekt boşlukları güzelce dolduracak */
+        .bg-blur { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh; 
+            background-image: url('menu.png'); 
+            background-size: cover; 
+            background-position: center; 
+            filter: blur(15px) brightness(0.4); 
+            z-index: -3; 
+            opacity: 1; 
+        }
 
         .menu-btn { width: 320px; padding: 15px; background-color: #d4a373; border: 4px solid #8b5a2b; box-shadow: 4px 4px 0px #5a3a1b; border-radius: 8px; font-family: 'Press Start 2P', cursive; font-size: 20px; color: #2b1b0e; cursor: pointer; text-align: center; text-transform: uppercase; transition: all 0.1s ease; touch-action: manipulation; pointer-events: auto; }
         .menu-btn:hover { background-color: #e0b88e; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #5a3a1b; }
         .menu-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #5a3a1b; }
         
-        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 40px; z-index: 10; }
+        /* Butonlar resmin üzerine binmesin diye aşağı çektik */
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 180px; z-index: 10; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
         .modal-content { background-color: #d4a373; border: 6px solid #8b5a2b; box-shadow: 8px 8px 0px #5a3a1b; border-radius: 12px; padding: 30px; width: 400px; display: flex; flex-direction: column; gap: 15px; color: #2b1b0e; }
@@ -227,7 +249,7 @@
             width: 100vw; height: 100vh; 
             display: none; 
             z-index: 1000; 
-            overflow: hidden; /* Kaydırmayı kesinlikle engelle */
+            overflow: hidden; 
         }
         #screen-game.active { display: flex; align-items: center; justify-content: center; }
         
@@ -243,7 +265,6 @@
             background: #111;
         }
         
-        /* Tuvalin (Canvas) ekrana tam sığmasını sağla, taşmasını engelle */
         canvas { 
             width: 100%; 
             height: 100%; 
@@ -273,16 +294,15 @@
             .slot .pos-label { font-size: 6px; bottom: -12px; }
             .ui-bars { top: 55px; }
             
-            /* MENÜ SIĞDIRMA AYARI */
             .menu-buttons {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
-                margin-top: 10px;
+                margin-top: 100px; /* Mobilde butonları biraz daha yukarı alalım */
                 width: 95%;
                 max-width: 400px;
             }
-            .menu-btn { width: 100%; padding: 10px 2px; font-size: 12px; }
+            .menu-btn { width: 100%; padding: 12px 2px; font-size: 12px; }
             
             .modal-content { width: 90%; padding: 15px; gap: 10px; }
             .modal-content h2 { font-size: 16px; }
@@ -317,7 +337,8 @@
     </div>
 
     <div id="screen-main-menu" class="screen active">
-        <div class="bg-image"></div>
+        <div class="bg-blur"></div> <!-- Bulanık arka plan -->
+        <div class="bg-image"></div> <!-- Net arka plan (Kaleci ve Logo) -->
         <div class="menu-buttons">
             <button class="menu-btn" id="btn-play">ONLINE OYNA</button>
             <button class="menu-btn" id="btn-offline" style="background-color: #eab308; border-color: #a16207; box-shadow: 4px 4px 0px #713f12; color: black;">TEK OYUNCULU</button>
@@ -551,7 +572,6 @@
     <audio id="whistleSound" src="whistle.mp3" preload="auto"></audio>
 
     <script>
-        // Tarayıcının kendi kendine zoom yapmasını engelle (Pinch Zoom)
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
         document.addEventListener('touchmove', function (e) { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         window.addEventListener('wheel', function(e) { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
@@ -1741,7 +1761,6 @@
 
                 ctx.clearRect(0, 0, 1200, 600);
 
-                // KAMERA SABİTLEMESİ: Artık oyuncuyu takip etmiyor, tüm saha görünüyor!
                 let targetCamX = 600; let targetCamY = 300; let targetZoom = 1.0;
                 if (currentRoom && !isPractice && !isOffline) {
                     let speed = Math.hypot(ball.vx || 0, ball.vy || 0);
